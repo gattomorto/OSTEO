@@ -78,8 +78,8 @@ cur.execute("CREATE TABLE IF NOT EXISTS diagnosi_cura("
             "PRIMARY KEY (PATIENT_KEY,SCAN_DATE,id_cura))")
             #"FOREIGN KEY (id_cura) REFERENCES cure (id) ON UPDATE CASCADE ON DELETE CASCADE,"
             #"FOREIGN KEY (PATIENT_KEY, SCAN_DATE) REFERENCES diagnosi (PATIENT_KEY,SCAN_DATE))")
-mydb.commit()'''
-
+mydb.commit()
+'''
 
 #POPULO LA TABELLA CURE
 '''
@@ -91,64 +91,77 @@ for tup in tups:
     cur.execute(stmnt)
 mydb.commit()'''
 
+def crea_diagnosi_cura():
+    '''
+    QUESTA PARTE SI OCCUPA DI LEGGERE LA TABELLA diagnosi E CONVERTIRE TUTTE LE CURE IN diagnosi_cur
 
+    a partire da questa:
+    PATIENT_KEY  SCAN_DATE  TERAPIE_ORMONALI_CHECKBOX  TERAPIE_ORMONALI_LISTA  TERAPIE_OSTEOPROTETTIVE_CHECKBOX  TERAPIE_OSTEOPROTETTIVE_LISTA ...
+    199BU        3/9/4                 1               calciferolo 55mg 2/die               1                    desonumab e.v. 50000 UI
+    521ZZ        1/8/8                 0               NULL                                 1                    estradiolo 6 gocce al giorno
 
+    si crea questa:
+    PATIENT_KEY  SCAN_DATE  id_cura
+    199BU        3/9/4        8     (cura di tipo TERAPIA_ORMONALE con principio attivo calciferolo e dose = 55 ...)
+    199BU        3/9/4        1     (cura di tipo TERAPIA_OST.. a base di desonumab)
+    199BU        3/9/4        5     (questa non si vede nella tabella, ma ce)
+    521ZZ        1/8/8        1     (TERAPIE_OSTEOPROTETTIVE a base di estradiolo)
+    521ZZ        1/8/8        9     (un altra cura per questa diagnosi che non si vede)
+    '''
+    #data una cura in formato stringa la converte in id della cura corrispondente della tabella 'cure'
+    def get_id_cura(s):
+        length_s = len(s)
+        return length_s
 
-#QUESTA PARTE SI OCCUPA DI LEGGERE LA TABELLA diagnosi E CONVERTIRE TUTTE LE CURE IN diagnosi_cura
-'''
-#data una cura in formato stringa la converte in id della cura corrispondente della tabella 'cure'
-def get_id_cura(s):
-    length_s = len(s)
-    return length_s
+    #quando ho identificato che un paziente è sottoposto ad una cura allora aggiungo a 'diagnosi_cura'
+    #questa funzione puo scattare piu volte per un paziente
+    def add_to_diagnosi_cura(patient_key,scan_date,id_cura):
+        tup = (patient_key,scan_date,id_cura)
+        stmnt = "INSERT INTO diagnosi_cura (PATIENT_KEY, SCAN_DATE, id_cura) VALUES {}".format(str(tup))
+        cur.execute(stmnt)
+        #print(stmnt)
 
+    #di tutta la diagnosi mi interessano solo le cure prescritte dal medico
+    sttmnt = "SELECT PATIENT_KEY, SCAN_DATE, " \
+             "TERAPIE_ORMONALI_CHECKBOX, TERAPIE_ORMONALI_LISTA, " \
+             "TERAPIE_OSTEOPROTETTIVE_CHECKBOX, TERAPIE_OSTEOPROTETTIVE_LISTA, " \
+             "VITAMINA_D_TERAPIA_CHECKBOX, VITAMINA_D_TERAPIA_LISTA, " \
+             "VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX, VITAMINA_D_SUPPLEMENTAZIONE_LISTA, " \
+             "CALCIO_SUPPLEMENTAZIONE_CHECKBOX, CALCIO_SUPPLEMENTAZIONE_LISTA " \
+             "FROM diagnosi"
+    cur.execute(sttmnt)
+    results = cur.fetchall()
 
-#quando ho identificato che un paziente è sottoposto ad una cura allora aggiungo a 'diagnosi_cura'
-#questa funzione puo scattare piu volte per un paziente
-def add_to_diagnosi_cura(patient_key,scan_date,id_cura):
-    tup = (patient_key,scan_date,id_cura)
-    stmnt = "INSERT INTO diagnosi_cura (PATIENT_KEY, SCAN_DATE, id_cura) VALUES {}".format(str(tup))
-    cur.execute(stmnt)
-    #print(stmnt)
-    
-#mi interessa solo ciò che ha prescritto il medico
-sttmnt = "SELECT PATIENT_KEY, SCAN_DATE, " \
-         "TERAPIE_ORMONALI_CHECKBOX, TERAPIE_ORMONALI_LISTA, " \
-         "TERAPIE_OSTEOPROTETTIVE_CHECKBOX, TERAPIE_OSTEOPROTETTIVE_LISTA, " \
-         "VITAMINA_D_TERAPIA_CHECKBOX, VITAMINA_D_TERAPIA_LISTA, " \
-         "VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX, VITAMINA_D_SUPPLEMENTAZIONE_LISTA, " \
-         "CALCIO_SUPPLEMENTAZIONE_CHECKBOX, CALCIO_SUPPLEMENTAZIONE_LISTA " \
-         "FROM diagnosi"
-cur.execute(sttmnt)
+    # prima di inserire cancello tutte le righe dalla tabella diagnosi_test, altrimenti se lancio più volte la funzione da errore di PK duplicata
+    statement = "DELETE FROM diagnosi_cura"; cur.execute(statement); mydb.commit()
 
-results = cur.fetchmany(size=1000)
-#per ogni paziente controllo che cure sono state prescitte ad esso
-for row in results:
-   patient_key = row[0]
-   scan_date = str(row[1])
-   
-   if(row[2]==1):#TERAPIE_ORMONALI_CHECKBOX
-       cura_string = row[3]#TERAPIE_ORMONALI_LISTA
-       id_cura = 3#get_id_cura(cura_string)
-       add_to_diagnosi_cura(patient_key,scan_date,id_cura)
-   if(row[4] == 1):#TERAPIE_OSTEOPROTETTIVE_CHECKBOX
-       cura_string = row[5]#TERAPIE_OSTEOPROTETTIVE_LISTA
-       id_cura = 5#get_id_cura(cura_string)
-       add_to_diagnosi_cura(patient_key, scan_date, id_cura)
-   if (row[6] == 1):  # VITAMINA_D_TERAPIA_CHECKBOX
-       cura_string = row[7]  # VITAMINA_D_TERAPIA_LISTA
-       id_cura = 7#get_id_cura(cura_string)
-       add_to_diagnosi_cura(patient_key, scan_date, id_cura)
-   if (row[8] == 1):  #VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX
-       cura_string = row[9]  # VITAMINA_D_SUPPLEMENTAZIONE_LISTA
-       id_cura = 9#get_id_cura(cura_string)
-       add_to_diagnosi_cura(patient_key, scan_date, id_cura)
-   if (row[10] == 1):  # CALCIO_SUPPLEMENTAZIONE_CHECKBOX
-       cura_string = row[11]  #CALCIO_SUPPLEMENTAZIONE_LISTA
-       id_cura = 11#get_id_cura(cura_string)
-       add_to_diagnosi_cura(patient_key, scan_date, id_cura)
-mydb.commit()
-'''
+    #per ogni paziente controllo che cure sono state prescitte ad esso
+    #nota: ci sono pazienti a cui è stata presctitta nessuna cura, per questi non si aggiunge nulla
+    for row in results:
+       patient_key = row[0]
+       scan_date = str(row[1])
 
+       if(row[2]==1):#TERAPIE_ORMONALI_CHECKBOX
+           cura_string = row[3]#TERAPIE_ORMONALI_LISTA
+           id_cura = 3#get_id_cura(cura_string)
+           add_to_diagnosi_cura(patient_key,scan_date,id_cura)
+       if(row[4] == 1):#TERAPIE_OSTEOPROTETTIVE_CHECKBOX
+           cura_string = row[5]#TERAPIE_OSTEOPROTETTIVE_LISTA
+           id_cura = 5#get_id_cura(cura_string)
+           add_to_diagnosi_cura(patient_key, scan_date, id_cura)
+       if (row[6] == 1):  # VITAMINA_D_TERAPIA_CHECKBOX
+           cura_string = row[7]  # VITAMINA_D_TERAPIA_LISTA
+           id_cura = 7#get_id_cura(cura_string)
+           add_to_diagnosi_cura(patient_key, scan_date, id_cura)
+       if (row[8] == 1):  #VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX
+           cura_string = row[9]  # VITAMINA_D_SUPPLEMENTAZIONE_LISTA
+           id_cura = 9#get_id_cura(cura_string)
+           add_to_diagnosi_cura(patient_key, scan_date, id_cura)
+       if (row[10] == 1):  # CALCIO_SUPPLEMENTAZIONE_CHECKBOX
+           cura_string = row[11]  #CALCIO_SUPPLEMENTAZIONE_LISTA
+           id_cura = 11#get_id_cura(cura_string)
+           add_to_diagnosi_cura(patient_key, scan_date, id_cura)
+    mydb.commit()
 def test():
     '''
     PATIENT_KEY  SCAN_DATE  id_cura
@@ -195,7 +208,7 @@ def test():
         }
         return terapie[id];
 
-    #creo la tabella test:
+    #creo la tabella diagnosi_test:
     statement= "CREATE TABLE IF NOT EXISTS diagnosi_test(" \
                "PATIENT_KEY VARCHAR(24) NOT NULL," \
                "SCAN_DATE DATE NOT NULL," \
@@ -217,7 +230,7 @@ def test():
     statement = "SELECT PATIENT_KEY, SCAN_DATE FROM diagnosi_cura"; cur.execute(statement);
     results = cur.fetchall()
     results = list(set(results))#qui ho le diagnosi univoche
-    #prima di inserire cancello la tabella, altrimenti se lancio più volte la funzione da errore di PK duplicata
+    #prima di inserire cancello tutte le righe dalla tabella diagnosi_test, altrimenti se lancio più volte la funzione da errore di PK duplicata
     statement = "DELETE FROM diagnosi_test"; cur.execute(statement); mydb.commit()
     #per ogni diagnosi
     for diagnosi in results:
@@ -237,12 +250,72 @@ def test():
             #id_cura è una tupla di un valore
             #mi serve sapere che terapia è stata scelta per la cura 'id_cura' per selezionare il checkbox corrispondente
             statement = "SELECT id_terapia FROM cure WHERE id = {}".format(id_cura[0]); cur.execute(statement);
-            results3 = cur.fetchone() #ho agito sull'id (PK) perciò ce solo un risultato
+            results3 = cur.fetchone() #ho agito sull'id (PK) perciò ce solo un risultato. Ritorna una tupla di un elemtento
+            id_terapia = results3[0]
+            #dall'id arrivo a TERAPIE_ORMONALI/TERAPIE_OSTEOPROTETTIVE/VITAMINA_D_TERAPIA/...
+            #questo perchè mi serve sapere come si chiamano la colonne nella tabella vecchia diagnosi per modificarle
+            terapia_stringa = get_string_terapia(id_terapia)
+            #se terapia_stringa = TERAPIE_ORMONALI, allora diventa TERAPIE_ORMONALI_CHECKBOX
+            TERAPIA_CHECKBOX = terapia_stringa+"_CHECKBOX"
+            #se terapia_stringa = TERAPIE_ORMONALI, allora diventa TERAPIE_ORMONALI_LISTA
+            TERAPIA_LISTA = terapia_stringa+"_LISTA"
+            #se un checkbox è selezionato, allora bisogna anche modificare la lista associata (calfiferolo 25000 UI 1/die)
+            cura_stringa = get_string_cura(id_cura)
+            #viene modificata solo una riga perchè agisco su PK di diagnosi
+            #UPDATE diagnosi_test SET TERAPIE_ORMONALI_CHECKBOX = 1, TERAPIE_ORMONALI_LISTA = 'colecalciferolo 30 gocce 3 volte a sett' WHERE PATIENT_KEY = '1JT91613RZ0848306' AND SCAN_DATE = '2018-11-27'
+            statement = "UPDATE diagnosi_test SET {} = 1, {} = '{}' WHERE PATIENT_KEY = '{}' AND SCAN_DATE = '{}'".\
+                format(TERAPIA_CHECKBOX,TERAPIA_LISTA,cura_stringa,patient_key,scan_date); cur.execute(statement); mydb.commit()
+            #print(statement)
 
+    ####################################################################################################################
+
+    #Da qui in poi controllo che diagnosi_test sia uguale a diagnosi; confrontando riga-per-riga
+    #Il controllo non viene fatto contro diagnosi per sè, ma su un suo sottoinsieme (copia_diagnosi)
+    #recupero tutte le righe di diagnosi (copia_diagnosi)
+    statement = "SELECT PATIENT_KEY, SCAN_DATE, " \
+             "TERAPIE_ORMONALI_CHECKBOX, TERAPIE_ORMONALI_LISTA, " \
+             "TERAPIE_OSTEOPROTETTIVE_CHECKBOX, TERAPIE_OSTEOPROTETTIVE_LISTA, " \
+             "VITAMINA_D_TERAPIA_CHECKBOX, VITAMINA_D_TERAPIA_LISTA, " \
+             "VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX, VITAMINA_D_SUPPLEMENTAZIONE_LISTA, " \
+             "CALCIO_SUPPLEMENTAZIONE_CHECKBOX, CALCIO_SUPPLEMENTAZIONE_LISTA " \
+             "FROM diagnosi"; cur.execute(statement)
+    righe_diagnosi = cur.fetchall()
+    #recupero tutte le righe da diagnosi_test
+    statement = "SELECT * FROM diagnosi_test"; cur.execute(statement)
+    righe_diagnosi_test = cur.fetchall()
+    #ci sono pazienti cui, che nella diagnosi, non è stata assegnata nessuna cura e
+    #dunque questi non sono stati aggiunti a diagnosi_cura
+    #quando si ricostruisce diagnosi da diagnosi_cura questi pazienti mancheranno
+    #allora si deve tenere conto di questo
+    #trovo tutti i pazienti con nessuna cura
+    statement = "SELECT PATIENT_KEY, SCAN_DATE, " \
+                "TERAPIE_ORMONALI_CHECKBOX, TERAPIE_ORMONALI_LISTA, " \
+                "TERAPIE_OSTEOPROTETTIVE_CHECKBOX, TERAPIE_OSTEOPROTETTIVE_LISTA, " \
+                "VITAMINA_D_TERAPIA_CHECKBOX, VITAMINA_D_TERAPIA_LISTA, " \
+                "VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX, VITAMINA_D_SUPPLEMENTAZIONE_LISTA, " \
+                "CALCIO_SUPPLEMENTAZIONE_CHECKBOX, CALCIO_SUPPLEMENTAZIONE_LISTA " \
+                "FROM diagnosi " \
+                "where " \
+                "TERAPIE_ORMONALI_CHECKBOX = 0 and " \
+                "TERAPIE_OSTEOPROTETTIVE_CHECKBOX = 0 and " \
+                "VITAMINA_D_TERAPIA_CHECKBOX = 0 and " \
+                "VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX = 0 and " \
+                "CALCIO_SUPPLEMENTAZIONE_CHECKBOX = 0"
+    cur.execute(statement)
+    righe_pazienti_no_cura = cur.fetchall()
+    #completo righe_diagnosi_test: righe_diagnosi_test ha/dovrebbe avere le stesse righe di righe_diagnosi
+    righe_diagnosi_test.extend(righe_pazienti_no_cura)
+
+    len1 = len(righe_diagnosi)
+    len2 =len(righe_diagnosi_test)
+
+    #nota che la XXX_LIST di righe diagnosi hanno dei \n\r finali strani
+    if(len(righe_diagnosi)==len(righe_diagnosi_test)):
+      print(set(righe_diagnosi) == set(righe_diagnosi_test))
 def main():
+
+    #crea_diagnosi_cura()
     test()
-
-
 
 if __name__ == "__main__":
     main()
