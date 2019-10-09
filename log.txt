@@ -1,0 +1,22 @@
+1)in FRATTURA_FEMORE c'è un volore: 'piu di 1'. lo cambiato in 1 (sul file locale osteo.csv)
+
+
+uso stratified fold perchè sembrano sproporzionati
+uso StratifiedShuffleSplit invece di stratifiedKFold perchè non funziona con multiclasse
+TERAPIE_ORMONALI_CHECKBOX	            37
+TERAPIE_OSTEOPROTETTIVE_CHECKBOX	    349
+VITAMINA_D_TERAPIA_CHECKBOX	            45
+VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX	853
+CALCIO_SUPPLEMENTAZIONE_CHECKBOX	    413
+
+
+'1 AGE','1 TERAPIA_OSTEOPROTETTIVA_ORMONALE','1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA', '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA','1 BMI','1 FRATTURE',
+prevedendo solo le terapie ottengo avg: 1.0, 0.7 con 50 splits
+
+
+2) la colonna 1 FRATTURA_FEMORE ha null alloro sistemo
+
+3) convertire CAUSE_OSTEOPOROSI_SECONDARIA in valori nomerici
+   ma dopo quando inseriscono funziona lo stesso??
+
+4) sostituisco gli 0 in DEFRA_INTERO con la media pechè penso che dovebbe essere null. dico questo perchè ce chi ha defra 0, hanno anche osteoporosi grave
