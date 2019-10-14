@@ -20,3 +20,48 @@ prevedendo solo le terapie ottengo avg: 1.0, 0.7 con 50 splits
    ma dopo quando inseriscono funziona lo stesso??
 
 4) sostituisco gli 0 in DEFRA_INTERO con la media pechè penso che dovebbe essere null. dico questo perchè ce chi ha defra 0, hanno anche osteoporosi grave
+
+5) frattura vertebre dove il dato non era disponibile ho messo zero.. spero che vada bene e piu di 1 con 2
+
+6) 1 STATO_MENOPAUSALE: sostituisco i 40 valori nulli (20 maschi) con "na"... attenzione è null per le femmine quando stanno ancora mestruando??
+    corretto dopo sostituendo con onehotencoding 16)
+
+7)1 ULTIMA_MESTRUAZIONE .. è stata sostituita da quanti anni ha mestruato in totale (ULTIMA_MESTRUAZIONE - BIRTHDATE).. per i maschi e per quelle che stanno ancora
+    mestruando ho fatto la media
+
+8) bisogna controllare che io non abbia sostituito con la media qualcuno che è sano...
+   se ce un valore mancante si dovrebbe far riferimento ad altre colonne..
+   lo farai per DEFRA_INTERO assegnerai un valore piu alto della media a chi sembra piu grave e piu basso a chi lo è meno
+
+9) sostituisco con 0 a chi ha null su VITAMINA_D
+
+10) separo gli anni da TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA e creo una nuova colonna XXX_TERAPIA_OST_ANNI_XXX
+il problema che ci sono righe anche con due terapie e come faccio io prendo la data dell'ultima.. mentre quando one-hot-encode
+estraggo il principio della prima.....
+
+11)riga 857 e colonna TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA gli anni sono 2008.. sostituisco con 10 nel file osteo.csv
+il medico dice in seguito: METOCAL D3. ASSUME ALENDRONATO DAL 2008, CON INTERRUZIONE DI UN ANNO NEL 2013 E 6 MESI NEL 2017.
+
+12) TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg,3 mesi anni
+a riga 72 in TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA  sostituisco con 1 anno
+
+13) non posso assegnare dei numeri ad ogni categoria in STATO_MENOPAUSALE.. bisogna cambire in one-hot-encoder
+
+14)le colonne TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA, TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA tiro fuori i principi e li one-hot-encodo
+però ci sono delle rigne con due terapie.. tengo solo la prima
+
+15) per ABUSO_FUMO ho fatto null: 0 sigarette, 1: <=10, 2: >10... ma i valori sono costantii??
+
+16) STATO_MENOPAUSALE onehotencoded
+
+17) TERAPIA_STATO onehotencoded
+
+18) CAUSE_OSTEOPOROSI_SECONDARIA onehotencoded
+
+19)1 SITUAZIONE_COLONNA.. one hot encoded
+forse meglio assegnare dei valori crescenti... ma poi se inserisce qualcosa di nuovo?
+
+20) siamo sicuri che NORME_PREVENZIONE non venga aggiunta dopo
+
+21) se facciamo ipotesi che le terapie sono mutalmente ex. allora avremo da prevedere 16 classi al posto di 32
+non puoi fare questa assunzione riga 1391
