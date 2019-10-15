@@ -65,3 +65,15 @@ forse meglio assegnare dei valori crescenti... ma poi se inserisce qualcosa di n
 
 21) se facciamo ipotesi che le terapie sono mutalmente ex. allora avremo da prevedere 16 classi al posto di 32
 non puoi fare questa assunzione riga 1391
+
+22) per TERAPIA_ALTRO e ALTRE PATOLOGIE vettoriziamo
+prima fase: elimino stopword
+seconda fase:stemming
+terza fase: vettorizazione con bigrammi
+
+23)1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA vectorized
+
+24) 1 USO_CORTISONE vectorized
+
+> 2.5 mg e < 5 mg
+>= 5 mg (Prednisone)

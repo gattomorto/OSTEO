@@ -12,13 +12,21 @@ from nltk.stem.snowball import SnowballStemmer
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize, word_tokenize
 import nltk
+from nltk.tokenize import RegexpTokenizer
 #nltk.download('all')
 '''
-0.562  0.578-0.627
-
+0.562  0.578-0.627  0.641
+611,628,629,625,639,641,628,629,643,639,622,639,619
+645,628,627,613,636,639,627,623
         list(nomi_colonne_onehotencoded_SITUAZIONE_COLONNA)  qualcosiiina
         list(nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_SN) qualcosiina
         list(nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_DX) qualcosiina
+        
+        list(nomi_nuove_colonne_vectorized_TERAPIA_ALTRO) buon aumento
+        nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE     buon aumento
+        
+        nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA non aumenteato
+        nomi_nuove_colonne_vectorized_USO_CORTISONE non aumentato
 '''
 def main():
     tabella_completa = pd.read_csv("osteo.csv")
@@ -122,14 +130,123 @@ def preprocessamento(tabella_completa):
         # ritorno i nomi perchè poi bisogna selezionarli per il modello
         return frame, nomi_colonne_nuove
 
+    def histo(frame):
+        tokenizer = RegexpTokenizer(r'[a-zA-Z]+')
+        tokens = []
+        for row_idx in range(0, tabella_completa.shape[0]):
+            sentence = tabella_completa.loc[row_idx, '1 TERAPIA_ALTRO']
+            tokens+=tokenizer.tokenize(sentence)
+            #tokens+=sentence.split()
+
+        tokens.sort()
+
+        wordfreq = []
+        for w in tokens:
+            wordfreq.append(tokens.count(w))
+
+        sss = zip(wordfreq,tokens)
+        sss = list(set(sss))
+        sss.sort(reverse=True)
+
+        for t in sss:
+            print(t)
+
+    def remove_stopwords_and_stem(sentence, regex):
+        '''
+        Data una stringa contenete una frase ritorna una stringa con parole in forma radicale e senza rumore
+        es:
+        sentence: ha assunto alendronato per 2 anni
+        regex: come scegliere i token. di default scelgo parole e non numeri tranne 100.000/10.000/... che sono comuni
+        returns: assunt alendronato
+        '''
+
+        tokenizer = RegexpTokenizer(regex) # ogni parola e 100.000 UI (100000 UI/MESE esiste e non passa)
+        tokens = tokenizer.tokenize(sentence)
+        tokens = [x.lower() for x in tokens]
+
+        # libreria nltk
+        stop_words = stopwords.words('italian')
+        # 'non' è molto importante
+        stop_words.remove('non')
+        stop_words += ['.', ',', 'm','t' ,'gg','die','fa','mg','cp', 'im', 'fino', 'uno', 'due', 'tre', 'quattro', 'cinque','sei', 'ogni',
+                       'alcuni', 'giorni', 'giorno', 'mesi', 'mese', 'settimana', 'settimane', 'circa', 'aa', 'gtt',
+                       'poi', 'gennaio', 'febbraio', 'marzo', 'maggio', 'aprile', 'giugno', 'luglio', 'agosto',
+                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett']
+
+        # trovo tutti i token da eliminare dalla frase
+        to_be_removed = []
+        for token in tokens:
+            if token in stop_words:
+                to_be_removed.append(token)
+
+        # rimuovo i token dalla frase
+        for elem in to_be_removed:
+            if elem in tokens:
+                tokens.remove(elem)
+
+        #print(tokens)
+        # la parte di stemming
+        stemmer = SnowballStemmer("italian")
+        tokens = [stemmer.stem(tok) for tok in tokens]
+
+        # converto da lista di token in striga
+        output = ' '.join(tokens)
+        return output
+
+    def vectorize(column_name, frame, prefix, regex=r'(?:[a-zA-Z]+)|(?:[0-9]+[.,][0-9]+)', n_gram_range=(2, 2)):
+        '''
+        dato il nome di una colonna contenente testo, per ogni riga crea una rappresentazione
+        vettoriale senza stopwords e stemmed (vedi remove_stopwords_and_stem())
+        dopo aver visto tutte le righe avremo un vettore per ogni riga, cioè una matrice
+        questa verrà integrato al dataframe in input.
+
+        :param column_name: nome colonna da vettorizzare
+        :param frame: dataframe
+        :param prefix: per differenziare i nomi delle colonne in output
+        :param regex: come dividere i token
+        :param n_gram_range: (2,2) se voglio solo bigrammi, (1,2) se voglio bigrammi e monogrammi...
+        :return: la tabella con le nuove colonne e i nomi delle nuove colonne
+        '''
+        column_list = frame[column_name].tolist()
+        for i in range(0, len(column_list)):
+            column_list[i] = remove_stopwords_and_stem(column_list[i], regex)
+        vectorizer = TfidfVectorizer(ngram_range= n_gram_range, norm=None)
+        # in vectorized_matrix ogni riga è un vettore corrispondente ad una frase
+        vectorized_matrix = vectorizer.fit_transform(column_list).toarray()
+        # servono per filtrare tabella_completa. il suffisso serve perchè cosi se viene chiamata la funzione piu volte,
+        # non si confonde i nomi delle colonne
+        nomi_nuove_colonne_vectorized = [prefix + str(i) for i in range(0, vectorized_matrix.shape[1])]
+        # converto in DataFrame perchè devo accostarlo alla tabella_completa
+        vectorized_frame = pd.DataFrame(vectorized_matrix, columns=nomi_nuove_colonne_vectorized)
+        frame = pd.concat([frame, vectorized_frame], axis=1)
+        return frame, nomi_nuove_colonne_vectorized
+
+
+    # vettorizato USO_CORTISONE
+    tabella_completa['1 USO_CORTISONE'].fillna('na', inplace=True)
+    # con quel regex: > 2.5 mg e < 5 mg si trasforma in ['>', '2.5', '<', '5']
+    tabella_completa, nomi_nuove_colonne_vectorized_USO_CORTISONE = vectorize('1 USO_CORTISONE', tabella_completa, 'uc', r'[\w.<>=]+', (1, 2))
+
+    # vettorizato VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
+    tabella_completa['1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA = vectorize('1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA', tabella_completa, 'vdtol')
+
+    # vettorizato TERAPIA_ALTRO
     tabella_completa['1 TERAPIA_ALTRO'].fillna('na', inplace=True)
-    terapia_altro_lista = tabella_completa['1 TERAPIA_ALTRO'].tolist()
-    print(sent_tokenize(terapia_altro_lista[4]))
+    tabella_completa, nomi_nuove_colonne_vectorized_TERAPIA_ALTRO = vectorize('1 TERAPIA_ALTRO', tabella_completa, 'ta')
 
+    # vettorizzato ALTRE_PATOLOGIE
+    tabella_completa['1 ALTRE_PATOLOGIE'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE = vectorize('1 ALTRE_PATOLOGIE', tabella_completa, 'ap')
 
-
-
-    exit(8)
+    '''doppio_col_list = []
+    for inx_row in range(0, tabella_completa.shape[0]):
+        sen1 = tabella_completa.loc[inx_row,'1 TERAPIA_ALTRO']
+        sen2 = tabella_completa.loc[inx_row,'1 ALTRE_PATOLOGIE']
+        sen_double = sen1+' '+sen2
+        doppio_col_list.append(sen_double)
+    tabella_completa['DOPPIO'] = doppio_col_list
+    tabella_completa, nomi_nuove_colonne_vectorized_DOPPIO = vectorize('DOPPIO', tabella_completa, 'd')'''
 
     # one hot encoding SITUAZIONE_FEMORE_DX
     tabella_completa['1 SITUAZIONE_FEMORE_DX'].fillna('na', inplace=True)
@@ -224,40 +341,6 @@ def preprocessamento(tabella_completa):
     tabella_completa['1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'].fillna("na,0 anni", inplace=True)
     tabella_completa, nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA = \
         one_hot_encode(tabella_completa, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA','(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-zA-Z]*))|(\s[+][a-zA-Z]*)){0,1})','tos')
-    '''
-    # region one-hot-encode TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA
-    # questa lista contiene solo il principio attivo (se una riga ha due terapie, prendo solo la prima)
-    principio_attivo_col = []
-    # metto 'na,0 anni' perchè la colonna TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA servirà dopo anche per tirare fuori le date
-    # per le righe vuote: na per il nome del principio e 0 anni per la durata (na2 perchè altrimenti si confonde con na di TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA)
-    tabella_completa['1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'].fillna("naa,0 anni", inplace=True)
-    for row_index in range(0, tabella_completa.shape[0]):
-        # abbiamo un problema alla riga 15 alendronato +vidD.. findall trova solo alendronato+ bisogna sistemare dopo
-        if row_index==14:
-            ggg= 'per il debugg'
-        # iesima riga del tipo 'Bazedoxifene cpr 20 mg, 1 cpr/di in continua,2 anni'
-        terapia_osteoprotettiva_spec = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
-        # estraggo il principio attivo dalla riga (Bazedoxifene)
-        princ_att = re.findall('(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-z]*))|(\s[+][a-z]*)){0,1})',
-                               terapia_osteoprotettiva_spec)
-        # per qualche strana ragione princ_att è una lista di tuple, allora prendo il primo elemento della prima tupla
-        principio_attivo_col.append(princ_att[0][0])
-    # trasformo principio_attivo_col in dataframe
-    principio_attivo_col = pd.Series(principio_attivo_col, name='principio_attivo_col')
-    principio_attivo_col = principio_attivo_col.to_frame()
-    one_hot_encoder = OneHotEncoder()
-    one_hot_encoder.fit(principio_attivo_col)
-    # questa è una matrice ndarray encoded
-    principio_attivo_encoded = one_hot_encoder.transform(principio_attivo_col).toarray()
-    # lista dei nomi delle nuove colonne (dovresti cambiare nome perchè potrebbero confondersi)
-    nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA = one_hot_encoder.get_feature_names()
-    # trasformo la matrice in DataFrame e do anche i nomi alle colonne corrispondenti al principio
-    principio_attivo_encoded_frame = pd.DataFrame(principio_attivo_encoded,
-                                                  columns=nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA)
-    # unisco la tabella appena creata con la tabella iniziale
-    tabella_completa = pd.concat([tabella_completa, principio_attivo_encoded_frame], axis=1)
-    # endregion
-    '''
 
     # region separazione anni TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA
     # separo le date da TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA
@@ -296,6 +379,7 @@ def preprocessamento(tabella_completa):
     tabella_completa['1 FRATTURA_VERTEBRE'].replace('piu di 1', 2, inplace=True)
 
     # sostituisco i null con 0
+    tabella_completa['1 TERAPIA_ALTRO_CHECKBOX'].fillna(0, inplace=True)
     tabella_completa['1 FRATTURA_FEMORE'].fillna(0, inplace=True)
     tabella_completa['1 VITAMINA_D'].fillna(0, inplace=True)
     tabella_completa['1 TBS_COLONNA_APPLICABILE'].fillna(0, inplace=True)
@@ -375,6 +459,7 @@ def preprocessamento(tabella_completa):
         + [
         'XXX_TERAPIA_OST_SPEC_ANNI_XXX',# fa niente e anche quella sopra
         '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
+        '1 TERAPIA_ALTRO_CHECKBOX',
         '1 TERAPIA_COMPLIANCE',
         '1 BMI',
         '1 FRATTURE',
@@ -418,8 +503,12 @@ def preprocessamento(tabella_completa):
         '1 INTOLLERANZE_CHECKBOX'] +\
         list(nomi_colonne_onehotencoded_SITUAZIONE_COLONNA) + \
         list(nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_SN) +\
-        list(nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_DX) \
-         +[
+        list(nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_DX) +\
+        list(nomi_nuove_colonne_vectorized_TERAPIA_ALTRO) + \
+        nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE + \
+        nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA + \
+        nomi_nuove_colonne_vectorized_USO_CORTISONE\
+        +[
         '1 OSTEOPOROSI_GRAVE',  # aumentato tanto
 
         '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX', #niente sembra
