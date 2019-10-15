@@ -15,7 +15,7 @@ import nltk
 from nltk.tokenize import RegexpTokenizer
 #nltk.download('all')
 '''
-0.562  0.578-0.627  0.641
+0.562  0.578-0.627  0.641   0.65    0.652
 611,628,629,625,639,641,628,629,643,639,622,639,619
 645,628,627,613,636,639,627,623
         list(nomi_colonne_onehotencoded_SITUAZIONE_COLONNA)  qualcosiiina
@@ -27,6 +27,11 @@ from nltk.tokenize import RegexpTokenizer
         
         nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA non aumenteato
         nomi_nuove_colonne_vectorized_USO_CORTISONE non aumentato
+        
+        nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI no
+        nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA no
+        nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA no
+        nomi_nuove_colonne_vectorized_ALLERGIE no
 '''
 def main():
     tabella_completa = pd.read_csv("osteo.csv")
@@ -37,7 +42,19 @@ def main():
     Y = tabella_ridotta.iloc[:, -num_classi:]
 
     kf = KFold(n_splits=4, shuffle=True)
-    tree = DecisionTreeClassifier()  # 6 non male
+    '''
+    #11-    0.655 
+    10-     0.664 
+    9-      0.665, 0.656, 0.664
+    8-      0.661, 0.67, 0.668
+    7-      0.7, 0.698, 0.667, 0.664, 0.676, 0.691
+    6-      0.655, 0.671, 0.673
+    5-      0.681, 0.672, 0.67
+    4-      0.659 
+    3-      0.617
+    '''
+    tree = DecisionTreeClassifier(max_depth=8)
+
     avg_ext_train_score = 0
     avg_ext_test_score = 0
     avg_int_train_score = 0
@@ -50,14 +67,15 @@ def main():
         tree.fit(trainX, trainY)
         avg_ext_test_score += tree.score(testX, testY)
         avg_ext_train_score += tree.score(trainX, trainY)
-        # avg_int_train_score += inernal_acc_score(trainX,trainY,tree)
-        # avg_int_test_score += inernal_acc_score(testX,testY,tree)
+        #avg_int_train_score += inernal_acc_score(trainX,trainY,tree)
+        #avg_int_test_score += inernal_acc_score(testX,testY,tree)
+        #print(null_accuracy_score(testX,testY,tree))
 
     print("avg ext: {}, {}".format(
         *[round(avg / kf.get_n_splits(), 3) for avg in [avg_ext_train_score, avg_ext_test_score]]))
-    # print("avg int: {}, {}".format(*[round(avg/kf.get_n_splits(), 3) for avg in [avg_int_train_score, avg_int_test_score]]))
+    #print("avg int: {}, {}".format(*[round(avg/kf.get_n_splits(), 3) for avg in [avg_int_train_score, avg_int_test_score]]))
 
-    # print("avg2_test_score: {}".format(round(avg_test2_score/num_somme,3)))
+
 
 
 def inernal_acc_score(X, true_Y, model):
@@ -171,7 +189,7 @@ def preprocessamento(tabella_completa):
         stop_words += ['.', ',', 'm','t' ,'gg','die','fa','mg','cp', 'im', 'fino', 'uno', 'due', 'tre', 'quattro', 'cinque','sei', 'ogni',
                        'alcuni', 'giorni', 'giorno', 'mesi', 'mese', 'settimana', 'settimane', 'circa', 'aa', 'gtt',
                        'poi', 'gennaio', 'febbraio', 'marzo', 'maggio', 'aprile', 'giugno', 'luglio', 'agosto',
-                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett']
+                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett','pu','u']
 
         # trovo tutti i token da eliminare dalla frase
         to_be_removed = []
@@ -187,7 +205,7 @@ def preprocessamento(tabella_completa):
         #print(tokens)
         # la parte di stemming
         stemmer = SnowballStemmer("italian")
-        tokens = [stemmer.stem(tok) for tok in tokens]
+        tokens = [stemmer.stem(tok) for tok in tokens] #tolto perchè forse è meglio
 
         # converto da lista di token in striga
         output = ' '.join(tokens)
@@ -221,11 +239,51 @@ def preprocessamento(tabella_completa):
         frame = pd.concat([frame, vectorized_frame], axis=1)
         return frame, nomi_nuove_colonne_vectorized
 
+    # vettorizato INDAGINI_APPROFONDIMENTO_LISTA
+    tabella_completa['1 INDAGINI_APPROFONDIMENTO_LISTA'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA =\
+        vectorize('1 INDAGINI_APPROFONDIMENTO_LISTA', tabella_completa, prefix='ial')
+
+    # vettorizato SOSPENSIONE_TERAPIA_FARMACO
+    tabella_completa['1 SOSPENSIONE_TERAPIA_FARMACO'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO\
+        = vectorize('1 SOSPENSIONE_TERAPIA_FARMACO', tabella_completa, prefix= 'stf', n_gram_range=(1,1))
+
+    # vettorizato ALTRO
+    tabella_completa['1 ALTRO'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_ALTRO = vectorize('1 ALTRO', tabella_completa, prefix= 'altr')
+
+    # vettorizato INTOLLERANZE
+    tabella_completa['1 INTOLLERANZE'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_INTOLLERANZE = \
+        vectorize('1 INTOLLERANZE', tabella_completa, prefix='i', n_gram_range=(1, 1))
+
+    # vettorizato ALLERGIE
+    tabella_completa['1 ALLERGIE'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_ALLERGIE = \
+        vectorize('1 ALLERGIE', tabella_completa, prefix='a', n_gram_range=(2, 2))
+
+    # vettorizato DISLIPIDEMIA_TERAPIA
+    tabella_completa['1 DISLIPIDEMIA_TERAPIA'].fillna('na', inplace=True)
+    # (1,1) perchè sono quasi tutte parole singole
+    tabella_completa, nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA = \
+        vectorize('1 DISLIPIDEMIA_TERAPIA', tabella_completa, prefix='dt', n_gram_range=(1, 1))
+
+    # vettorizato NEOPLASIA_MAMMARIA_TERAPIA
+    tabella_completa['1 NEOPLASIA_MAMMARIA_TERAPIA'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA = \
+        vectorize('1 NEOPLASIA_MAMMARIA_TERAPIA', tabella_completa, prefix='nmt', n_gram_range=(2, 2))
+
+    # vettorizato PATOLOGIE_UTERINE_DIAGNOSI
+    tabella_completa['1 PATOLOGIE_UTERINE_DIAGNOSI'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI = \
+        vectorize('1 PATOLOGIE_UTERINE_DIAGNOSI', tabella_completa, prefix= 'pud', n_gram_range=(1,2))
 
     # vettorizato USO_CORTISONE
     tabella_completa['1 USO_CORTISONE'].fillna('na', inplace=True)
     # con quel regex: > 2.5 mg e < 5 mg si trasforma in ['>', '2.5', '<', '5']
-    tabella_completa, nomi_nuove_colonne_vectorized_USO_CORTISONE = vectorize('1 USO_CORTISONE', tabella_completa, 'uc', r'[\w.<>=]+', (1, 2))
+    tabella_completa, nomi_nuove_colonne_vectorized_USO_CORTISONE = \
+        vectorize('1 USO_CORTISONE', tabella_completa, prefix='uc', regex = r'[\w.<>=]+', n_gram_range = (1, 2))
 
     # vettorizato VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
     tabella_completa['1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'].fillna('na', inplace=True)
@@ -500,14 +558,23 @@ def preprocessamento(tabella_completa):
         '1 MICI',
         '1 VITAMINA_D_CHECKBOX',  # diminuito forse
         '1 VITAMINA_D',  # aumentato tanto
+        '1 ALLERGIE_CHECKBOX',
         '1 INTOLLERANZE_CHECKBOX'] +\
-        list(nomi_colonne_onehotencoded_SITUAZIONE_COLONNA) + \
-        list(nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_SN) +\
-        list(nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_DX) +\
-        list(nomi_nuove_colonne_vectorized_TERAPIA_ALTRO) + \
+        nomi_colonne_onehotencoded_SITUAZIONE_COLONNA + \
+        nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_SN +\
+        nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_DX +\
+        nomi_nuove_colonne_vectorized_TERAPIA_ALTRO + \
         nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE + \
         nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA + \
-        nomi_nuove_colonne_vectorized_USO_CORTISONE\
+        nomi_nuove_colonne_vectorized_USO_CORTISONE + \
+        nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI + \
+        nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA+ \
+        nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA+ \
+        nomi_nuove_colonne_vectorized_ALLERGIE+ \
+        nomi_nuove_colonne_vectorized_INTOLLERANZE+ \
+        nomi_nuove_colonne_vectorized_ALTRO+ \
+        nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO+ \
+        nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA\
         +[
         '1 OSTEOPOROSI_GRAVE',  # aumentato tanto
 
@@ -529,6 +596,7 @@ def preprocessamento(tabella_completa):
         '1 NORME_PREVENZIONE', #aumento discreto
         '1 NORME_COMPORTAMENTALI',  #diminuisce??
         '1 ATTIVITA_FISICA',
+        '1 SOSPENSIONE_TERAPIA_CHECKBOX',
         '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',#fa nulla
         '1 SOSPENSIONE_FUMO',
         '1 CONTROLLO_DENSITOMETRICO_CHECKBOX',#fa nulla

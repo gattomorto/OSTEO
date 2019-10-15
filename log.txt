@@ -75,5 +75,14 @@ terza fase: vettorizazione con bigrammi
 
 24) 1 USO_CORTISONE vectorized
 
-> 2.5 mg e < 5 mg
->= 5 mg (Prednisone)
+25)1 PATOLOGIE_UTERINE_DIAGNOSI vectorized
+
+26) devi assicurarti che se qualcuno inserisce delle parole corte la vettorizazione non di problemi
+nomi_nuove_colonne_vectorized_USO_CORTISONE con ngram_range = (2,2) dava errore
+
+27) vercorized NEOPLASIA_MAMMARIA_TERAPIA
+
+28) ho il dubbio che se ce scritto NULL su excel che in realtà quando leggo risulti la stringa NULL
+se su excel ce vuoto, allora è veramente null
+
+
