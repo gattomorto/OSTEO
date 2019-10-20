@@ -13,6 +13,10 @@ from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize, word_tokenize
 import nltk
 from nltk.tokenize import RegexpTokenizer
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+
 #nltk.download('all')
 '''
 0.562  0.578-0.627  0.641   0.65    0.652
@@ -46,34 +50,48 @@ def main():
     #11-    0.655 
     10-     0.664 
     9-      0.665, 0.656, 0.664
-    8-      0.661, 0.67, 0.668
-    7-      0.7, 0.698, 0.667, 0.664, 0.676, 0.691
+    8-      0.661, 0.67, 0.668, 0.66, 0.658
+    7-      0.698, 0.667, 0.676, 0.691, 0.684, 0.678, 0.684, 0.666, 0.686, 0.659, 0.671, 0.684, 0.68
     6-      0.655, 0.671, 0.673
-    5-      0.681, 0.672, 0.67
+    5-      0.681, 0.672, 0.67, 0.651
     4-      0.659 
     3-      0.617
     '''
-    tree = DecisionTreeClassifier(max_depth=8)
+    tree = DecisionTreeClassifier(max_depth=6)
 
     avg_ext_train_score = 0
     avg_ext_test_score = 0
     avg_int_train_score = 0
     avg_int_test_score = 0
+    trainX = []; trainY = []; testX=[]; testY=[];
     for train_indexes, test_indexes in kf.split(X):
-        trainX = X.iloc[train_indexes, :]
-        trainY = Y.iloc[train_indexes, :]
-        testX = X.iloc[test_indexes, :]
-        testY = Y.iloc[test_indexes, :]
+        trainX = X.iloc[train_indexes,  :]
+        trainY = Y.iloc[train_indexes,  :]
+        testX = X.iloc [test_indexes,   :]
+        testY = Y.iloc [test_indexes,   :]
         tree.fit(trainX, trainY)
+
         avg_ext_test_score += tree.score(testX, testY)
         avg_ext_train_score += tree.score(trainX, trainY)
         #avg_int_train_score += inernal_acc_score(trainX,trainY,tree)
         #avg_int_test_score += inernal_acc_score(testX,testY,tree)
         #print(null_accuracy_score(testX,testY,tree))
 
+    print_feature_importances(tree, trainX)
+
     print("avg ext: {}, {}".format(
         *[round(avg / kf.get_n_splits(), 3) for avg in [avg_ext_train_score, avg_ext_test_score]]))
     #print("avg int: {}, {}".format(*[round(avg/kf.get_n_splits(), 3) for avg in [avg_int_train_score, avg_int_test_score]]))
+
+
+def print_feature_importances(model, X):
+    '''
+    Dato il modello 'model' allenato su 'X', la funzione stampa in maniera decrescente le feautures più significative
+    '''
+    feature_importances = list(zip(X.columns, model.feature_importances_))
+    feature_importances.sort(key = lambda tup: tup[1], reverse = True)
+    for t in feature_importances:
+        print(t)
 
 
 
@@ -148,27 +166,6 @@ def preprocessamento(tabella_completa):
         # ritorno i nomi perchè poi bisogna selezionarli per il modello
         return frame, nomi_colonne_nuove
 
-    def histo(frame):
-        tokenizer = RegexpTokenizer(r'[a-zA-Z]+')
-        tokens = []
-        for row_idx in range(0, tabella_completa.shape[0]):
-            sentence = tabella_completa.loc[row_idx, '1 TERAPIA_ALTRO']
-            tokens+=tokenizer.tokenize(sentence)
-            #tokens+=sentence.split()
-
-        tokens.sort()
-
-        wordfreq = []
-        for w in tokens:
-            wordfreq.append(tokens.count(w))
-
-        sss = zip(wordfreq,tokens)
-        sss = list(set(sss))
-        sss.sort(reverse=True)
-
-        for t in sss:
-            print(t)
-
     def remove_stopwords_and_stem(sentence, regex):
         '''
         Data una stringa contenete una frase ritorna una stringa con parole in forma radicale e senza rumore
@@ -239,6 +236,70 @@ def preprocessamento(tabella_completa):
         frame = pd.concat([frame, vectorized_frame], axis=1)
         return frame, nomi_nuove_colonne_vectorized
 
+    def polinomial_regression(col_name_x, col_name_y, frame, degree_, plt_show=False):
+        '''
+        esegue una regressione polinomiale univariata
+        :param col_name_x: nome della colonna dei valori di x
+        :param col_name_y: nome della colonna dei valori da modellare
+        :param frame: il dataframe da dove prendere le colonne
+        :param degree_: il grado del polinomio
+        :param plt_show: se true mostra il grafico
+        :return: il modello della regressione e polynomial_features per trasformare in features quadratiche
+        '''
+        # xy_frame contiene solo la colonna X e la colonna Y
+        xy_frame = frame[[col_name_x, col_name_y]]
+        xy_frame.dropna(inplace=True)
+        # tengo solo le righe che non hanno zeri
+        xy_frame = xy_frame[xy_frame[col_name_x] != 0]
+        xy_frame = xy_frame[xy_frame[col_name_y] != 0]
+
+        # scatter plot di X e Y (viene mostrato solo se plt_show = true)
+        plt.scatter(xy_frame[col_name_x].values, xy_frame[col_name_y].values, s=0.2, c='black')
+
+        polynomial_features = PolynomialFeatures(degree=degree_)
+        # x ritrasformato per rigressione polinomiale
+        x_poly = polynomial_features.fit_transform(xy_frame[col_name_x].values.reshape(-1, 1))
+        model = LinearRegression()
+        model.fit(x_poly, xy_frame[col_name_y].values)
+        # y_poly_pred = model.predict(x_poly)
+
+        # da qui in poi è solo per il grafico e serve solo se plt_show = true
+        # min,max per il dominio del grafico
+        min_x = min(xy_frame[col_name_x].values)
+        max_x = max(xy_frame[col_name_x].values)
+        x_plot = np.arange(min_x, max_x, 0.1)
+        x_plot_poly = polynomial_features.fit_transform(x_plot.reshape(-1, 1))
+        y_plot = model.predict(x_plot_poly)
+        plt.plot(x_plot, y_plot, c='red')
+
+        if plt_show:
+            plt.show()
+
+        return model, polynomial_features
+
+
+    #region regressione di FRAX_FRATTURE_MAGGIORI_INTERO
+    # non serve a molto dato che ci sono solo 14 valori mancanti
+    model, pol_features = polinomial_regression(col_name_x = '1 DEFRA_INTERO', col_name_y = '1 FRAX_FRATTURE_MAGGIORI_INTERO', frame = tabella_completa,plt_show=False, degree_= 3)
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, ['1 FRAX_FRATTURE_MAGGIORI_INTERO', '1 DEFRA_INTERO']]
+        if np.isnan(row['1 FRAX_FRATTURE_MAGGIORI_INTERO']) and row['1 DEFRA_INTERO']!=0:
+            predicted = model.predict( pol_features.fit_transform(row['1 DEFRA_INTERO'].reshape(1,-1)))
+            tabella_completa.loc[row_index,'1 FRAX_FRATTURE_MAGGIORI_INTERO']=predicted
+    #endregion
+
+    #region regressione DEFRA_INTERO
+    # uso la colonna FRAX_FRATTURE_MAGGIORI_INTERO (x) per prevedere DEFRA_INTERO(y)
+    model, pol_features = polinomial_regression(col_name_x = '1 FRAX_FRATTURE_MAGGIORI_INTERO', col_name_y = '1 DEFRA_INTERO', frame = tabella_completa, plt_show=False, degree_=1)
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, ['1 FRAX_FRATTURE_MAGGIORI_INTERO', '1 DEFRA_INTERO']]
+        # se DEFRA_INTERO è 0 allora uso il modello lineare.. ma solo se FRAX_FRATTURE_MAGGIORI_INTERO non è null
+        if  row['1 DEFRA_INTERO']==0 and  not np.isnan(row['1 FRAX_FRATTURE_MAGGIORI_INTERO']):
+            # pol_features serve qui per trasformare l'input x in un formato adatto per il modello
+            predicted = model.predict(pol_features.fit_transform(row['1 FRAX_FRATTURE_MAGGIORI_INTERO'].reshape(1,-1)))
+            tabella_completa.loc[row_index,'1 DEFRA_INTERO']=predicted
+    #endregion
+
     # vettorizato INDAGINI_APPROFONDIMENTO_LISTA
     tabella_completa['1 INDAGINI_APPROFONDIMENTO_LISTA'].fillna('na', inplace=True)
     tabella_completa, nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA =\
@@ -297,15 +358,6 @@ def preprocessamento(tabella_completa):
     tabella_completa['1 ALTRE_PATOLOGIE'].fillna('na', inplace=True)
     tabella_completa, nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE = vectorize('1 ALTRE_PATOLOGIE', tabella_completa, 'ap')
 
-    '''doppio_col_list = []
-    for inx_row in range(0, tabella_completa.shape[0]):
-        sen1 = tabella_completa.loc[inx_row,'1 TERAPIA_ALTRO']
-        sen2 = tabella_completa.loc[inx_row,'1 ALTRE_PATOLOGIE']
-        sen_double = sen1+' '+sen2
-        doppio_col_list.append(sen_double)
-    tabella_completa['DOPPIO'] = doppio_col_list
-    tabella_completa, nomi_nuove_colonne_vectorized_DOPPIO = vectorize('DOPPIO', tabella_completa, 'd')'''
-
     # one hot encoding SITUAZIONE_FEMORE_DX
     tabella_completa['1 SITUAZIONE_FEMORE_DX'].fillna('na', inplace=True)
     tabella_completa, nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_DX = one_hot_encode(tabella_completa, '1 SITUAZIONE_FEMORE_DX', '^.*', 'sfd')
@@ -348,35 +400,7 @@ def preprocessamento(tabella_completa):
     tabella_completa['1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'].fillna("na,0 anni", inplace=True)
     tabella_completa, nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA = \
         one_hot_encode(tabella_completa, "1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA","(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-zA-Z]*))|(\s[+][a-zA-Z]*)){0,1})",'too')
-    '''# region one-hot-encode TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA
-    # da TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA estraggi solamente il principio attivo e one-hot-encode
-    # questa lista contiene solo il principio attivo (se una riga ha due terapie, prendo solo la prima)
-    principio_attivo_col = []
-    # metto 'na,0 anni' perchè la colonna TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA servirà dopo per tirare fuori le date
-    # per le righe vuote: na per il nome del principio e 0 anni per la durata
-    tabella_completa['1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'].fillna("na,0 anni", inplace=True)
-    for row_index in range(0, tabella_completa.shape[0]):
-        # iesima riga del tipo 'TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 m'
-        terapia_osteoprotettiva_orm = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
-        # estraggo il principio attivo dalla riga (TSEC)
-        princ_att = re.findall('(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-z]*))|(\s[+][a-z]*)){0,1})', terapia_osteoprotettiva_orm)
-        # per qualche strana ragione princ_att è una lista di tuple, allora prendo il primo elemento della prima tupla
-        principio_attivo_col.append(princ_att[0][0])
-    # trasformo principio_attivo_col in dataframe
-    principio_attivo_col = pd.Series(principio_attivo_col)
-    principio_attivo_col = principio_attivo_col.to_frame()
-    one_hot_encoder = OneHotEncoder()
-    one_hot_encoder.fit(principio_attivo_col)
-    # questa è una matrice ndarray encoded
-    principio_attivo_encoded = one_hot_encoder.transform(principio_attivo_col).toarray()
-    # lista dei nomi delle nuove colonne (dovresti cambiare nome perchè potrebbero confondersi)
-    nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA = one_hot_encoder.get_feature_names()
-    # trasformo la matrice in DataFrame e do anche i nomi alle colonne corrispondenti al principio
-    principio_attivo_encoded_frame = pd.DataFrame(principio_attivo_encoded, columns=nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA)
-    # unisco la tabella appena creata con la tabella iniziale
-    tabella_completa = pd.concat([tabella_completa, principio_attivo_encoded_frame], axis=1)
-    # endregion
-    '''
+
     # region separazione anni TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA
     # qui rifaccio la stessa identica cosa che ho fatto per TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA(separo le date)
     # solo che adesso lo faccio per TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA
@@ -448,10 +472,14 @@ def preprocessamento(tabella_completa):
     tabella_completa['1 SEX'].replace('M', 1, inplace=True)
 
     # sostituisco i null con la media della colonna
+    # alcuni null di FRAX_FRATTURE_MAGGIORI_INTERO sono stati sostituiti con reg. polinomiale usando DEFRA_INTERO come supporto
+    # alcuni null avevo 0 nella colonna DEFRA_INTERO e quindi non potevo applicare reg. polinomiale. dunue sostituisco con la media
     tabella_completa['1 FRAX_FRATTURE_MAGGIORI_INTERO'].fillna(
         tabella_completa['1 FRAX_FRATTURE_MAGGIORI_INTERO'].mean(), inplace=True)
     tabella_completa['1 FRAX_COLLO_FEMORE_INTERO'].fillna(tabella_completa['1 FRAX_COLLO_FEMORE_INTERO'].mean(),
                                                           inplace=True)
+    # acuni valori di DEFRA_INTERO non sono riuscito a sostituirli per causa della colonna di supporto FRAX_FRATTURE_MAGGIORI_INTERO null
+    # allora applico la media
     tabella_completa['1 DEFRA_INTERO'].fillna(tabella_completa['1 DEFRA_INTERO'].mean(), inplace=True)
     tabella_completa['1 L1_AREA'].fillna(tabella_completa['1 L1_AREA'].mean(), inplace=True)
     tabella_completa['1 L2_AREA'].fillna(tabella_completa['1 L2_AREA'].mean(), inplace=True)
@@ -498,23 +526,11 @@ def preprocessamento(tabella_completa):
     # seleziono le colonne da usare per la predizione
     l = [
         '1 AGE',
-        '1 SEX'
-        ] +\
-        list(nomi_colonne_onehotencoded_STATO_MENOPAUSALE) \
-        + [
-        '1 ULTIMA_MESTRUAZIONE' #fa niente e anche quella sopra
-        ]+\
-        list(nomi_colonne_onehotencoded_TERAPIA_STATO) \
-        + [
-        '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE' # quella sopra non fa un cazzo
-        ] + \
-        list(nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA) \
-        + [
+        '1 SEX',
+        '1 ULTIMA_MESTRUAZIONE', #fa niente e anche quella sopra
+        '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE', # quella sopra non fa un cazzo
         'XXX_TERAPIA_OST_ORM_ANNI_XXX',#fa niente e anche quella sopra
-        '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA'
-        ] + \
-        list(nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA) \
-        + [
+        '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
         'XXX_TERAPIA_OST_SPEC_ANNI_XXX',# fa niente e anche quella sopra
         '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
         '1 TERAPIA_ALTRO_CHECKBOX',
@@ -534,10 +550,7 @@ def preprocessamento(tabella_completa):
         '1 MALATTIE_ATTUALI_LUPUS',
         '1 MALATTIE_ATTUALI_SCLERODERMIA',
         '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',
-        '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX'
-        ] +\
-        list(nomi_colonne_onehotencoded_CAUSE_OSTEOPOROSI_SECONDARIA) \
-        +[
+        '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
         '1 PATOLOGIE_UTERINE_CHECKBOX',# quello sopra non fa niente
         '1 NEOPLASIA_CHECKBOX',
         '1 SINTOMI_VASOMOTORI',
@@ -559,7 +572,12 @@ def preprocessamento(tabella_completa):
         '1 VITAMINA_D_CHECKBOX',  # diminuito forse
         '1 VITAMINA_D',  # aumentato tanto
         '1 ALLERGIE_CHECKBOX',
-        '1 INTOLLERANZE_CHECKBOX'] +\
+        '1 INTOLLERANZE_CHECKBOX'] + \
+        nomi_colonne_onehotencoded_STATO_MENOPAUSALE   + \
+        nomi_colonne_onehotencoded_CAUSE_OSTEOPOROSI_SECONDARIA+\
+        nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA+\
+        nomi_colonne_onehotencoded_TERAPIA_STATO + \
+        nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA+\
         nomi_colonne_onehotencoded_SITUAZIONE_COLONNA + \
         nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_SN +\
         nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_DX +\
@@ -568,16 +586,15 @@ def preprocessamento(tabella_completa):
         nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA + \
         nomi_nuove_colonne_vectorized_USO_CORTISONE + \
         nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI + \
-        nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA+ \
-        nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA+ \
+        nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA + \
+        nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA + \
         nomi_nuove_colonne_vectorized_ALLERGIE+ \
         nomi_nuove_colonne_vectorized_INTOLLERANZE+ \
         nomi_nuove_colonne_vectorized_ALTRO+ \
-        nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO+ \
+        nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO + \
         nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA\
         +[
         '1 OSTEOPOROSI_GRAVE',  # aumentato tanto
-
         '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX', #niente sembra
         '1 VERTEBRE_NON_ANALIZZATE_L1', #niente sembra
         '1 VERTEBRE_NON_ANALIZZATE_L2', #niente sembra
@@ -586,7 +603,6 @@ def preprocessamento(tabella_completa):
         '1 COLONNA_NON_ANALIZZABILE', #niente sembra
         '1 COLONNA_VALORI_SUPERIORI', #niente sembra
         '1 FEMORE_NON_ANALIZZABILE', #niente sembra
-        
         '1 FRAX_APPLICABILE',
         '1 FRAX_FRATTURE_MAGGIORI_INTERO',  # aumento discreto
         '1 FRAX_COLLO_FEMORE_INTERO',  # aumento discreto
@@ -647,6 +663,135 @@ def preprocessamento(tabella_completa):
         '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',
         '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX'
     ]
+
+    # senza le colonne vectorized
+    '''l = [
+            '1 AGE',
+            '1 SEX',
+            '1 ULTIMA_MESTRUAZIONE',  # fa niente e anche quella sopra
+            '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',  # quella sopra non fa un cazzo
+            'XXX_TERAPIA_OST_ORM_ANNI_XXX',  # fa niente e anche quella sopra
+            '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
+            'XXX_TERAPIA_OST_SPEC_ANNI_XXX',  # fa niente e anche quella sopra
+            '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
+            '1 TERAPIA_ALTRO_CHECKBOX',
+            '1 TERAPIA_COMPLIANCE',
+            '1 BMI',
+            '1 FRATTURE',
+            '1 FRATTURA_VERTEBRE',
+            '1 FRATTURA_FEMORE',
+            '1 FRATTURA_SITI_DIVERSI',
+            '1 FRATTURA_FAMILIARITA',
+            '1 ABUSO_FUMO_CHECKBOX',
+            '1 ABUSO_FUMO',  # fa niente
+            '1 USO_CORTISONE_CHECKBOX',
+            '1 MALATTIE_ATTUALI_CHECKBOX',
+            '1 MALATTIE_ATTUALI_ARTRITE_REUM',
+            '1 MALATTIE_ATTUALI_ARTRITE_PSOR',
+            '1 MALATTIE_ATTUALI_LUPUS',
+            '1 MALATTIE_ATTUALI_SCLERODERMIA',
+            '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',
+            '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
+            '1 PATOLOGIE_UTERINE_CHECKBOX',  # quello sopra non fa niente
+            '1 NEOPLASIA_CHECKBOX',
+            '1 SINTOMI_VASOMOTORI',
+            '1 SINTOMI_DISTROFICI',
+            '1 DISLIPIDEMIA_CHECKBOX',
+            '1 IPERTENSIONE',
+            '1 RISCHIO_TEV',
+            '1 PATOLOGIA_CARDIACA',
+            '1 PATOLOGIA_VASCOLARE',
+            '1 INSUFFICIENZA_RENALE',
+            '1 PATOLOGIA_RESPIRATORIA',
+            '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',
+            '1 PATOLOGIA_EPATICA',
+            '1 PATOLOGIA_ESOFAGEA',
+            '1 GASTRO_DUODENITE',
+            '1 GASTRO_RESEZIONE',
+            '1 RESEZIONE_INTESTINALE',
+            '1 MICI',
+            '1 VITAMINA_D_CHECKBOX',  # diminuito forse
+            '1 VITAMINA_D',  # aumentato tanto
+            '1 ALLERGIE_CHECKBOX',
+            '1 INTOLLERANZE_CHECKBOX'] + \
+        nomi_colonne_onehotencoded_STATO_MENOPAUSALE + \
+        nomi_colonne_onehotencoded_CAUSE_OSTEOPOROSI_SECONDARIA + \
+        nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA + \
+        nomi_colonne_onehotencoded_TERAPIA_STATO + \
+        nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA + \
+        nomi_colonne_onehotencoded_SITUAZIONE_COLONNA + \
+        nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_SN + \
+        nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_DX  \
+        +[
+            '1 OSTEOPOROSI_GRAVE',  # aumentato tanto
+            '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # niente sembra
+            '1 VERTEBRE_NON_ANALIZZATE_L1',  # niente sembra
+            '1 VERTEBRE_NON_ANALIZZATE_L2',  # niente sembra
+            '1 VERTEBRE_NON_ANALIZZATE_L3',  # niente sembra
+            '1 VERTEBRE_NON_ANALIZZATE_L4',  # niente sembra
+            '1 COLONNA_NON_ANALIZZABILE',  # niente sembra
+            '1 COLONNA_VALORI_SUPERIORI',  # niente sembra
+            '1 FEMORE_NON_ANALIZZABILE',  # niente sembra
+            '1 FRAX_APPLICABILE',
+            '1 FRAX_FRATTURE_MAGGIORI_INTERO',  # aumento discreto
+            '1 FRAX_COLLO_FEMORE_INTERO',  # aumento discreto
+            '1 TBS_COLONNA_APPLICABILE',  # nessun aumento
+            '1 TBS_COLONNA_VALORE',  # nessun aumento
+            '1 DEFRA_INTERO',
+            '1 NORME_PREVENZIONE',  # aumento discreto
+            '1 NORME_COMPORTAMENTALI',  # diminuisce??
+            '1 ATTIVITA_FISICA',
+            '1 SOSPENSIONE_TERAPIA_CHECKBOX',
+            '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # fa nulla
+            '1 SOSPENSIONE_FUMO',
+            '1 CONTROLLO_DENSITOMETRICO_CHECKBOX',  # fa nulla
+            '1 L1_AREA',
+            '1 L2_AREA',
+            '1 L3_AREA',
+            '1 L4_AREA',
+            '1 TOT_AREA',
+            '1 L1_BMC',
+            '1 L2_BMC',
+            '1 L3_BMC',
+            '1 L4_BMC',
+            '1 TOT_BMC',
+            '1 L1_BMD',
+            '1 L2_BMD',
+            '1 L3_BMD',
+            '1 L4_BMD',
+            '1 TOT_BMD',
+            '1 L1_Tscore',
+            '1 L2_Tscore',
+            '1 L3_Tscore',
+            '1 L4_Tscore',
+            '1 TOT_Tscore',
+            '1 L1_Zscore',
+            '1 L2_Zscore',
+            '1 L3_Zscore',
+            '1 L4_Zscore',
+            '1 TOT_Zscore',
+            '1 NECK_AREA',
+            '1 TROCH_AREA',
+            '1 INTER_AREA',
+            '1 HTOT_AREA',
+            '1 WARDS_AREA',
+            '1 NECK_BMC',
+            '1 TROCH_BMC',
+            '1 INTER_BMC',
+            '1 HTOT_BMC',
+            '1 WARDS_BMC',
+            '1 NECK_BMD',
+            '1 TROCH_BMD',
+            '1 INTER_BMD',
+            '1 HTOT_BMD',
+            '1 WARDS_BMD',
+
+            '1 TERAPIE_ORMONALI_CHECKBOX',
+            '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX',
+            '1 VITAMINA_D_TERAPIA_CHECKBOX',
+            '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',
+            '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX'
+        ]'''
 
     return tabella_completa[l]
 
