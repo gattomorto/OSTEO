@@ -16,26 +16,8 @@ from nltk.tokenize import RegexpTokenizer
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
-
 #nltk.download('all')
 '''
-0.562  0.578-0.627  0.641   0.65    0.652
-611,628,629,625,639,641,628,629,643,639,622,639,619
-645,628,627,613,636,639,627,623
-        list(nomi_colonne_onehotencoded_SITUAZIONE_COLONNA)  qualcosiiina
-        list(nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_SN) qualcosiina
-        list(nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_DX) qualcosiina
-        
-        list(nomi_nuove_colonne_vectorized_TERAPIA_ALTRO) buon aumento
-        nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE     buon aumento
-        
-        nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA non aumenteato
-        nomi_nuove_colonne_vectorized_USO_CORTISONE non aumentato
-        
-        nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI no
-        nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA no
-        nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA no
-        nomi_nuove_colonne_vectorized_ALLERGIE no
 '''
 def main():
     tabella_completa = pd.read_csv("osteo.csv")
@@ -46,42 +28,50 @@ def main():
     Y = tabella_ridotta.iloc[:, -num_classi:]
 
     kf = KFold(n_splits=4, shuffle=True)
+
     '''
-    #11-    0.655 
-    10-     0.664 
-    9-      0.665, 0.656, 0.664
-    8-      0.661, 0.67, 0.668, 0.66, 0.658
-    7-      0.698, 0.667, 0.676, 0.691, 0.684, 0.678, 0.684, 0.666, 0.686, 0.659, 0.671, 0.684, 0.68
-    6-      0.655, 0.671, 0.673
-    5-      0.681, 0.672, 0.67, 0.651
-    4-      0.659 
-    3-      0.617
+    min lif split non fa niente.. 
+    max_leaf_nodes = 25 aumenta tanto con maxdepth = 6
+    min sample spit = 10 ok 5come10  15no
+    min sample leaf=10 no, 20no, 5no
+    
+    migliore maxdept 6, max_leaf_nodes = 25 0.695, 0.701, 0.688, 0.698, 0.692, 0.691
+    
+    max_depth=7,max_leaf_nodes=35 no
+                               40 ok 
+                               45 no
+                               10 no
+                               20 come il migliore
+                               25 mcome il migliore
+                               30 no
+                               15 ok
     '''
-    tree = DecisionTreeClassifier(max_depth=6)
+    tree = DecisionTreeClassifier(max_depth=6, max_leaf_nodes=25)
 
     avg_ext_train_score = 0
     avg_ext_test_score = 0
     avg_int_train_score = 0
     avg_int_test_score = 0
-    trainX = []; trainY = []; testX=[]; testY=[];
+    trainX = []; trainY = []; testX=[]; testY=[]
     for train_indexes, test_indexes in kf.split(X):
-        trainX = X.iloc[train_indexes,  :]
-        trainY = Y.iloc[train_indexes,  :]
-        testX = X.iloc [test_indexes,   :]
-        testY = Y.iloc [test_indexes,   :]
+        trainX = X.iloc[train_indexes, :]
+        trainY = Y.iloc[train_indexes, :]
+        testX = X.iloc[test_indexes, :]
+        testY = Y.iloc[test_indexes, :]
         tree.fit(trainX, trainY)
 
         avg_ext_test_score += tree.score(testX, testY)
         avg_ext_train_score += tree.score(trainX, trainY)
-        #avg_int_train_score += inernal_acc_score(trainX,trainY,tree)
-        #avg_int_test_score += inernal_acc_score(testX,testY,tree)
-        #print(null_accuracy_score(testX,testY,tree))
+        avg_int_train_score += inernal_acc_score(trainX,trainY,tree)
+        avg_int_test_score += inernal_acc_score(testX,testY,tree)
+        #print("null: "+str(null_accuracy_score(testX,testY,tree)))
+        #print("no null:"+str(no_null_accuracy_score(testX, testY, tree)))
 
     print_feature_importances(tree, trainX)
 
     print("avg ext: {}, {}".format(
         *[round(avg / kf.get_n_splits(), 3) for avg in [avg_ext_train_score, avg_ext_test_score]]))
-    #print("avg int: {}, {}".format(*[round(avg/kf.get_n_splits(), 3) for avg in [avg_int_train_score, avg_int_test_score]]))
+    print("avg int: {}, {}".format(*[round(avg/kf.get_n_splits(), 3) for avg in [avg_int_train_score, avg_int_test_score]]))
 
 
 def print_feature_importances(model, X):
@@ -92,29 +82,6 @@ def print_feature_importances(model, X):
     feature_importances.sort(key = lambda tup: tup[1], reverse = True)
     for t in feature_importances:
         print(t)
-
-
-
-
-def inernal_acc_score(X, true_Y, model):
-    '''
-    Riceve le istanze da classificare (X) su un modello allenato (model) e i risultati corretti (true_Y).
-    Ritorna l'accuratezza interna del modello: il rapporto tra tutti i bit e i bit indovinati di tutto il set
-    Differenza tra internal_acc_score() e model.score():
-        Se predicted_y = [0, 1, 1] e true_y = [0, 1, 0]
-        per model.score() questa istanza è 0
-        per internal_acc_score() è 0.66
-    La funzione calcola la media di tutte le accuracy di ogni riga
-    '''
-    avg_score = 0
-    # andava bene fare anche true_Y.shape[0] perchè hanno dimensione uguale
-    for row_index in range(0, X.shape[0]):
-        # i-esima riga di true_Y
-        y_true = true_Y.iloc[row_index, :].values
-        # il modello predice data l'iesima riga di X
-        y_predicted = model.predict(X.iloc[row_index, :].values.reshape(1, -1))
-        avg_score += accuracy_score(y_true, y_predicted[0, :])
-    return avg_score / X.shape[0]
 
 def preprocessamento(tabella_completa):
     def one_hot_encode(frame, column_name, regex, prefix):
@@ -175,7 +142,7 @@ def preprocessamento(tabella_completa):
         returns: assunt alendronato
         '''
 
-        tokenizer = RegexpTokenizer(regex) # ogni parola e 100.000 UI (100000 UI/MESE esiste e non passa)
+        tokenizer = RegexpTokenizer(regex)
         tokens = tokenizer.tokenize(sentence)
         tokens = [x.lower() for x in tokens]
 
@@ -202,7 +169,7 @@ def preprocessamento(tabella_completa):
         #print(tokens)
         # la parte di stemming
         stemmer = SnowballStemmer("italian")
-        tokens = [stemmer.stem(tok) for tok in tokens] #tolto perchè forse è meglio
+        tokens = [stemmer.stem(tok) for tok in tokens]
 
         # converto da lista di token in striga
         output = ' '.join(tokens)
@@ -239,16 +206,19 @@ def preprocessamento(tabella_completa):
     def polinomial_regression(col_name_x, col_name_y, frame, degree_, plt_show=False):
         '''
         esegue una regressione polinomiale univariata
+        si usa per prevedere col_name_y usando col_name_x
         :param col_name_x: nome della colonna dei valori di x
-        :param col_name_y: nome della colonna dei valori da modellare
+        :param col_name_y: nome della colonna dei valori da modellare (la colonna da prevedere)
         :param frame: il dataframe da dove prendere le colonne
         :param degree_: il grado del polinomio
         :param plt_show: se true mostra il grafico
         :return: il modello della regressione e polynomial_features per trasformare in features quadratiche
         '''
+        # questo evita il problema dei plot sovrapposti
+        plt.clf()
         # xy_frame contiene solo la colonna X e la colonna Y
         xy_frame = frame[[col_name_x, col_name_y]]
-        xy_frame.dropna(inplace=True)
+        xy_frame = xy_frame.dropna()
         # tengo solo le righe che non hanno zeri
         xy_frame = xy_frame[xy_frame[col_name_x] != 0]
         xy_frame = xy_frame[xy_frame[col_name_y] != 0]
@@ -277,28 +247,106 @@ def preprocessamento(tabella_completa):
 
         return model, polynomial_features
 
-
-    #region regressione di FRAX_FRATTURE_MAGGIORI_INTERO
-    # non serve a molto dato che ci sono solo 14 valori mancanti
-    model, pol_features = polinomial_regression(col_name_x = '1 DEFRA_INTERO', col_name_y = '1 FRAX_FRATTURE_MAGGIORI_INTERO', frame = tabella_completa,plt_show=False, degree_= 3)
+    # region null di SITUAZIONE_COLONNA vengono sostituiti con i valori SITUAZIONE_FEMORE_SN o SITUAZIONE_FEMORE_DX
+    # dal momento che SITUAZIONE_COLONNA è importante ai fini di classificare i valori mancanti vengono sostituiti
+    # con SITUAZIONE_FEMORE_SN. E se pure quello manca, si usa SITUAZIONE_FEMORE_DX
+    # se manca sia SITUAZIONE_FEMORE_SN che SITUAZIONE_FEMORE_DX allora si mette 'na' in SITUAZIONE_COLONNA
+    # one hot ecoding in fondo
     for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, ['1 FRAX_FRATTURE_MAGGIORI_INTERO', '1 DEFRA_INTERO']]
-        if np.isnan(row['1 FRAX_FRATTURE_MAGGIORI_INTERO']) and row['1 DEFRA_INTERO']!=0:
-            predicted = model.predict( pol_features.fit_transform(row['1 DEFRA_INTERO'].reshape(1,-1)))
-            tabella_completa.loc[row_index,'1 FRAX_FRATTURE_MAGGIORI_INTERO']=predicted
+        row = tabella_completa.loc[row_index, ['1 SITUAZIONE_COLONNA', '1 SITUAZIONE_FEMORE_SN', '1 SITUAZIONE_FEMORE_DX']]
+        if pd.isna(row['1 SITUAZIONE_COLONNA']):
+            # se SITUAZIONE_COLONNA è nulla ma il valore accanto di SITUAZIONE_FEMORE_SN non lo è, allora assegno al
+            # valore mancante il valore di SITUAZIONE_FEMORE_SN
+            if not pd.isna(row['1 SITUAZIONE_FEMORE_SN']):
+                tabella_completa.loc[row_index,'1 SITUAZIONE_COLONNA']=row['1 SITUAZIONE_FEMORE_SN']
+            # SITUAZIONE_FEMORE_SN è nullo allora uso SITUAZIONE_FEMORE_DX per sostituire
+            elif not pd.isna(row['1 SITUAZIONE_FEMORE_DX']):
+                tabella_completa.loc[row_index, '1 SITUAZIONE_COLONNA'] = row['1 SITUAZIONE_FEMORE_DX']
+    # questo ha effetto solo se SITUAZIONE_COLONNA, SITUAZIONE_FEMORE_SN, SITUAZIONE_FEMORE_DX erano tutti null
+    # tabella_completa['1 SITUAZIONE_COLONNA'].fillna('na', inplace=True)
+    # endregion
+
+    # region null di SITUAZIONE_FEMORE_SN vengono sostituiti con i valori di SITUAZIONE_FEMORE_DX o SITUAZIONE_COLONNA
+    # se succede che sia SITUAZIONE_FEMORE_DX che SITUAZIONE_COLONNA sono null allora in SITUAZIONE_FEMORE_SN metto 'na'
+    # one hot ecoding in fondo
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, ['1 SITUAZIONE_FEMORE_SN', '1 SITUAZIONE_FEMORE_DX', '1 SITUAZIONE_COLONNA']]
+        if pd.isna(row['1 SITUAZIONE_FEMORE_SN']):
+            # se SITUAZIONE_FEMORE_SN è nulla ma il valore accanto di SITUAZIONE_FEMORE_DX non lo è, allora assegno al
+            # valore mancante il valore di SITUAZIONE_FEMORE_SN
+            if not pd.isna(row['1 SITUAZIONE_FEMORE_DX']):
+                tabella_completa.loc[row_index, '1 SITUAZIONE_FEMORE_SN']=row['1 SITUAZIONE_FEMORE_DX']
+            # in questo caso SITUAZIONE_FEMORE_DX è nulla allora uso SITUAZIONE_COLONNA
+            elif not pd.isna(row['1 SITUAZIONE_COLONNA']):
+                tabella_completa.loc[row_index, '1 SITUAZIONE_FEMORE_SN'] = row['1 SITUAZIONE_COLONNA']
+    # questo ha effetto solo se SITUAZIONE_COLONNA, SITUAZIONE_FEMORE_SN, SITUAZIONE_FEMORE_DX erano tutti null
+    # tabella_completa['1 SITUAZIONE_FEMORE_SN'].fillna('na', inplace=True)
+    # endregion
+
+    # region null di SITUAZIONE_FEMORE_DX vengono sostituiti con i valori di SITUAZIONE_FEMORE_SN o SITUAZIONE_COLONNA
+    # 'na' nel caso in cui SITUAZIONE_FEMORE_SN, SITUAZIONE_COLONNA entrambi null
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[
+            row_index, ['1 SITUAZIONE_FEMORE_DX', '1 SITUAZIONE_FEMORE_SN', '1 SITUAZIONE_COLONNA']]
+        if pd.isna(row['1 SITUAZIONE_FEMORE_DX']):
+            if not pd.isna(row['1 SITUAZIONE_FEMORE_SN']):
+                tabella_completa.loc[row_index, '1 SITUAZIONE_FEMORE_DX'] = row['1 SITUAZIONE_FEMORE_SN']
+            elif not pd.isna(row['1 SITUAZIONE_COLONNA']):
+                tabella_completa.loc[row_index, '1 SITUAZIONE_FEMORE_DX'] = row['1 SITUAZIONE_COLONNA']
+    # tabella_completa['1 SITUAZIONE_FEMORE_DX'].fillna('na', inplace=True)
+    # endregion
+
+    #region prevedo FRAX_COLLO_FEMORE_INTERO usando FRAX_FRATTURE_MAGGIORI_INTERO con la regressione
+    # non serve a molto dato che ci sono solo 37 valori mancanti
+    col_name_da_prevedere = '1 FRAX_COLLO_FEMORE_INTERO'
+    col_name_usando = '1 FRAX_FRATTURE_MAGGIORI_INTERO'
+    # ritorna il modello che uso per predire e pol_fratures che serve per trasformare le x in formato adatto per il modello
+    model, pol_features = polinomial_regression(col_name_x = col_name_usando, col_name_y = col_name_da_prevedere, frame = tabella_completa,plt_show=False, degree_= 2)
+    for row_index in range(0, tabella_completa.shape[0]):
+        # solo quello che mi serve
+        row = tabella_completa.loc[row_index, [col_name_usando, col_name_da_prevedere]]
+        # la colonna da prevedere deve essere null, ma quella che uso come supporto no
+        if np.isnan(row[col_name_da_prevedere]) and not np.isnan(row[col_name_usando]):
+            predicted = model.predict(pol_features.fit_transform(row[col_name_usando].reshape(1,-1)))
+            tabella_completa.loc[row_index,col_name_da_prevedere]=predicted
     #endregion
 
-    #region regressione DEFRA_INTERO
-    # uso la colonna FRAX_FRATTURE_MAGGIORI_INTERO (x) per prevedere DEFRA_INTERO(y)
-    model, pol_features = polinomial_regression(col_name_x = '1 FRAX_FRATTURE_MAGGIORI_INTERO', col_name_y = '1 DEFRA_INTERO', frame = tabella_completa, plt_show=False, degree_=1)
+    #region prevedo FRAX_FRATTURE_MAGGIORI_INTERO usando FRAX_COLLO_FEMORE_INTERO  con la regressione
+    # non serve a molto dato che ci sono solo 17 valori mancanti
+    col_name_da_prevedere = '1 FRAX_FRATTURE_MAGGIORI_INTERO'
+    col_name_usando = '1 DEFRA_INTERO'
+    # ritorna il modello che uso per predire e pol_fratures che serve per trasformare le x in formato adatto per il modello
+    model, pol_features = polinomial_regression(col_name_x = col_name_usando, col_name_y = col_name_da_prevedere, frame = tabella_completa,plt_show=False, degree_= 3)
     for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, ['1 FRAX_FRATTURE_MAGGIORI_INTERO', '1 DEFRA_INTERO']]
+        # solo quello che mi serve
+        row = tabella_completa.loc[row_index, [col_name_usando, col_name_da_prevedere]]
+        # la colonna da prevedere deve essere null, ma quella che uso come supporto no
+        if np.isnan(row[col_name_da_prevedere]) and not row[col_name_usando]==0:
+            predicted = model.predict(pol_features.fit_transform(row[col_name_usando].reshape(1,-1)))
+            tabella_completa.loc[row_index,col_name_da_prevedere]=predicted
+    #endregion
+
+    #region prevedo DEFRA_INTERO usando FRAX_FRATTURE_MAGGIORI_INTERO con la regressione
+    # uso la colonna FRAX_FRATTURE_MAGGIORI_INTERO (x) per prevedere DEFRA_INTERO(y) perchè ce una dipendeneza lineare tra loro
+
+    col_name_da_prevedere = '1 DEFRA_INTERO'
+    col_name_usando = '1 FRAX_FRATTURE_MAGGIORI_INTERO'
+
+    model, pol_features = polinomial_regression(col_name_x = col_name_usando,
+                                                col_name_y = col_name_da_prevedere, frame = tabella_completa, plt_show=False,
+                                                degree_=1)
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, [col_name_usando, col_name_da_prevedere]]
         # se DEFRA_INTERO è 0 allora uso il modello lineare.. ma solo se FRAX_FRATTURE_MAGGIORI_INTERO non è null
-        if  row['1 DEFRA_INTERO']==0 and  not np.isnan(row['1 FRAX_FRATTURE_MAGGIORI_INTERO']):
+        if row[col_name_da_prevedere] == 0 and not np.isnan(row[col_name_usando]):
             # pol_features serve qui per trasformare l'input x in un formato adatto per il modello
-            predicted = model.predict(pol_features.fit_transform(row['1 FRAX_FRATTURE_MAGGIORI_INTERO'].reshape(1,-1)))
-            tabella_completa.loc[row_index,'1 DEFRA_INTERO']=predicted
+            predicted = model.predict(pol_features.fit_transform(row[col_name_usando].reshape(1,-1)))
+            tabella_completa.loc[row_index,col_name_da_prevedere]=predicted
     #endregion
+
+    tabella_completa['1 SITUAZIONE_COLONNA'].fillna('na', inplace=True)
+    tabella_completa['1 SITUAZIONE_FEMORE_SN'].fillna('na', inplace=True)
+    tabella_completa['1 SITUAZIONE_FEMORE_DX'].fillna('na', inplace=True)
 
     # vettorizato INDAGINI_APPROFONDIMENTO_LISTA
     tabella_completa['1 INDAGINI_APPROFONDIMENTO_LISTA'].fillna('na', inplace=True)
@@ -367,7 +415,6 @@ def preprocessamento(tabella_completa):
     tabella_completa, nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_SN = one_hot_encode(tabella_completa, '1 SITUAZIONE_FEMORE_SN','^.*', 'sfs')
 
     # one hot encoding SITUAZIONE_COLONNA
-    tabella_completa['1 SITUAZIONE_COLONNA'].fillna('na', inplace=True)
     tabella_completa, nomi_colonne_onehotencoded_SITUAZIONE_COLONNA = one_hot_encode(tabella_completa, '1 SITUAZIONE_COLONNA','^.*', 'sc')
 
     # one hot encoding di CAUSE_OSTEOPOROSI_SECONDARIA
@@ -797,7 +844,7 @@ def preprocessamento(tabella_completa):
 
 def null_accuracy_score(X, true_Y, model):
     '''
-    Ritorna il rapporto tra le righe nulle indovinare e il totale delle righe nulle (external accuracy)
+    Ritorna il rapporto tra le righe nulle indovinate (external accuracy) e il totale delle righe nulle
     :param X: le istanze da predire (in genere il X_test)
     :param true_Y: la predizione corretta (in genere Y_test)
     :param model: il modello (in genere DecisionTree)
@@ -819,7 +866,46 @@ def null_accuracy_score(X, true_Y, model):
 
     # print("tot {}, ind {}, totot {}, rapp {}".format(tot_righe_nulle,tot_righe_nulle_indovinate,X.shape[0],tot_righe_nulle/X.shape[0]))
     return tot_righe_nulle_indovinate / tot_righe_nulle
+def inernal_acc_score(X, true_Y, model):
+    '''
+    Riceve le istanze da classificare (X) su un modello allenato (model) e i risultati corretti (true_Y).
+    Ritorna l'accuratezza interna del modello: il rapporto tra tutti i bit e i bit indovinati di tutto il set
+    Differenza tra internal_acc_score() e model.score():
+        Se predicted_y = [0, 1, 1] e true_y = [0, 1, 0]
+        per model.score() questa istanza è 0
+        per internal_acc_score() è 0.66
+    La funzione calcola la media di tutte le accuracy di ogni riga
+    '''
+    avg_score = 0
+    # andava bene fare anche true_Y.shape[0] perchè hanno dimensione uguale
+    for row_index in range(0, X.shape[0]):
+        # i-esima riga di true_Y
+        y_true = true_Y.iloc[row_index, :].values
+        # il modello predice data l'iesima riga di X
+        y_predicted = model.predict(X.iloc[row_index, :].values.reshape(1, -1))
+        avg_score += accuracy_score(y_true, y_predicted[0, :])
+    return avg_score / X.shape[0]
+def no_null_accuracy_score(X, true_Y, model):
+    '''
+    Qual è la proporzione di elementi non nulli indovinati
+    X sono le istanze da prevedere del testset e Y_true sono le risposte(testset)
+    '''
+    predicted_Y = model.predict(X)
+    tot_righe_non_nulle = 0
+    tot_righe_non_nulle_indovinate = 0
+    # andave bene anche true_Y.shape[0] pechè hanno lo stesso numero di righe
+    for row_index in range(0, X.shape[0]):
+        row_ptedicted_Y = predicted_Y[row_index, :]
+        row_true_Y = true_Y.iloc[row_index, :].values
+        # se l'isesima riga non è complettamente nulla (almeno un 1 in qualche posizione)
+        if np.any(row_true_Y):
+            tot_righe_non_nulle += 1
+            # e se il modello ha indovinato correttamente la riga non nulla
+            if  list(row_ptedicted_Y) == list(row_true_Y):
+                tot_righe_non_nulle_indovinate += 1
 
+    # print("tot {}, ind {}, totot {}, rapp {}".format(tot_righe_nulle,tot_righe_nulle_indovinate,X.shape[0],tot_righe_nulle/X.shape[0]))
+    return tot_righe_non_nulle_indovinate / tot_righe_non_nulle
 
 if __name__ == '__main__':
     main()
