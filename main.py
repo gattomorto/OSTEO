@@ -17,13 +17,151 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 #nltk.download('all')
-'''
-'''
+from weka.classifiers import Classifier, Evaluation
+from weka.core.converters import Loader, Saver
+from weka.core.classes import Random
+import weka.core.jvm as jvm
+from weka.filters import Filter
+
 def main():
+    jvm.start(max_heap_size="900m")
+
+    loader = Loader(classname="weka.core.converters.ArffLoader")
+    data = loader.load_file("breast-cancer.arff")
+    data.class_is_last()
+
+    cls2 = Classifier(classname="weka.classifiers.rules.PART")
+
+    # evaluation = Evaluation(data)
+    # evaluation.crossvalidate_model(cls2, data, 10, Random(42))
+    cls2.build_classifier(data)
+
+    # data un istanza ritorna la probabilità che assegnerebbe ad ogni classe
+    # print(cls2.distribution_for_instance(data.get_instance(data.num_instances-1)))
+
+    # stampa le regole
+    # print(cls2)
+
+    rules = estrai_regole(cls2)
+
+    for r in rules:
+        print(str(r)+'\n')
+
+
+    jvm.stop()
+
+
+def estrai_regole(classifier):
+
+    f = open("h.txt",'r+')
+    classifier = f.read()
+
+    # straggo le regole in formato testuale dal classificatore, esattamente quelle che vengono fuori nel software Weka
+    regole_formato_testo = str(classifier)
+    # le regole hanno un header con scritto PART decision list con sotto una serie di lineette, allora li sostituisco
+    # con la stringa vuota
+    regole_formato_testo = re.sub(r'^PART decision list[\r\n][-]+[\r\n]{2}','',regole_formato_testo)
+    # stessa cosa: nel footer c'è Number of Rule: n. Sostituisco con la stringa vuota
+    regole_formato_testo = re.sub(r'[\r\n][\r\n]Number of Rules\s+:\s+[0-9]+$','',regole_formato_testo)
+
+    # conterrà tutte le regole
+    regole = []
+    # conterrà le proposizioni di una certa regola
+    proposizioni = []
+    # se la regola è vera, predizione è la classe predetta
+    predizione = None
+    # stringa (m/n) di ogni regola
+    gs = None
+    # per ogni riga
+    for line in str(regole_formato_testo).splitlines():
+        # riga generica letta: 1 VERTEBRE_NON_ANALIZZATE_L4 <= 0 AND
+        # match_obj_operando1 è un oggetto che conterrà il match: 1 VERTEBRE_NON_ANALIZZATE_L4
+        # attenzione match_obj_operando1 non è una stringa ma un oggetto di tipo MatchObject, la stringa si estrae
+        # in seguito
+        # regex parte dall inizio della riga fino ad arrivare ad un operatore
+        match_obj_operando1 = re.search(r'^.+(?=\s(=|<|>|<=|>=)\s)', line)
+
+        # se match_obj_operando1 è None, ci sono due possibilità:
+        # 1) riga vuota (non c'è il nome della colonna)
+        # 2) l'ultima regola della lista del tipo: ': 0 (2.0)' (non c'è il nome della colonna)
+        if match_obj_operando1 is None:
+            # caso 2) if vero solo 1 volta, all'ultima riga
+            if line != '':
+                # : 0 (2.0) tiro fuori lo 0 che è in mezzo a due spazi
+                predizione = re.search(r'(?<=:\s)\d(?=\s)', line).group(0)
+                # tiro fuori (2.0) che è in mezzo tra uno spazio e la fine
+                gs = re.search(r'(?<=\s)[(].*[)]$', line).group(0)
+                # dato che è un caso particolare che non ha proposizioni,
+                # alora questo caso è gestito trasformando la lista 'proposizioni' in variabile booleana = true
+                # cioè che le proposizioni sono tutte vere
+                proposizioni = True
+
+            # caso 1) caso generico, parte quando si finisce di leggere una regola
+            # qui la lista 'proposizioni' è riempita di proposizioni della regola opppure proposizioni = true se è
+            # l'ultima regola. predizione letta dall'ultima riga dellA regolA
+            r = Regola(predizione, proposizioni, gs)
+            regole.append(r)
+            # svuoto per far posto alle nuove proposizioni della regola successiva
+            proposizioni = []
+            # continue perchè non devo leggere niente dalla riga vuota
+            continue
+
+        # estraggo la stringa del nome della colonna (1 VERTEBRE_NON_ANALIZZATE_L4)
+        operando1 = match_obj_operando1.group(0)
+
+        # se line: 1 VERTEBRE_NON_ANALIZZATE_L4 <= 0 AND, operatore sarà '<='
+        # operatore isolato da due spazi
+        operatore = re.search(r'(?<=\s)(<=|>=|=|<|>)(?=\s)', line).group(0)
+        # converto '=' in '==' perchè uso queste stringhe dentro eval()
+        if operatore == '=': operatore = '=='
+
+        # se line: '1 VERTEBRE_NON_ANALIZZATE_L4 <= 0 AND', operando2 sarà '0'
+        # regex estrae interi o float che sono in mezzo ad un [operatore][spazio] e [AND]
+        # oppure se siamo arrivati all'ultima riga della regola che è del tipo '1 NORME_PREVENZIONE > 0: 1 (13.0)'
+        # regex estrae interi o float in mezzo ad un [operatore][spazio] e [:] cioè lo '0' in questo caso
+        operando2 = re.search(r'(?<=\s)[+-]?([0-9]*[.])?[0-9]+((?=\sAND$)|(?=:))', line).group(0)
+
+        # qui cerco di estrarre la predizione.
+        # se line = '1 NORME_PREVENZIONE > 0: 1 (13.0)' allora estraggo '1'
+        # ha senso solo se è 'line' è l'ultima proposizione della regola
+        # regex prende il numero tra [:][spazio] e [spazio][(]
+        # ATTENZIONE: posso solo prevedere classi numeriche
+        match_obj_predizione = re.search(r'(?<=:\s)\d(?=\s\()', line)
+
+        # non è null sole se siamo arrivari all'ultima riga della regola
+        # altrimenti ignora
+        if match_obj_predizione is not None:
+            predizione = match_obj_predizione.group(0)
+
+        # non è null sole se siamo arrivari all'ultima riga della regola
+        # altrimenti ignora
+        match_obj_gs = re.search(r'(?<=\s)[(].*[)]$', line)
+        if match_obj_gs is not None:
+            gs = match_obj_gs.group(0)
+
+        # se line: '1 VERTEBRE_NON_ANALIZZATE_L4 <= 0 AND'
+        # operatore: <=
+        # operando1: 1 VERTEBRE_NON_ANALIZZATE_L4
+        # operando2: 0
+        p = Proposizione(operatore, operando1, operando2)
+        proposizioni.append(p)
+
+    return regole
+
+
+def multilabel():
+    '''
+    tutto quello che c'era nel main una volta
+    :return:
+    '''
     tabella_completa = pd.read_csv("osteo.csv")
+
     num_classi = 5
 
     tabella_ridotta = preprocessamento(tabella_completa)
+    #tabella_ridotta.to_csv('osteo_r.csv', index=False)
+    # tabella_ridotta = pd.read_csv('osteo_r.csv')
+
     X = tabella_ridotta.iloc[:, :-num_classi]
     Y = tabella_ridotta.iloc[:, -num_classi:]
 
@@ -34,9 +172,9 @@ def main():
     max_leaf_nodes = 25 aumenta tanto con maxdepth = 6
     min sample spit = 10 ok 5come10  15no
     min sample leaf=10 no, 20no, 5no
-    
+
     migliore maxdept 6, max_leaf_nodes = 25 0.695, 0.701, 0.688, 0.698, 0.692, 0.691
-    
+
     max_depth=7,max_leaf_nodes=35 no
                                40 ok 
                                45 no
@@ -46,34 +184,35 @@ def main():
                                30 no
                                15 ok
     '''
+    tree = DecisionTreeClassifier()
     tree = DecisionTreeClassifier(max_depth=6, max_leaf_nodes=25)
 
     avg_ext_train_score = 0
     avg_ext_test_score = 0
     avg_int_train_score = 0
     avg_int_test_score = 0
-    trainX = []; trainY = []; testX=[]; testY=[]
+    trainX = [];
+    trainY = [];
+    testX = [];
+    testY = []
     for train_indexes, test_indexes in kf.split(X):
         trainX = X.iloc[train_indexes, :]
         trainY = Y.iloc[train_indexes, :]
         testX = X.iloc[test_indexes, :]
         testY = Y.iloc[test_indexes, :]
         tree.fit(trainX, trainY)
-
         avg_ext_test_score += tree.score(testX, testY)
         avg_ext_train_score += tree.score(trainX, trainY)
-        avg_int_train_score += inernal_acc_score(trainX,trainY,tree)
-        avg_int_test_score += inernal_acc_score(testX,testY,tree)
-        #print("null: "+str(null_accuracy_score(testX,testY,tree)))
-        #print("no null:"+str(no_null_accuracy_score(testX, testY, tree)))
+        # avg_int_train_score += inernal_acc_score(trainX,trainY,tree)
+        # avg_int_test_score += inernal_acc_score(testX,testY,tree)
+        # print("null: "+str(null_accuracy_score(testX,testY,tree)))
+        # print("no null:"+str(no_null_accuracy_score(testX, testY, tree)))
 
     print_feature_importances(tree, trainX)
 
     print("avg ext: {}, {}".format(
         *[round(avg / kf.get_n_splits(), 3) for avg in [avg_ext_train_score, avg_ext_test_score]]))
-    print("avg int: {}, {}".format(*[round(avg/kf.get_n_splits(), 3) for avg in [avg_int_train_score, avg_int_test_score]]))
-
-
+    # print("avg int: {}, {}".format(*[round(avg/kf.get_n_splits(), 3) for avg in [avg_int_train_score, avg_int_test_score]]))
 def print_feature_importances(model, X):
     '''
     Dato il modello 'model' allenato su 'X', la funzione stampa in maniera decrescente le feautures più significative
@@ -82,15 +221,14 @@ def print_feature_importances(model, X):
     feature_importances.sort(key = lambda tup: tup[1], reverse = True)
     for t in feature_importances:
         print(t)
-
 def preprocessamento(tabella_completa):
     def one_hot_encode(frame, column_name, regex, prefix):
         '''
         frame:
         A               B
-        cane bau        x
-        gatto miao      y
-        pesce blob      z
+        cane bau        a
+        gatto miao      b
+        pesce blob      c
 
         column_name: A
         regex: "solo la prima parola"
@@ -98,17 +236,21 @@ def preprocessamento(tabella_completa):
 
         output:
         A               B    xcane  xgatto xpesce
-        cane bau        x     1      0      0
-        gatto miao      y     0      1      0
-        pesce blob      z     0      0      1
+        cane bau        a     1      0      0
+        gatto miao      b     0      1      0
+        pesce blob      c     0      0      1
+        gatto miao      e     0      1      0
 
-        e la lista delle colonne aggiunte [cane, gatto, pesce]
+        e la lista delle colonne aggiunte [xcane, xgatto, xpesce] (serve perchè dopo dovrò selezionare queste colonne)
 
-        regex serve nel caso in cui si desiderasse considerare una sottostringa della riga
+        regex serve nel caso in cui si desiderasse considerare una sottostringa della riga (cioe al posto di 'cane bau'
+        è come se fosse 'cane')
+
         il prefisso serve per evitare che ci siano colonne con lo stesso nome: questa funzione può essere chiamata
         due volte con due colonne che hanno 'na' e allora si formerà una colonna comune
         '''
         # conterrà cane, gatto, pesce
+        # questa conterrà tutti i valori con cui fare one-hot-encoding
         valori_nominali = []
         for row_index in range(0, frame.shape[0]):
             # iesima riga del frame, sarà 'cane bau', 'gatto miao', 'pesce blob'
@@ -246,6 +388,54 @@ def preprocessamento(tabella_completa):
             plt.show()
 
         return model, polynomial_features
+
+    # Tengo solo quelli che sono venuti prima di ottobre
+    tabella_completa = tabella_completa.loc[tabella_completa['1 SCAN_DATE'] <= '2019-10-01', :].copy()
+    tabella_completa.reset_index(drop=True, inplace=True)
+
+    # region categorizzo USO_CORTISONE
+    # 0 se non usa cortisone, 1 se compreso tra 2.5 e 5, 2 se > 5
+    for row_index in range(0, tabella_completa.shape[0]):
+        value = tabella_completa.loc[row_index,'1 USO_CORTISONE']
+        if value == '> 2.5 mg e < 5 mg':
+            tabella_completa.loc[row_index,'1 USO_CORTISONE'] = 1
+        elif value == '>= 5 mg (Prednisone)':
+            tabella_completa.loc[row_index,'1 USO_CORTISONE'] = 2
+        else:
+            tabella_completa.loc[row_index,'1 USO_CORTISONE'] = 0
+    # endregion
+
+    # region categorizzo ULTIMA_MESTRUAZIONE
+    # come prima cosa sostituisco l'anno dell'ultima mestruazione con quanti anni non ha mestruazioni
+    # divido in range [-inf,mean-std]=poco, [mean-std,mean+std]=medio, [mean+std,+inf]=tanto, e per gli uomini e/o per
+    # le donne che hanno ancora il ciclo la categoria è 'maschio_o_attiva'
+    # una volta che ho le categorie: one-hot-encode
+    birthdate_col = tabella_completa['1 BIRTHDATE']
+    # dalla data di nascita mi serve solo l'anno
+    birthdate_year_col = [data[0:4] for data in birthdate_col]
+    # nel ciclo viene fatta la differenza
+    for row_index in range(0, tabella_completa.shape[0]):
+        # qui sostituisco alla data dell'ultima mest. con gli anni che non ha mest.
+        # la differenza lascia nan per chi ha ULTIMA_MESTRUAZIONE nan
+        tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = \
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] - int(birthdate_year_col[row_index])
+    std = tabella_completa['1 ULTIMA_MESTRUAZIONE'].std()
+    mean = tabella_completa['1 ULTIMA_MESTRUAZIONE'].mean()
+    # in questa parte sostituisco gli anni in cui non ha il ciclo con una tra le categorie
+    for row_index in range(0, tabella_completa.shape[0]):
+        anni_senza_ciclo = tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE']
+        if mean-std <= anni_senza_ciclo <= mean+std:
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'medio'
+        elif anni_senza_ciclo > mean + std:
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'tanto'
+        elif anni_senza_ciclo < mean - std:
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'poco'
+        else:
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'maschio_o_attiva'
+    # onehotencode
+    tabella_completa, nomi_colonne_onehotencoded_ULTIMA_MESTRUAZIONE =\
+        one_hot_encode(tabella_completa, '1 ULTIMA_MESTRUAZIONE','^.*', 'ultima_mestr')
+    #endregion
 
     # region null di SITUAZIONE_COLONNA vengono sostituiti con i valori SITUAZIONE_FEMORE_SN o SITUAZIONE_FEMORE_DX
     # dal momento che SITUAZIONE_COLONNA è importante ai fini di classificare i valori mancanti vengono sostituiti
@@ -388,11 +578,7 @@ def preprocessamento(tabella_completa):
     tabella_completa, nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI = \
         vectorize('1 PATOLOGIE_UTERINE_DIAGNOSI', tabella_completa, prefix= 'pud', n_gram_range=(1,2))
 
-    # vettorizato USO_CORTISONE
-    tabella_completa['1 USO_CORTISONE'].fillna('na', inplace=True)
-    # con quel regex: > 2.5 mg e < 5 mg si trasforma in ['>', '2.5', '<', '5']
-    tabella_completa, nomi_nuove_colonne_vectorized_USO_CORTISONE = \
-        vectorize('1 USO_CORTISONE', tabella_completa, prefix='uc', regex = r'[\w.<>=]+', n_gram_range = (1, 2))
+
 
     # vettorizato VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
     tabella_completa['1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'].fillna('na', inplace=True)
@@ -433,15 +619,16 @@ def preprocessamento(tabella_completa):
     tabella_completa, nomi_colonne_onehotencoded_STATO_MENOPAUSALE = one_hot_encode(tabella_completa,'1 STATO_MENOPAUSALE','^.*','sm')
 
     # ABUSO_FUMO: 0 se non fuma, 1 se fuma meno di 10, 2 se piu di 10
-    tabella_completa['1 ABUSO_FUMO'].fillna('na', inplace=True)
     for row_index in range(0, tabella_completa.shape[0]):
         row = tabella_completa.loc[row_index, '1 ABUSO_FUMO']
-        if row[0] == 'n':
+        if pd.isnull(row):
             tabella_completa.loc[row_index, '1 ABUSO_FUMO'] = 0
         elif row[0] == '<':
             tabella_completa.loc[row_index, '1 ABUSO_FUMO'] = 1
         elif row[0] == '>':
             tabella_completa.loc[row_index, '1 ABUSO_FUMO'] = 2
+
+
 
     # one hot encoding di TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA
     tabella_completa['1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'].fillna("na,0 anni", inplace=True)
@@ -488,19 +675,6 @@ def preprocessamento(tabella_completa):
         terapia_osteoprotettiva_spec_anni_col.append(anni)
     # aggiungo la nuova colonna con un nome che suggerisce l'artificialità
     tabella_completa['XXX_TERAPIA_OST_SPEC_ANNI_XXX'] = terapia_osteoprotettiva_spec_anni_col
-    # endregion
-
-    # region sostituisco a ULTIMA_MESTRUAZIONE: ULTIMA_MESTRUAZIONE - BIRTHDATE
-    # sostituisco a ULTIMA_MESTRUAZIONE: ULTIMA_MESTRUAZIONE - BIRTHDATE
-    birthdate_col = tabella_completa['1 BIRTHDATE']
-    # dalla data di nascita mi serve solo l'anno
-    birthdate_year_col = [data[0:4] for data in birthdate_col]
-    # nel ciclo viene fatta la differenza
-    for row_index in range(0, tabella_completa.shape[0]):
-        tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = \
-            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] - int(birthdate_year_col[row_index])
-    # per gli uomini e le donne che hanno ancora il ciclo, viene fatta la media
-    tabella_completa['1 ULTIMA_MESTRUAZIONE'].fillna(tabella_completa['1 ULTIMA_MESTRUAZIONE'].mean(), inplace=True)
     # endregion
 
     # region altro
@@ -574,7 +748,6 @@ def preprocessamento(tabella_completa):
     l = [
         '1 AGE',
         '1 SEX',
-        '1 ULTIMA_MESTRUAZIONE', #fa niente e anche quella sopra
         '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE', # quella sopra non fa un cazzo
         'XXX_TERAPIA_OST_ORM_ANNI_XXX',#fa niente e anche quella sopra
         '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
@@ -584,6 +757,7 @@ def preprocessamento(tabella_completa):
         '1 TERAPIA_COMPLIANCE',
         '1 BMI',
         '1 FRATTURE',
+        '1 USO_CORTISONE',
         '1 FRATTURA_VERTEBRE',
         '1 FRATTURA_FEMORE',
         '1 FRATTURA_SITI_DIVERSI',
@@ -620,7 +794,7 @@ def preprocessamento(tabella_completa):
         '1 VITAMINA_D',  # aumentato tanto
         '1 ALLERGIE_CHECKBOX',
         '1 INTOLLERANZE_CHECKBOX'] + \
-        nomi_colonne_onehotencoded_STATO_MENOPAUSALE   + \
+        nomi_colonne_onehotencoded_STATO_MENOPAUSALE + \
         nomi_colonne_onehotencoded_CAUSE_OSTEOPOROSI_SECONDARIA+\
         nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA+\
         nomi_colonne_onehotencoded_TERAPIA_STATO + \
@@ -628,10 +802,10 @@ def preprocessamento(tabella_completa):
         nomi_colonne_onehotencoded_SITUAZIONE_COLONNA + \
         nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_SN +\
         nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_DX +\
+        nomi_colonne_onehotencoded_ULTIMA_MESTRUAZIONE +\
         nomi_nuove_colonne_vectorized_TERAPIA_ALTRO + \
         nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE + \
         nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA + \
-        nomi_nuove_colonne_vectorized_USO_CORTISONE + \
         nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI + \
         nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA + \
         nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA + \
@@ -711,137 +885,7 @@ def preprocessamento(tabella_completa):
         '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX'
     ]
 
-    # senza le colonne vectorized
-    '''l = [
-            '1 AGE',
-            '1 SEX',
-            '1 ULTIMA_MESTRUAZIONE',  # fa niente e anche quella sopra
-            '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',  # quella sopra non fa un cazzo
-            'XXX_TERAPIA_OST_ORM_ANNI_XXX',  # fa niente e anche quella sopra
-            '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
-            'XXX_TERAPIA_OST_SPEC_ANNI_XXX',  # fa niente e anche quella sopra
-            '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
-            '1 TERAPIA_ALTRO_CHECKBOX',
-            '1 TERAPIA_COMPLIANCE',
-            '1 BMI',
-            '1 FRATTURE',
-            '1 FRATTURA_VERTEBRE',
-            '1 FRATTURA_FEMORE',
-            '1 FRATTURA_SITI_DIVERSI',
-            '1 FRATTURA_FAMILIARITA',
-            '1 ABUSO_FUMO_CHECKBOX',
-            '1 ABUSO_FUMO',  # fa niente
-            '1 USO_CORTISONE_CHECKBOX',
-            '1 MALATTIE_ATTUALI_CHECKBOX',
-            '1 MALATTIE_ATTUALI_ARTRITE_REUM',
-            '1 MALATTIE_ATTUALI_ARTRITE_PSOR',
-            '1 MALATTIE_ATTUALI_LUPUS',
-            '1 MALATTIE_ATTUALI_SCLERODERMIA',
-            '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',
-            '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
-            '1 PATOLOGIE_UTERINE_CHECKBOX',  # quello sopra non fa niente
-            '1 NEOPLASIA_CHECKBOX',
-            '1 SINTOMI_VASOMOTORI',
-            '1 SINTOMI_DISTROFICI',
-            '1 DISLIPIDEMIA_CHECKBOX',
-            '1 IPERTENSIONE',
-            '1 RISCHIO_TEV',
-            '1 PATOLOGIA_CARDIACA',
-            '1 PATOLOGIA_VASCOLARE',
-            '1 INSUFFICIENZA_RENALE',
-            '1 PATOLOGIA_RESPIRATORIA',
-            '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',
-            '1 PATOLOGIA_EPATICA',
-            '1 PATOLOGIA_ESOFAGEA',
-            '1 GASTRO_DUODENITE',
-            '1 GASTRO_RESEZIONE',
-            '1 RESEZIONE_INTESTINALE',
-            '1 MICI',
-            '1 VITAMINA_D_CHECKBOX',  # diminuito forse
-            '1 VITAMINA_D',  # aumentato tanto
-            '1 ALLERGIE_CHECKBOX',
-            '1 INTOLLERANZE_CHECKBOX'] + \
-        nomi_colonne_onehotencoded_STATO_MENOPAUSALE + \
-        nomi_colonne_onehotencoded_CAUSE_OSTEOPOROSI_SECONDARIA + \
-        nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA + \
-        nomi_colonne_onehotencoded_TERAPIA_STATO + \
-        nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA + \
-        nomi_colonne_onehotencoded_SITUAZIONE_COLONNA + \
-        nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_SN + \
-        nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_DX  \
-        +[
-            '1 OSTEOPOROSI_GRAVE',  # aumentato tanto
-            '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # niente sembra
-            '1 VERTEBRE_NON_ANALIZZATE_L1',  # niente sembra
-            '1 VERTEBRE_NON_ANALIZZATE_L2',  # niente sembra
-            '1 VERTEBRE_NON_ANALIZZATE_L3',  # niente sembra
-            '1 VERTEBRE_NON_ANALIZZATE_L4',  # niente sembra
-            '1 COLONNA_NON_ANALIZZABILE',  # niente sembra
-            '1 COLONNA_VALORI_SUPERIORI',  # niente sembra
-            '1 FEMORE_NON_ANALIZZABILE',  # niente sembra
-            '1 FRAX_APPLICABILE',
-            '1 FRAX_FRATTURE_MAGGIORI_INTERO',  # aumento discreto
-            '1 FRAX_COLLO_FEMORE_INTERO',  # aumento discreto
-            '1 TBS_COLONNA_APPLICABILE',  # nessun aumento
-            '1 TBS_COLONNA_VALORE',  # nessun aumento
-            '1 DEFRA_INTERO',
-            '1 NORME_PREVENZIONE',  # aumento discreto
-            '1 NORME_COMPORTAMENTALI',  # diminuisce??
-            '1 ATTIVITA_FISICA',
-            '1 SOSPENSIONE_TERAPIA_CHECKBOX',
-            '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # fa nulla
-            '1 SOSPENSIONE_FUMO',
-            '1 CONTROLLO_DENSITOMETRICO_CHECKBOX',  # fa nulla
-            '1 L1_AREA',
-            '1 L2_AREA',
-            '1 L3_AREA',
-            '1 L4_AREA',
-            '1 TOT_AREA',
-            '1 L1_BMC',
-            '1 L2_BMC',
-            '1 L3_BMC',
-            '1 L4_BMC',
-            '1 TOT_BMC',
-            '1 L1_BMD',
-            '1 L2_BMD',
-            '1 L3_BMD',
-            '1 L4_BMD',
-            '1 TOT_BMD',
-            '1 L1_Tscore',
-            '1 L2_Tscore',
-            '1 L3_Tscore',
-            '1 L4_Tscore',
-            '1 TOT_Tscore',
-            '1 L1_Zscore',
-            '1 L2_Zscore',
-            '1 L3_Zscore',
-            '1 L4_Zscore',
-            '1 TOT_Zscore',
-            '1 NECK_AREA',
-            '1 TROCH_AREA',
-            '1 INTER_AREA',
-            '1 HTOT_AREA',
-            '1 WARDS_AREA',
-            '1 NECK_BMC',
-            '1 TROCH_BMC',
-            '1 INTER_BMC',
-            '1 HTOT_BMC',
-            '1 WARDS_BMC',
-            '1 NECK_BMD',
-            '1 TROCH_BMD',
-            '1 INTER_BMD',
-            '1 HTOT_BMD',
-            '1 WARDS_BMD',
-
-            '1 TERAPIE_ORMONALI_CHECKBOX',
-            '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX',
-            '1 VITAMINA_D_TERAPIA_CHECKBOX',
-            '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',
-            '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX'
-        ]'''
-
     return tabella_completa[l]
-
 def null_accuracy_score(X, true_Y, model):
     '''
     Ritorna il rapporto tra le righe nulle indovinate (external accuracy) e il totale delle righe nulle
@@ -906,6 +950,54 @@ def no_null_accuracy_score(X, true_Y, model):
 
     # print("tot {}, ind {}, totot {}, rapp {}".format(tot_righe_nulle,tot_righe_nulle_indovinate,X.shape[0],tot_righe_nulle/X.shape[0]))
     return tot_righe_non_nulle_indovinate / tot_righe_non_nulle
+
+class Proposizione:
+    def __init__(self, operatore, nome_variabile_operando1, valore_costante_operando2):
+        self.operatore = operatore
+        self.nome_variabile_operando1 = nome_variabile_operando1
+        self.valore_costante_operando2 = valore_costante_operando2
+
+    def valuta(self, istanza):
+        if eval( str(istanza[self.nome_variabile_operando1])+self.operatore+self.valore_costante_operando2)==True:
+            return True
+        else:
+            return False
+
+    def __str__(self):
+        return self.nome_variabile_operando1+" "+self.operatore+" "+self.valore_costante_operando2
+
+class Regola:
+    proposizioni = []
+
+    def __init__(self, predizione, proposizioni, gs):
+        self.predizione = predizione
+        self.proposizioni = proposizioni
+        self.gs = gs
+
+    '''def add_preposizione(self, proposizione):
+        self.proposizioni.append(proposizione)'''
+
+    def valuta(self, istanza):
+        for prop in self.proposizioni:
+            if prop.valuta(istanza) == False:
+                return False
+        return self.predizione
+
+    def __str__(self):
+        if isinstance(self.proposizioni, list):
+            output = ""
+            for prop in self.proposizioni:
+                if prop!=self.proposizioni[-1]:
+                    output += str(prop)+" AND\n"
+                else:
+                    output+=str(prop)+": "+self.predizione+" "+self.gs
+                    return output
+        else:
+            return ": "+self.predizione+" "+self.gs
+
+
+
+
 
 if __name__ == '__main__':
     main()
