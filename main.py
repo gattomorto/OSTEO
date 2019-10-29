@@ -22,39 +22,87 @@ from weka.core.converters import Loader, Saver
 from weka.core.classes import Random
 import weka.core.jvm as jvm
 from weka.filters import Filter
-
+#from scipy.io import arff
+import arff
 def main():
+    '''#tabella_ridotta = pd.read_csv("osteo_r.csv")
+
+
+    tabella_ridotta = pd.read_csv("osteo_r.csv")
+    tabella_ridotta = tabella_ridotta.iloc[:, :-4]
+
+
+    train, test = train_test_split(tabella_ridotta, test_size=0.25, stratify=tabella_ridotta.iloc[:, -1])
+
+    train.to_csv('osteo_t_train.csv',index=False)
+    test.to_csv('osteo_t_test.csv',index=False)'''
+
+    train = pd.read_csv('osteo_t_train.csv')
+    test = pd.read_csv('osteo_t_test.csv')
+
+
     jvm.start(max_heap_size="900m")
 
-    loader = Loader(classname="weka.core.converters.ArffLoader")
-    data = loader.load_file("breast-cancer.arff")
+    loader = Loader(classname="weka.core.converters.CSVLoader")
+    data = loader.load_file("osteo_t_train.csv")
     data.class_is_last()
 
+    remove = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal", options=["-R", "last"])
+    remove.inputformat(data)
+    filtered = remove.filter(data)
+
     cls2 = Classifier(classname="weka.classifiers.rules.PART")
+    cls2.build_classifier(filtered)
 
-    # evaluation = Evaluation(data)
-    # evaluation.crossvalidate_model(cls2, data, 10, Random(42))
-    cls2.build_classifier(data)
-
-    # data un istanza ritorna la probabilità che assegnerebbe ad ogni classe
-    # print(cls2.distribution_for_instance(data.get_instance(data.num_instances-1)))
-
-    # stampa le regole
-    # print(cls2)
+    print(cls2)
 
     rules = estrai_regole(cls2)
-
-    for r in rules:
-        print(str(r)+'\n')
-
-
+    # sempre dopo estrai_regole
     jvm.stop()
 
+    print(rules)
 
+    testX = test.iloc[:, 0:-1]
+    testY = test.iloc[:, -1]
+    print(accuracy_rules(testX, testY, rules))
+
+def accuracy_rules(test_X, test_Y, regole):
+    '''
+    Valuta l'accuratezza delle regole
+    Uso generale:
+        Si divide in test, train.
+        Si allena PART su train.
+        Si ricavano le regole da PART.
+        E si testa l'accuratezza su test.
+    :param test_X: DataFrame
+    :param test_Y: DataFrame
+    :param regole: Regole
+    :return: None
+    '''
+    predicted_right = 0
+    # andava bene anche test_Y.shape[0]
+    num_instances = test_X.shape[0]
+    # per ogni riga
+    for row_index in range(0, num_instances):
+        istance_X = test_X.iloc[row_index,:]
+        true_Y = test_Y.values[row_index]
+        predicted_Y = regole.predict(istance_X)
+        # qui perchè il dato mi viene salvato in byte
+        strtt = str(true_Y)
+        strtt = re.search(r'\d',strtt)
+        strtt= strtt.group(0)
+        if predicted_Y == strtt:
+            predicted_right+=1
+
+    return predicted_right/num_instances
 def estrai_regole(classifier):
+    '''
+    dato 'classifier' (classifier = Classifier(classname="weka.classifiers.rules.PART")), la funzione ritorna
+    un oggetto di tipo Regole inizializzato con le regole di 'classifier'
+    '''
 
-    f = open("h.txt",'r+')
-    classifier = f.read()
+    #f = open("h.txt",'r+')
+    #classifier = f.read()
 
     # straggo le regole in formato testuale dal classificatore, esattamente quelle che vengono fuori nel software Weka
     regole_formato_testo = str(classifier)
@@ -65,9 +113,9 @@ def estrai_regole(classifier):
     regole_formato_testo = re.sub(r'[\r\n][\r\n]Number of Rules\s+:\s+[0-9]+$','',regole_formato_testo)
 
     # conterrà tutte le regole
-    regole = []
+    regole_list = []
     # conterrà le proposizioni di una certa regola
-    proposizioni = []
+    proposizioni_list = []
     # se la regola è vera, predizione è la classe predetta
     predizione = None
     # stringa (m/n) di ogni regola
@@ -94,15 +142,15 @@ def estrai_regole(classifier):
                 # dato che è un caso particolare che non ha proposizioni,
                 # alora questo caso è gestito trasformando la lista 'proposizioni' in variabile booleana = true
                 # cioè che le proposizioni sono tutte vere
-                proposizioni = True
+                proposizioni_list = True
 
             # caso 1) caso generico, parte quando si finisce di leggere una regola
             # qui la lista 'proposizioni' è riempita di proposizioni della regola opppure proposizioni = true se è
             # l'ultima regola. predizione letta dall'ultima riga dellA regolA
-            r = Regola(predizione, proposizioni, gs)
-            regole.append(r)
+            r = Regola(predizione, proposizioni_list, gs)
+            regole_list.append(r)
             # svuoto per far posto alle nuove proposizioni della regola successiva
-            proposizioni = []
+            proposizioni_list = []
             # continue perchè non devo leggere niente dalla riga vuota
             continue
 
@@ -144,11 +192,10 @@ def estrai_regole(classifier):
         # operando1: 1 VERTEBRE_NON_ANALIZZATE_L4
         # operando2: 0
         p = Proposizione(operatore, operando1, operando2)
-        proposizioni.append(p)
+        proposizioni_list.append(p)
 
+    regole = Regole(regole_list)
     return regole
-
-
 def multilabel():
     '''
     tutto quello che c'era nel main una volta
@@ -952,12 +999,33 @@ def no_null_accuracy_score(X, true_Y, model):
     return tot_righe_non_nulle_indovinate / tot_righe_non_nulle
 
 class Proposizione:
+    '''
+    Classe per modellare una proposizione di una certa regola di un classificatore weka
+    se una proposizione di una regola è:
+    XXX_TERAPIA_OST_ORM_ANNI_XXX <= 0.5 AND
+    operatore diventerà: <=
+    nome_variabile_operando1 diventerà: XXX_TERAPIA_OST_ORM_ANNI_XXX
+    valore_costante_operando2 diventerà: 0.5
+
+    ATTENZIONE:
+    Questa classe non può modellare la preposizione dell'ultima regola (: 0 (2.0))
+    cioè una prposizione sempre vera. Questo caso è gestito dentro la calsse Regola
+    '''
     def __init__(self, operatore, nome_variabile_operando1, valore_costante_operando2):
         self.operatore = operatore
         self.nome_variabile_operando1 = nome_variabile_operando1
         self.valore_costante_operando2 = valore_costante_operando2
 
+
     def valuta(self, istanza):
+        '''
+        Valuta se questa proposizione è vera o falsa.
+        esempio:
+            questa proposizione=XXX_TERAPIA_OST_ORM_ANNI_XXX <= 0.5
+            data un istanza si va nella colonna XXX_TERAPIA_OST_ORM_ANNI_XXX dell'istanza e si controlla se è <=0.5
+            se sì, si ritorna true, altrimenti no
+        '''
+        # vado nella colonna con il nome 'nome_variabile_operando1' e controllo se la condizione vale
         if eval( str(istanza[self.nome_variabile_operando1])+self.operatore+self.valore_costante_operando2)==True:
             return True
         else:
@@ -965,23 +1033,36 @@ class Proposizione:
 
     def __str__(self):
         return self.nome_variabile_operando1+" "+self.operatore+" "+self.valore_costante_operando2
-
 class Regola:
+    '''
+    La classe contiene una regola un classificatore PART
+    una regola è una lista di proposizioni
+    ATTENZIONE: la lista deve essere ordinata perchè le proposizioni e le regole vanno lette
+    dall'alto al basso.
+    L'ultima regola del classeificatore è una regola sempre vera e che non contiene proposizioni. In questa classe
+    viene modellata impostando 'proposizioni' = true.
+    Ogni regola ha anche una predizione (intero), cioè la predizione della classe se la regola è vera
+    Ogni regola ha gs:.....
+    '''
     proposizioni = []
-
     def __init__(self, predizione, proposizioni, gs):
         self.predizione = predizione
         self.proposizioni = proposizioni
         self.gs = gs
 
-    '''def add_preposizione(self, proposizione):
-        self.proposizioni.append(proposizione)'''
-
     def valuta(self, istanza):
+        '''
+        Data un istanza(vettore) da classificare, la funzione ritorna True se l'istanza soddisfa la regola.
+        '''
+        # caso particore di una regola sempre vera
+        if isinstance(self.proposizioni, bool):
+            return True
+        # una regola per essere vera, deve avere tutte le sue proposizioni vere
         for prop in self.proposizioni:
+            # se almeno una prop. è falsa, tutta la regola è falsa
             if prop.valuta(istanza) == False:
                 return False
-        return self.predizione
+        return True
 
     def __str__(self):
         if isinstance(self.proposizioni, list):
@@ -994,9 +1075,34 @@ class Regola:
                     return output
         else:
             return ": "+self.predizione+" "+self.gs
+class Regole:
+    '''
+    Semplicemente una lista di 'Regola'
+    Usato per prevedere una classe data un istanza
+    '''
+    def __init__(self, regole):
+        '''
+        ATTENZIONE: è importante l'ordine delle regole. La lista di decisione di PART va interpretata dall'altro
+        verso il basso
+        '''
+        self.regole = regole
 
+    def __str__(self):
+        output = ''
+        for r in self.regole:
+            output+= str(r) + '\n\n'
+        return output
 
+    def get_num_of_rules(self):
+        return len(self.regole)
 
+    '''
+    Se una regola è vera, ritorno la predizione di quella regola
+    '''
+    def predict(self, istanza):
+        for r in self.regole:
+            if r.valuta(istanza) == True:
+                return r.predizione
 
 
 if __name__ == '__main__':
