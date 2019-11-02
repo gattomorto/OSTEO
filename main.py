@@ -24,22 +24,186 @@ import weka.core.jvm as jvm
 from weka.filters import Filter
 #from scipy.io import arff
 import arff
+from sqlalchemy import create_engine
+import pymysql
+
 def main():
-    '''#tabella_ridotta = pd.read_csv("osteo_r.csv")
+    jvm.start(max_heap_size="900m")
+
+    class_name = '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX'
+
+    tabella_completa = pd.read_csv("osteo.csv")
+    # preprocessata e filtrata scegliendo solo gli attributi necessari + ultimo attributo è la classe
+    tabella_preprocessata = preprocessamento_nuovo(tabella_completa, class_name)
+
+    cls = Classifier(classname="weka.classifiers.rules.PART", options=["-M","2","-C","0.25","-Q","1"])
+    cls.build_classifier(data)
+
+    evl = Evaluation(data)
+    evl.test_model(cls,data)
+    print(evl.summary())
 
 
+    
+    jvm.stop()
+# altri main()
+def secondo_script():
+    '''
+    fare il preprocessing in base al dominio della colonna. cioè se è stringa lunga allora vettorizzo, se sono pochi valor
+    allora nominal, ecc...
+    vettorizzo se il numero medio di parole per cella è > di una costante
+    nominal se i valori unici sono < di una costante
+    date se contiene tutti numeri che sono tra 1900 e oggi poi creo una colonna con la differenza tra oggi e la colonna
+    numeric altrimenti
+
+    il risultato è la tabella preprocessata per weka
+    :return:
+    '''
+def primo_script():
+    '''
+    *fare la queri con i join
+    *qui mi si deve dire quale colonne voglio prevedere
+    *fare il controllo se ce quella da prevedere
+    *filtrare solo le colonne che mi servono
+    *scrivere sul file il risultato della query
+    *costruire il log
+
+    :return:
+    '''
+    db_connection_str = 'mysql+pymysql://root:cazzodicane@localhost/ggg'
+    db_connection = create_engine(db_connection_str)
+    try:
+        df = pd.read_sql(
+            'select * from anamnesi inner join diagnosi on anamnesi.PATIENT_KEY = diagnosi.PATIENT_KEY and anamnesi.SCAN_DATE = diagnosi.SCAN_DATE inner join patient on anamnesi.PATIENT_KEY = patient.PATIENT_KEY inner join scananalysis on anamnesi.PATIENT_KEY = scananalysis.PATIENT_KEY and anamnesi.SCAN_DATE = scananalysis.SCAN_DATE inner join spine on anamnesi.PATIENT_KEY = spine.PATIENT_KEY and anamnesi.SCAN_DATE = spine.SCAN_DATE',
+            con=db_connection)
+    except:
+        # scrivo su log
+        print('err')
+        exit(-1)
+
+    print(df)
+def preprocessamento_per_weka():
+    '''
+    attenzione produce tabella arff con tutte e  terapie
+    :return:
+    '''
+    tabella_completa = pd.read_csv("osteo200.csv")
+    tabella_ridotta = preprocessamento_nuovo(tabella_completa)
+
+    tabella_ridotta.to_csv('perwekacsv.csv', index=False)
+
+    nomi_col_da_trasf_in_nominal = [
+        '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',
+        '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
+        '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
+        '1 TERAPIA_ALTRO_CHECKBOX',
+        '1 TERAPIA_COMPLIANCE',
+        '1 FRATTURE',
+        '1 FRATTURA_SITI_DIVERSI',
+        '1 FRATTURA_FAMILIARITA',
+        '1 ABUSO_FUMO_CHECKBOX',
+        '1 USO_CORTISONE_CHECKBOX',
+        '1 MALATTIE_ATTUALI_CHECKBOX',
+        '1 MALATTIE_ATTUALI_ARTRITE_REUM',
+        '1 MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
+        '1 MALATTIE_ATTUALI_LUPUS',  # NON
+        '1 MALATTIE_ATTUALI_SCLERODERMIA',  # NON
+        '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON
+        '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
+        '1 PATOLOGIE_UTERINE_CHECKBOX',  # NON
+        '1 NEOPLASIA_CHECKBOX',  # NON
+        '1 SINTOMI_VASOMOTORI',  # NON
+        '1 SINTOMI_DISTROFICI',  # NON
+        '1 DISLIPIDEMIA_CHECKBOX',  # NON
+        '1 IPERTENSIONE',  # NON
+        '1 RISCHIO_TEV',  # NON
+        '1 PATOLOGIA_CARDIACA',  # NON
+        '1 PATOLOGIA_VASCOLARE',  # NON
+        '1 INSUFFICIENZA_RENALE',  # NON
+        '1 PATOLOGIA_RESPIRATORIA',  # NON
+        '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
+        '1 PATOLOGIA_EPATICA',  # NON
+        '1 PATOLOGIA_ESOFAGEA',  # NON
+        '1 GASTRO_DUODENITE',  # NON
+        '1 GASTRO_RESEZIONE',  # NON
+        '1 RESEZIONE_INTESTINALE',  # NON
+        '1 MICI',  # NON
+        '1 VITAMINA_D_CHECKBOX',
+        '1 ALLERGIE_CHECKBOX',  # NON + quella sotto
+        '1 INTOLLERANZE_CHECKBOX',
+        '1 SITUAZIONE_COLONNA_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_DX',
+        '1 OSTEOPOROSI_GRAVE',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L1',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L2',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L3',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L4',  # NON
+        '1 COLONNA_NON_ANALIZZABILE',  # NON
+        '1 COLONNA_VALORI_SUPERIORI',  # NON
+        '1 FEMORE_NON_ANALIZZABILE',  # NON
+        '1 FRAX_APPLICABILE',  # NON**
+        '1 TBS_COLONNA_APPLICABILE',
+        '1 DEFRA_APPLICABILE',  # NON# NON**
+        '1 NORME_PREVENZIONE',  # NON
+        '1 ALTRO_CHECKBOX',  # NON
+        '1 NORME_COMPORTAMENTALI',  # NON
+        '1 ATTIVITA_FISICA',  # NON
+        '1 SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
+        '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
+        '1 SOSPENSIONE_FUMO',  # NON
+        '1 CONTROLLO_DENSITOMETRICO_CHECKBOX',  # NON
+
+        '1 TERAPIE_ORMONALI_CHECKBOX',
+        '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX',
+        '1 VITAMINA_D_TERAPIA_CHECKBOX',
+        '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',
+        '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX']
+    # conterrà al posto dei nomi, gli indici. Serve per il filtro NumericToNominal
+    ind_col_da_trasf_in_nominal = []
+    for nome in nomi_col_da_trasf_in_nominal:
+        # dato il nome della colonna, ottengo l'indice a cui si trova
+        # +1 perchè weka conta da 1
+        ind_col_da_trasf_in_nominal.append(tabella_ridotta.columns.get_loc(nome) + 1)
+
+    # options del filtro deve essere di questo tipo: "-R 2,8,9,10"
+    # allora dalla dalla lista in formato stringa: "[2, 8, 9, 10]" elimino il primo e l'ultimo carattere
+    # cosi diventa "2, 8, 9, 10"
+    ind_col_da_trasf_in_nominal = str(ind_col_da_trasf_in_nominal)
+    ind_col_da_trasf_in_nominal = ind_col_da_trasf_in_nominal[1:-1]
+
+    jvm.start(max_heap_size="900m")
+    loader = Loader(classname="weka.core.converters.CSVLoader")
+    data = loader.load_file("perwekacsv.csv")
+
+    remove = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal",
+                    options=["-R", ind_col_da_trasf_in_nominal])
+    remove.inputformat(data)
+    filtered = remove.filter(data)
+
+    saver = Saver(classname="weka.core.converters.ArffSaver")
+    saver.save_file(filtered, "perwekaarff.arff")
+
+    jvm.stop()
+def estrazione_regole_e_verifica():
+
+    '''
     tabella_ridotta = pd.read_csv("osteo_r.csv")
+    # voglio prevedere solo terapie orm. check.
     tabella_ridotta = tabella_ridotta.iloc[:, :-4]
-
 
     train, test = train_test_split(tabella_ridotta, test_size=0.25, stratify=tabella_ridotta.iloc[:, -1])
 
+    # lunico modo di comunicare con il wrapper è salvando e poi leggendo il file
+    # salvo due perchè poi voglio vedere se l'accuracy su interfaccia grafica è la stessa che ottengo con le regole estratte
     train.to_csv('osteo_t_train.csv',index=False)
     test.to_csv('osteo_t_test.csv',index=False)'''
 
-    train = pd.read_csv('osteo_t_train.csv')
+    # serve solo il test.. per verificare l'accuratezza
+    #train = pd.read_csv('osteo_t_train.csv')
     test = pd.read_csv('osteo_t_test.csv')
-
 
     jvm.start(max_heap_size="900m")
 
@@ -47,6 +211,8 @@ def main():
     data = loader.load_file("osteo_t_train.csv")
     data.class_is_last()
 
+    # se legge da scv vede ter. orm. come numerico e io lo voglio nominal, perhcè PART non funziona altrimenti
+    # non fare caso al nome 'remove'. dovrebbe essere 'converted'
     remove = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal", options=["-R", "last"])
     remove.inputformat(data)
     filtered = remove.filter(data)
@@ -57,7 +223,7 @@ def main():
     print(cls2)
 
     rules = estrai_regole(cls2)
-    # sempre dopo estrai_regole
+    # jvm.stop() sempre dopo estrai_regole
     jvm.stop()
 
     print(rules)
@@ -66,6 +232,128 @@ def main():
     testY = test.iloc[:, -1]
     print(accuracy_rules(testX, testY, rules))
 
+# funzioni moderne
+def stratified_train_test_split_arff(class_name):
+    '''
+    Ritorna train(75%) test(25%) preprocessato in formato .arff stratificato su 'class_name'.
+    I dataset avranno solo una delle cinque terapie (class_name)
+    Imposta la classe
+
+    Divido train-test usando sklearn e poi finisco il preprocessamento applicando il filtro NumericToNominal
+    a train e test, infine salvo train test in formato arff.
+    '''
+    tabella_completa = pd.read_csv("osteo.csv")
+    # preprocessata e filtrata scegliendo solo gli attributi necessari + ultimo attributo è la classe
+    tabella_preprocessata = preprocessamento_nuovo(tabella_completa, class_name)
+
+    # weka non ha stratified train_test_split
+    train_, test_ = train_test_split(tabella_preprocessata, test_size=0.25,
+                                   stratify=tabella_preprocessata.iloc[:, -1])
+    # l'unico modo di comuicare con weka è salvando il file su hhd
+    train_.to_csv('train.csv', index=False)
+    test_.to_csv('test.csv', index=False)
+
+    # tutto questo paragrafo serve a creare gli indici delle colonne a cui applicare il filtro
+    # NumericToNominal di weka
+    nomi_col_da_trasf_in_nominal = [
+        '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',
+        '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
+        '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
+        '1 TERAPIA_ALTRO_CHECKBOX',
+        '1 TERAPIA_COMPLIANCE',
+        '1 FRATTURE',
+        '1 FRATTURA_SITI_DIVERSI',
+        '1 FRATTURA_FAMILIARITA',
+        '1 ABUSO_FUMO_CHECKBOX',
+        '1 USO_CORTISONE_CHECKBOX',
+        '1 MALATTIE_ATTUALI_CHECKBOX',
+        '1 MALATTIE_ATTUALI_ARTRITE_REUM',
+        '1 MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
+        '1 MALATTIE_ATTUALI_LUPUS',  # NON
+        '1 MALATTIE_ATTUALI_SCLERODERMIA',  # NON
+        '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON
+        '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
+        '1 PATOLOGIE_UTERINE_CHECKBOX',  # NON
+        '1 NEOPLASIA_CHECKBOX',  # NON
+        '1 SINTOMI_VASOMOTORI',  # NON
+        '1 SINTOMI_DISTROFICI',  # NON
+        '1 DISLIPIDEMIA_CHECKBOX',  # NON
+        '1 IPERTENSIONE',  # NON
+        '1 RISCHIO_TEV',  # NON
+        '1 PATOLOGIA_CARDIACA',  # NON
+        '1 PATOLOGIA_VASCOLARE',  # NON
+        '1 INSUFFICIENZA_RENALE',  # NON
+        '1 PATOLOGIA_RESPIRATORIA',  # NON
+        '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
+        '1 PATOLOGIA_EPATICA',  # NON
+        '1 PATOLOGIA_ESOFAGEA',  # NON
+        '1 GASTRO_DUODENITE',  # NON
+        '1 GASTRO_RESEZIONE',  # NON
+        '1 RESEZIONE_INTESTINALE',  # NON
+        '1 MICI',  # NON
+        '1 VITAMINA_D_CHECKBOX',
+        '1 ALLERGIE_CHECKBOX',  # NON + quella sotto
+        '1 INTOLLERANZE_CHECKBOX',
+        '1 SITUAZIONE_COLONNA_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_DX',
+        '1 OSTEOPOROSI_GRAVE',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L1',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L2',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L3',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L4',  # NON
+        '1 COLONNA_NON_ANALIZZABILE',  # NON
+        '1 COLONNA_VALORI_SUPERIORI',  # NON
+        '1 FEMORE_NON_ANALIZZABILE',  # NON
+        '1 FRAX_APPLICABILE',  # NON**
+        '1 TBS_COLONNA_APPLICABILE',
+        '1 DEFRA_APPLICABILE',  # NON# NON**
+        '1 NORME_PREVENZIONE',  # NON
+        '1 ALTRO_CHECKBOX',  # NON
+        '1 NORME_COMPORTAMENTALI',  # NON
+        '1 ATTIVITA_FISICA',  # NON
+        '1 SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
+        '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
+        '1 SOSPENSIONE_FUMO',  # NON
+        '1 CONTROLLO_DENSITOMETRICO_CHECKBOX']
+    nomi_col_da_trasf_in_nominal.append(class_name)
+    # conterrà al posto dei nomi, gli indici. Serve per il filtro NumericToNominal
+    ind_col_da_trasf_in_nominal = []
+    for nome in nomi_col_da_trasf_in_nominal:
+        # dato il nome della colonna, ottengo l'indice a cui si trova
+        # +1 perchè weka conta da 1
+        ind_col_da_trasf_in_nominal.append(tabella_preprocessata.columns.get_loc(nome) + 1)
+    # options del filtro deve essere di questo tipo: "-R 2,8,9,10"
+    # allora dalla dalla lista in formato stringa: "[2, 8, 9, 10]" elimino il primo e l'ultimo carattere
+    # cosi diventa "2, 8, 9, 10"
+    ind_col_da_trasf_in_nominal = str(ind_col_da_trasf_in_nominal)
+    ind_col_da_trasf_in_nominal = ind_col_da_trasf_in_nominal[1:-1]
+
+    loader = Loader(classname="weka.core.converters.CSVLoader")
+    train = loader.load_file("train.csv")
+    test = loader.load_file("test.csv")
+
+    fltr = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal",
+                            options=["-R", ind_col_da_trasf_in_nominal])
+
+    fltr.inputformat(train)
+    train = fltr.filter(train)
+
+    fltr.inputformat(test)
+    test = fltr.filter(test)
+
+    train.class_is_last()
+    test.class_is_last()
+
+    saver = Saver(classname="weka.core.converters.ArffSaver")
+    saver.save_file(train, "train.arff")
+    saver.save_file(test, "test.arff")
+
+    return train, test, train_, test_
+
+    #jvm.stop()
 def accuracy_rules(test_X, test_Y, regole):
     '''
     Valuta l'accuratezza delle regole
@@ -167,7 +455,8 @@ def estrai_regole(classifier):
         # regex estrae interi o float che sono in mezzo ad un [operatore][spazio] e [AND]
         # oppure se siamo arrivati all'ultima riga della regola che è del tipo '1 NORME_PREVENZIONE > 0: 1 (13.0)'
         # regex estrae interi o float in mezzo ad un [operatore][spazio] e [:] cioè lo '0' in questo caso
-        operando2 = re.search(r'(?<=\s)[+-]?([0-9]*[.])?[0-9]+((?=\sAND$)|(?=:))', line).group(0)
+        # TODO: assicurati che prenda tutte le stringhe
+        operando2 = re.search(r'(?<=\s)[a-z\sA-Z0-9.,+-]+((?=\sAND$)|(?=:))', line).group(0)
 
         # qui cerco di estrarre la predizione.
         # se line = '1 NORME_PREVENZIONE > 0: 1 (13.0)' allora estraggo '1'
@@ -196,70 +485,574 @@ def estrai_regole(classifier):
 
     regole = Regole(regole_list)
     return regole
-def multilabel():
+def preprocessamento_nuovo(tabella_completa,class_name):
+    def one_hot_encode(frame, column_name, regex, prefix):
+        '''
+        frame:
+        A               B
+        cane bau        a
+        gatto miao      b
+        pesce blob      c
+
+        column_name: A
+        regex: "solo la prima parola"
+        prefix: x
+
+        output:
+        A               B    xcane  xgatto xpesce
+        cane bau        a     1      0      0
+        gatto miao      b     0      1      0
+        pesce blob      c     0      0      1
+        gatto miao      e     0      1      0
+
+        e la lista delle colonne aggiunte [xcane, xgatto, xpesce] (serve perchè dopo dovrò selezionare queste colonne)
+
+        regex serve nel caso in cui si desiderasse considerare una sottostringa della riga (cioe al posto di 'cane bau'
+        è come se fosse 'cane')
+
+        il prefisso serve per evitare che ci siano colonne con lo stesso nome: questa funzione può essere chiamata
+        due volte con due colonne che hanno 'na' e allora si formerà una colonna comune
+        '''
+        # conterrà cane, gatto, pesce
+        # questa conterrà tutti i valori con cui fare one-hot-encoding
+        valori_nominali = []
+        for row_index in range(0, frame.shape[0]):
+            # iesima riga del frame, sarà 'cane bau', 'gatto miao', 'pesce blob'
+            row = frame.loc[row_index, column_name]
+            # la sottostringa di interesse. sarà 'cane', 'gatto', 'pesce'
+            value_of_interest = re.search(regex, row)
+            valori_nominali.append(value_of_interest[0])
+        # trasformo la lista in DataFrame
+        valori_nominali = pd.Series(valori_nominali)
+        valori_nominali = valori_nominali.to_frame()
+        one_hot_encoder = OneHotEncoder()
+        one_hot_encoder.fit(valori_nominali)
+        # valori one-hot-encoded, però è una matrice, bisogna trasformare in DataFrame
+        valori_nominali_encoded_ndarray = one_hot_encoder.transform(valori_nominali).toarray()
+        # servono per la creazione del DataFrame
+        nomi_colonne_nuove = one_hot_encoder.get_feature_names()
+        # aggiungo il prefisso
+        nomi_colonne_nuove = [prefix+col_name for col_name in nomi_colonne_nuove]
+        # DataFrame creato, ora lo aggiungere al DataFrame passato
+        valori_nominali_encoded_dataframe = pd.DataFrame(valori_nominali_encoded_ndarray, columns=nomi_colonne_nuove)
+        frame = pd.concat([frame, valori_nominali_encoded_dataframe], axis=1)
+        # ritorno i nomi perchè poi bisogna selezionarli per il modello
+        return frame, nomi_colonne_nuove
+
+    def remove_stopwords_and_stem(sentence, regex):
+        #TODO: 10.000ui li trasforma in 10.000u
+        '''
+        Data una stringa contenete una frase ritorna una stringa con parole in forma radicale e senza rumore
+        es:
+        sentence: ha assunto alendronato per 2 anni
+        regex: voglio solo parole
+        returns: assunt alendronato
+        '''
+
+        tokenizer = RegexpTokenizer(regex)
+        # crea una lista di tutti i match del regex
+        tokens = tokenizer.tokenize(sentence)
+        #tokens = [x.lower() for x in tokens]
+
+        # libreria nltk
+        stop_words = stopwords.words('italian')
+        # 'non' è molto importante
+        stop_words.remove('non')
+        stop_words += ['.', ',', 'm','t' ,'gg','die','fa','mg','cp', 'im', 'fino', 'uno', 'due', 'tre', 'quattro', 'cinque','sei', 'ogni',
+                       'alcuni', 'giorni', 'giorno', 'mesi', 'mese', 'settimana', 'settimane', 'circa', 'aa', 'gtt',
+                       'poi', 'gennaio', 'febbraio', 'marzo', 'maggio', 'aprile', 'giugno', 'luglio', 'agosto',
+                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett','pu','u']
+
+        # trovo tutti i token da eliminare dalla frase
+        to_be_removed = []
+        for token in tokens:
+            if token in stop_words:
+                to_be_removed.append(token)
+
+        # rimuovo i token dalla frase
+        for elem in to_be_removed:
+            if elem in tokens:
+                tokens.remove(elem)
+
+        #print(tokens)
+        # la parte di stemming
+        stemmer = SnowballStemmer("italian")
+        tokens = [stemmer.stem(tok) for tok in tokens]
+
+        # converto da lista di token in striga
+        output = ' '.join(tokens)
+        return output
+
+    def vectorize(column_name, frame, prefix, regex=r'(?:[.a-zA-Z]+)', n_gram_range=(2, 2)):
+        # TODO:  vectorizer.fit_transform(column_list).toarray() è in grado di gestire i valori null, allora perchè metto 'na'?
+        '''
+        ATTENZIONE: se scegli solo bigrammi il vettore delle frasi diverse di una sola parola sarà nullo
+                    mi sono accorto perche 'na' e 'calciferolo' trattato uguale
+
+        dato il nome di una colonna contenente testo, per ogni riga crea una rappresentazione
+        vettoriale senza stopwords e stemmed (vedi remove_stopwords_and_stem())
+        dopo aver visto tutte le righe, avremo un vettore per ogni riga, cioè una matrice
+        questa verrà integrato al dataframe in input.
+
+        :param column_name: nome colonna da vettorizzare
+        :param frame: dataframe
+        :param prefix: per differenziare i nomi delle colonne in output
+        :param regex: come dividere i token (cosa sarà un gramma) (il regex di default prende solo parole)
+        :param n_gram_range: (2,2) se voglio solo bigrammi, (1,2) se voglio bigrammi e monogrammi...
+        :return: la tabella con le nuove colonne e i nomi delle nuove colonne
+        '''
+        # lista di frasi
+        column_list = frame[column_name].tolist()
+        # lista di frasi tutte in minuscolo
+        column_list = [cell.lower() for cell in column_list]
+        for i in range(0, len(column_list)):
+            column_list[i] = remove_stopwords_and_stem(column_list[i], regex)
+        vectorizer = TfidfVectorizer(ngram_range=n_gram_range, norm=None)
+        # in vectorized_matrix ogni riga è un vettore corrispondente ad una frase
+        vectorized_matrix = vectorizer.fit_transform(column_list).toarray()
+        # servono per filtrare tabella_completa. il suffisso serve perchè cosi se viene chiamata la funzione piu volte,
+        # non si confonde i nomi delle colonne... perchè vectorized ha le colonne numerate da 0 a n
+        # nomi_nuove_colonne_vectorized sarà = [prefix0, prefix1, ... , prefixn]
+        nomi_nuove_colonne_vectorized = [prefix + str(i) for i in range(0, vectorized_matrix.shape[1])]
+        # converto in DataFrame perchè devo accostarlo alla tabella_completa
+        vectorized_frame = pd.DataFrame(vectorized_matrix, columns=nomi_nuove_colonne_vectorized)
+        frame = pd.concat([frame, vectorized_frame], axis=1)
+        return frame, nomi_nuove_colonne_vectorized
+
+    def polinomial_regression(col_name_x, col_name_y, frame, degree_, plt_show=False):
+        '''
+        esegue una regressione polinomiale univariata
+        si usa per prevedere col_name_y usando col_name_x
+        :param col_name_x: nome della colonna dei valori di x
+        :param col_name_y: nome della colonna dei valori da modellare (la colonna da prevedere)
+        :param frame: il dataframe da dove prendere le colonne
+        :param degree_: il grado del polinomio
+        :param plt_show: se true mostra il grafico
+        :return: il modello della regressione e polynomial_features per trasformare in features quadratiche
+        '''
+        # questo evita il problema dei plot sovrapposti
+        plt.clf()
+        # xy_frame contiene solo la colonna X e la colonna Y
+        xy_frame = frame[[col_name_x, col_name_y]]
+        xy_frame = xy_frame.dropna()
+        # tengo solo le righe che non hanno zeri
+        xy_frame = xy_frame[xy_frame[col_name_x] != 0]
+        xy_frame = xy_frame[xy_frame[col_name_y] != 0]
+
+        # scatter plot di X e Y (viene mostrato solo se plt_show = true)
+        plt.scatter(xy_frame[col_name_x].values, xy_frame[col_name_y].values, s=0.2, c='black')
+
+        polynomial_features = PolynomialFeatures(degree=degree_)
+        # x ritrasformato per rigressione polinomiale
+        x_poly = polynomial_features.fit_transform(xy_frame[col_name_x].values.reshape(-1, 1))
+        model = LinearRegression()
+        model.fit(x_poly, xy_frame[col_name_y].values)
+        # y_poly_pred = model.predict(x_poly)
+
+        # da qui in poi è solo per il grafico e serve solo se plt_show = true
+        # min,max per il dominio del grafico
+        min_x = min(xy_frame[col_name_x].values)
+        max_x = max(xy_frame[col_name_x].values)
+        x_plot = np.arange(min_x, max_x, 0.1)
+        x_plot_poly = polynomial_features.fit_transform(x_plot.reshape(-1, 1))
+        y_plot = model.predict(x_plot_poly)
+        plt.plot(x_plot, y_plot, c='red')
+
+        if plt_show:
+            plt.show()
+
+        return model, polynomial_features
+
+    # commento per il momento perchè devo fare riferimento a valori vecchi
+    '''# Tengo solo quelli che sono venuti prima di ottobre
+    tabella_completa = tabella_completa.loc[tabella_completa['1 SCAN_DATE'] <= '2019-10-01', :].copy()
+    tabella_completa.reset_index(drop=True, inplace=True)'''
+
+    # region categorizzo ULTIMA_MESTRUAZIONE
+    # come prima cosa sostituisco l'anno dell'ultima mestruazione con quanti anni non ha mestruazioni
+    # divido in range [-inf,mean-std]=poco, [mean-std,mean+std]=medio, [mean+std,+inf]=tanto, e per gli uomini e/o per
+    # le donne che hanno ancora il ciclo lascio null
+    birthdate_col = tabella_completa['1 BIRTHDATE']
+    # dalla data di nascita mi serve solo l'anno
+    birthdate_year_col = [data[0:4] for data in birthdate_col]
+    # nel ciclo viene fatta la differenza
+    for row_index in range(0, tabella_completa.shape[0]):
+        # qui sostituisco alla data dell'ultima mest. con gli anni che non ha mest.
+        # la differenza lascia nan per chi ha ULTIMA_MESTRUAZIONE nan
+        tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = \
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] - int(birthdate_year_col[row_index])
+    std = tabella_completa['1 ULTIMA_MESTRUAZIONE'].std()
+    mean = tabella_completa['1 ULTIMA_MESTRUAZIONE'].mean()
+    # in questa parte sostituisco gli anni in cui non ha il ciclo con una tra le categorie
+    for row_index in range(0, tabella_completa.shape[0]):
+        anni_senza_ciclo = tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE']
+        if mean-std <= anni_senza_ciclo <= mean+std:
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'medio'
+        elif anni_senza_ciclo > mean + std:
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'tanto'
+        elif anni_senza_ciclo < mean - std:
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'poco'
+    #endregion
+
+    # vettorizato INDAGINI_APPROFONDIMENTO_LISTA
+    tabella_completa['1 INDAGINI_APPROFONDIMENTO_LISTA'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA =\
+        vectorize('1 INDAGINI_APPROFONDIMENTO_LISTA', tabella_completa, prefix='ial')
+
+    # vettorizato SOSPENSIONE_TERAPIA_FARMACO
+    tabella_completa['1 SOSPENSIONE_TERAPIA_FARMACO'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO\
+        = vectorize('1 SOSPENSIONE_TERAPIA_FARMACO', tabella_completa, prefix= 'stf', n_gram_range=(1,1))
+
+    # vettorizato ALTRO
+    tabella_completa['1 ALTRO'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_ALTRO = vectorize('1 ALTRO', tabella_completa, prefix= 'altr')
+
+    # vettorizato INTOLLERANZE
+    tabella_completa['1 INTOLLERANZE'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_INTOLLERANZE = \
+        vectorize('1 INTOLLERANZE', tabella_completa, prefix='i', n_gram_range=(1, 1))
+
+    # vettorizato ALLERGIE
+    tabella_completa['1 ALLERGIE'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_ALLERGIE = \
+        vectorize('1 ALLERGIE', tabella_completa, prefix='a', n_gram_range=(2, 2))
+
+    # vettorizato DISLIPIDEMIA_TERAPIA
+    tabella_completa['1 DISLIPIDEMIA_TERAPIA'].fillna('na', inplace=True)
+    # (1,1) perchè sono quasi tutte parole singole
+    tabella_completa, nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA = \
+        vectorize('1 DISLIPIDEMIA_TERAPIA', tabella_completa, prefix='dt', n_gram_range=(1, 1))
+
+    # vettorizato NEOPLASIA_MAMMARIA_TERAPIA
+    tabella_completa['1 NEOPLASIA_MAMMARIA_TERAPIA'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA = \
+        vectorize('1 NEOPLASIA_MAMMARIA_TERAPIA', tabella_completa, prefix='nmt', n_gram_range=(2, 2))
+
+    # vettorizato PATOLOGIE_UTERINE_DIAGNOSI
+    tabella_completa['1 PATOLOGIE_UTERINE_DIAGNOSI'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI = \
+        vectorize('1 PATOLOGIE_UTERINE_DIAGNOSI', tabella_completa, prefix= 'pud', n_gram_range=(1,2))
+
+
+    # sostituisco a 10000UI 10.000UI in VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA']
+        if not pd.isnull(row):
+            tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = re.sub(r'10000', r'10.000', row)
+
+    # vettorizato VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
+    tabella_completa['1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'].fillna('na', inplace=True)
+    # regex: principio + per alcuni pricipi, anche la quantità
+    tabella_completa, nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA = \
+        vectorize('1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA',
+                  tabella_completa,
+                  prefix='vidtol',
+                  n_gram_range=(1, 2),
+                  regex=r'(?:(?:calcifediolo|colecalciferolo)\s[0-9]+[.]{0,1}[0-9]*(?:ui|\sui))|(?:Supplementazione giornaliera di vit D3|calcifediolo|^na$)')
+
+    # TODO: seve un regex che prenda anche numeri del tipo 10.000UI perchè è comune
+    # vettorizato TERAPIA_ALTRO
+    tabella_completa['1 TERAPIA_ALTRO'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_TERAPIA_ALTRO = vectorize('1 TERAPIA_ALTRO', tabella_completa, 'ta')
+
+    # vettorizzato ALTRE_PATOLOGIE
+    tabella_completa['1 ALTRE_PATOLOGIE'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE = vectorize('1 ALTRE_PATOLOGIE', tabella_completa, 'ap')
+
+    # vettorizzato CAUSE_OSTEOPOROSI_SECONDARIA
+    tabella_completa['1 CAUSE_OSTEOPOROSI_SECONDARIA'].fillna('na', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_CAUSE_OSTEOPOROSI_SECONDARIA = vectorize('1 CAUSE_OSTEOPOROSI_SECONDARIA', tabella_completa,'cos',n_gram_range=(1,2))
+
+
+
+    # alcuni hanno -1
+    tabella_completa['1 BMI'].replace(-1, tabella_completa['1 BMI'].mean(), inplace=True)
+
+    # region creazione di XXX_TERAPIA_OST_ORM_ANNI_XXX da TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA separando gli anni
+    # attenzione questo paragrafo deve stare prima di sostituizione della colonna con il principio
+    # la lista da trasformare poi in colonna del DataFrame
+    terapia_osteoprotettiva_ormon_anni_col = []
+    for row_index in range(0, tabella_completa.shape[0]):
+        terapia_osteoprotettiva_orm = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
+        if not pd.isna(terapia_osteoprotettiva_orm):
+            # isolo la parte di testo con il numero di anni
+            anni = re.search(r'[a-z\s],[0-9]+(?:[,.][0-9]+)*\sanni$', terapia_osteoprotettiva_orm)
+            # ottengo il numero senza altri caratteri
+            anni = re.search('[0-9]+(?:[.,][0-9]*)*', anni.group(0))
+            # se il numero ha una virgola, si sostituisce con il punto
+            anni = re.sub(",", ".", anni.group(0))
+        # i valori null li lascio, ci pensa weka
+        else:
+            anni = np.nan
+        terapia_osteoprotettiva_ormon_anni_col.append(anni)
+    # aggiungo la nuova colonna con un nome che suggerisce l'artificialità
+    tabella_completa['XXX_TERAPIA_OST_ORM_ANNI_XXX'] = terapia_osteoprotettiva_ormon_anni_col
+    # endregion
+
+    # region sostituisco TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA solo con il principio
+    # se in origine era: "TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg,1 anni" diventa TSEC
+    # lascio i null, ci pensa weka
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
+        if not pd.isna(row):
+            # estraggo solo il principio
+            principio_MatchObject = re.search(r'(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-zA-Z]*))|(\s[+][a-zA-Z]*)){0,1})', row)
+            tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = principio_MatchObject.group(0)
+    # endregion
+
+    # region creazione di XXX_TERAPIA_OST_SPEC_ANNI_XXX da TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA separando gli anni
+    # attenzione questo paragrafo deve stare prima di sostituizione della colonna con il principio
+    # la lista da trasformare poi in colonna del DataFrame
+    terapia_osteoprotettiva_spec_anni_col = []
+    for row_index in range(0, tabella_completa.shape[0]):
+        terapia_osteoprotettiva_spec = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
+        if not pd.isna(terapia_osteoprotettiva_spec):
+            # isolo la parte di testo con il numero di anni
+            anni = re.search(r'[a-z\s],[0-9]+(?:[,.][0-9]+)*\sanni$', terapia_osteoprotettiva_spec)
+            # ottengo il numero senza altri caratteri
+            anni = re.search('[0-9]+(?:[.,][0-9]*)*', anni.group(0))
+            # se il numero ha una virgola, si sostituisce con il punto
+            anni = re.sub(",", ".", anni.group(0))
+        # i valori null li lascio, ci pensa weka
+        else:
+            anni = np.nan
+        terapia_osteoprotettiva_spec_anni_col.append(anni)
+    # aggiungo la nuova colonna con un nome che suggerisce l'artificialità
+    tabella_completa['XXX_TERAPIA_OST_SPEC_ANNI_XXX'] = terapia_osteoprotettiva_spec_anni_col
+    # endregion
+
+    # region sostituisco TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA solo con il principio
+    # se in origine era: "TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg,1 anni" diventa TSEC
+    # lascio i null, ci pensa weka
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
+        if not pd.isna(row):
+            # estraggo solo il principio
+            principio_MatchObject = re.search(r'(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-zA-Z]*))|(\s[+][a-zA-Z]*)){0,1})', row)
+            tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = principio_MatchObject.group(0)
+    # endregion
+
+
+    # region fillna
+    tabella_completa['1 FRATTURA_VERTEBRE'].fillna('no fratture', inplace=True)
+    tabella_completa['1 FRATTURA_FEMORE'].fillna('no fratture', inplace=True)
+    tabella_completa['1 ABUSO_FUMO'].fillna('non fuma', inplace=True)
+    tabella_completa['1 USO_CORTISONE'].fillna('non usa cortisone', inplace=True)
+    tabella_completa['1 TERAPIA_ALTRO_CHECKBOX'].fillna(0, inplace=True)
+    # endregion
+
+    l = [
+            '1 AGE', #OK
+            '1 SEX',#OK weka trasforma in nominal
+            '1 STATO_MENOPAUSALE',#OK weka trasforma in nominal
+            '1 ULTIMA_MESTRUAZIONE',#OK weka trasforma in nominal
+            '1 TERAPIA_STATO',#OK
+            '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',#NON lo riconosce come nominal**
+            '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA',#OK weka riconosce nominal
+            'XXX_TERAPIA_OST_ORM_ANNI_XXX',#OK numeric
+            '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',#NON lo riconosce come nominal**
+            '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA',#OK nominal
+            'XXX_TERAPIA_OST_SPEC_ANNI_XXX',#OK numeric
+            '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',#NON lo riconosce come nominal**
+            '1 TERAPIA_ALTRO_CHECKBOX',#NON lo riconosce come nominal attenzione ci sono dei null**
+            '1 TERAPIA_COMPLIANCE',#NON lo riconosce come nominal**
+            '1 BMI',#OK
+            '1 FRATTURE',#NON lo riconosce come nominal**
+            '1 FRATTURA_VERTEBRE',#ok trasformato in nominal {no fratture, 1, piu di 1}
+            '1 FRATTURA_FEMORE',#ok trasformato in nominal {no fratture, 1, piu di 1}
+            '1 FRATTURA_SITI_DIVERSI',#NON lo riconosce come nominal**
+            '1 FRATTURA_FAMILIARITA',#NON lo riconosce come nominal**
+            '1 ABUSO_FUMO_CHECKBOX',#NON lo riconosce come nominal**
+            '1 ABUSO_FUMO',  #ok  tengo cosi com'è .. al posto di null metto 'non fuma'
+            '1 USO_CORTISONE_CHECKBOX',#NON**
+            '1 USO_CORTISONE',  # ok trasformato in nominal
+            '1 MALATTIE_ATTUALI_CHECKBOX',#NON**
+            '1 MALATTIE_ATTUALI_ARTRITE_REUM',#NON**
+            '1 MALATTIE_ATTUALI_ARTRITE_PSOR',#NON**
+            '1 MALATTIE_ATTUALI_LUPUS',#NON**
+            '1 MALATTIE_ATTUALI_SCLERODERMIA',#NON**
+            '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',#NON**
+            '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',#NON***
+            '1 PATOLOGIE_UTERINE_CHECKBOX',#NON
+            '1 NEOPLASIA_CHECKBOX',#NON
+            '1 SINTOMI_VASOMOTORI',#NON
+            '1 SINTOMI_DISTROFICI',#NON
+            '1 DISLIPIDEMIA_CHECKBOX',#NON
+            '1 IPERTENSIONE',#NON
+            '1 RISCHIO_TEV',#NON
+            '1 PATOLOGIA_CARDIACA',#NON
+            '1 PATOLOGIA_VASCOLARE',#NON
+            '1 INSUFFICIENZA_RENALE',#NON
+            '1 PATOLOGIA_RESPIRATORIA',#NON
+            '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',#NON
+            '1 PATOLOGIA_EPATICA',#NON
+            '1 PATOLOGIA_ESOFAGEA',#NON
+            '1 GASTRO_DUODENITE',#NON
+            '1 GASTRO_RESEZIONE',#NON
+            '1 RESEZIONE_INTESTINALE',#NON
+            '1 MICI',#NON
+            '1 VITAMINA_D_CHECKBOX',#NON
+            '1 VITAMINA_D',#ok
+            '1 ALLERGIE_CHECKBOX',#NON + quella sotto
+            '1 INTOLLERANZE_CHECKBOX'] + \
+        nomi_nuove_colonne_vectorized_TERAPIA_ALTRO + \
+        nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE + \
+        nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA + \
+        nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI + \
+        nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA + \
+        nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA + \
+        nomi_nuove_colonne_vectorized_ALLERGIE + \
+        nomi_nuove_colonne_vectorized_INTOLLERANZE + \
+        nomi_nuove_colonne_vectorized_ALTRO + \
+        nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO + \
+        nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA +\
+        nomi_nuove_colonne_vectorized_CAUSE_OSTEOPOROSI_SECONDARIA \
+            + [
+            '1 SITUAZIONE_COLONNA_CHECKBOX',#NON**
+            '1 SITUAZIONE_COLONNA',#ok
+            '1 SITUAZIONE_FEMORE_SN_CHECKBOX',#NON**
+            '1 SITUAZIONE_FEMORE_SN',#ok
+            '1 SITUAZIONE_FEMORE_DX_CHECKBOX',#NON**
+            '1 SITUAZIONE_FEMORE_DX',
+            '1 OSTEOPOROSI_GRAVE',#NON
+            '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',#NON
+            '1 VERTEBRE_NON_ANALIZZATE_L1',#NON
+            '1 VERTEBRE_NON_ANALIZZATE_L2',#NON
+            '1 VERTEBRE_NON_ANALIZZATE_L3',#NON
+            '1 VERTEBRE_NON_ANALIZZATE_L4',#NON
+            '1 COLONNA_NON_ANALIZZABILE',#NON
+            '1 COLONNA_VALORI_SUPERIORI',#NON
+            '1 FEMORE_NON_ANALIZZABILE',#NON
+            '1 FRAX_APPLICABILE',#NON**
+            '1 FRAX_FRATTURE_MAGGIORI_INTERO',
+            '1 FRAX_COLLO_FEMORE_INTERO',
+            '1 TBS_COLONNA_APPLICABILE',#NON**
+            '1 TBS_COLONNA_VALORE',
+            '1 DEFRA_APPLICABILE',#NON
+            '1 DEFRA_INTERO',
+            '1 NORME_PREVENZIONE',#NON
+            '1 ALTRO_CHECKBOX',#NON
+            '1 NORME_COMPORTAMENTALI',#NON
+            '1 ATTIVITA_FISICA',#NON
+            '1 SOSPENSIONE_TERAPIA_CHECKBOX',#NON
+            '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',#NON
+            '1 SOSPENSIONE_FUMO',#NON
+            '1 CONTROLLO_DENSITOMETRICO_CHECKBOX',#NON**
+            '1 TOT_Tscore',
+            '1 TOT_Zscore',
+        ]
+    l.append(class_name)
+
+    return tabella_completa[l]
+
+# classi
+class Proposizione:
     '''
-    tutto quello che c'era nel main una volta
-    :return:
+    Classe per modellare una proposizione di una certa regola di un classificatore weka
+    se una proposizione di una regola è:
+    XXX_TERAPIA_OST_ORM_ANNI_XXX <= 0.5 AND
+    operatore diventerà: <=
+    nome_variabile_operando1 diventerà: XXX_TERAPIA_OST_ORM_ANNI_XXX
+    valore_costante_operando2 diventerà: 0.5
+
+    ATTENZIONE:
+    Questa classe non può modellare la preposizione dell'ultima regola (: 0 (2.0))
+    cioè una prposizione sempre vera. Questo caso è gestito dentro la calsse Regola
     '''
-    tabella_completa = pd.read_csv("osteo.csv")
+    def __init__(self, operatore, nome_variabile_operando1, valore_costante_operando2):
+        self.operatore = operatore
+        self.nome_variabile_operando1 = nome_variabile_operando1
+        self.valore_costante_operando2 = valore_costante_operando2
 
-    num_classi = 5
+    def valuta(self, istanza):
+        '''
+        Valuta se questa proposizione è vera o falsa.
+        esempio:
+            questa proposizione=XXX_TERAPIA_OST_ORM_ANNI_XXX <= 0.5
+            data un istanza si va nella colonna XXX_TERAPIA_OST_ORM_ANNI_XXX dell'istanza e si controlla se è <=0.5
+            se sì, si ritorna true, altrimenti no
+        '''
+        # vado nella colonna con il nome 'nome_variabile_operando1' e controllo se la condizione vale
+        if eval( str(istanza[self.nome_variabile_operando1])+self.operatore+self.valore_costante_operando2)==True:
+            return True
+        else:
+            return False
 
-    tabella_ridotta = preprocessamento(tabella_completa)
-    #tabella_ridotta.to_csv('osteo_r.csv', index=False)
-    # tabella_ridotta = pd.read_csv('osteo_r.csv')
+    def __str__(self):
+        return self.nome_variabile_operando1+" "+self.operatore+" "+self.valore_costante_operando2
+class Regola:
+    '''
+    La classe contiene una regola un classificatore PART
+    una regola è una lista di proposizioni
+    ATTENZIONE: la lista deve essere ordinata perchè le proposizioni e le regole vanno lette
+    dall'alto al basso.
+    L'ultima regola del classeificatore è una regola sempre vera e che non contiene proposizioni. In questa classe
+    viene modellata impostando 'proposizioni' = true.
+    Ogni regola ha anche una predizione (intero), cioè la predizione della classe se la regola è vera
+    Ogni regola ha gs:.....
+    '''
+    proposizioni = []
+    def __init__(self, predizione, proposizioni, gs):
+        self.predizione = predizione
+        self.proposizioni = proposizioni
+        self.gs = gs
 
-    X = tabella_ridotta.iloc[:, :-num_classi]
-    Y = tabella_ridotta.iloc[:, -num_classi:]
+    def valuta(self, istanza):
+        '''
+        Data un istanza(vettore) da classificare, la funzione ritorna True se l'istanza soddisfa la regola.
+        '''
+        # caso particore di una regola sempre vera
+        if isinstance(self.proposizioni, bool):
+            return True
+        # una regola per essere vera, deve avere tutte le sue proposizioni vere
+        for prop in self.proposizioni:
+            # se almeno una prop. è falsa, tutta la regola è falsa
+            if prop.valuta(istanza) == False:
+                return False
+        return True
 
-    kf = KFold(n_splits=4, shuffle=True)
+    def __str__(self):
+        if isinstance(self.proposizioni, list):
+            output = ""
+            for prop in self.proposizioni:
+                if prop!=self.proposizioni[-1]:
+                    output += str(prop)+" AND\n"
+                else:
+                    output+=str(prop)+": "+self.predizione+" "+self.gs
+                    return output
+        else:
+            return ": "+self.predizione+" "+self.gs
+class Regole:
+    '''
+    Semplicemente una lista di 'Regola'
+    Usato per prevedere una classe data un istanza
+    '''
+    def __init__(self, regole):
+        '''
+        ATTENZIONE: è importante l'ordine delle regole. La lista di decisione di PART va interpretata dall'altro
+        verso il basso
+        '''
+        self.regole = regole
+
+    def __str__(self):
+        output = ''
+        for r in self.regole:
+            output+= str(r) + '\n\n'
+        return output
+
+    def get_num_of_rules(self):
+        return len(self.regole)
 
     '''
-    min lif split non fa niente.. 
-    max_leaf_nodes = 25 aumenta tanto con maxdepth = 6
-    min sample spit = 10 ok 5come10  15no
-    min sample leaf=10 no, 20no, 5no
-
-    migliore maxdept 6, max_leaf_nodes = 25 0.695, 0.701, 0.688, 0.698, 0.692, 0.691
-
-    max_depth=7,max_leaf_nodes=35 no
-                               40 ok 
-                               45 no
-                               10 no
-                               20 come il migliore
-                               25 mcome il migliore
-                               30 no
-                               15 ok
+    Se una regola è vera, ritorno la predizione di quella regola
     '''
-    tree = DecisionTreeClassifier()
-    tree = DecisionTreeClassifier(max_depth=6, max_leaf_nodes=25)
+    def predict(self, istanza):
+        for r in self.regole:
+            if r.valuta(istanza) == True:
+                return r.predizione
 
-    avg_ext_train_score = 0
-    avg_ext_test_score = 0
-    avg_int_train_score = 0
-    avg_int_test_score = 0
-    trainX = [];
-    trainY = [];
-    testX = [];
-    testY = []
-    for train_indexes, test_indexes in kf.split(X):
-        trainX = X.iloc[train_indexes, :]
-        trainY = Y.iloc[train_indexes, :]
-        testX = X.iloc[test_indexes, :]
-        testY = Y.iloc[test_indexes, :]
-        tree.fit(trainX, trainY)
-        avg_ext_test_score += tree.score(testX, testY)
-        avg_ext_train_score += tree.score(trainX, trainY)
-        # avg_int_train_score += inernal_acc_score(trainX,trainY,tree)
-        # avg_int_test_score += inernal_acc_score(testX,testY,tree)
-        # print("null: "+str(null_accuracy_score(testX,testY,tree)))
-        # print("no null:"+str(no_null_accuracy_score(testX, testY, tree)))
-
-    print_feature_importances(tree, trainX)
-
-    print("avg ext: {}, {}".format(
-        *[round(avg / kf.get_n_splits(), 3) for avg in [avg_ext_train_score, avg_ext_test_score]]))
-    # print("avg int: {}, {}".format(*[round(avg/kf.get_n_splits(), 3) for avg in [avg_int_train_score, avg_int_test_score]]))
+# funzioni antiche
 def print_feature_importances(model, X):
     '''
     Dato il modello 'model' allenato su 'X', la funzione stampa in maniera decrescente le feautures più significative
@@ -268,7 +1061,71 @@ def print_feature_importances(model, X):
     feature_importances.sort(key = lambda tup: tup[1], reverse = True)
     for t in feature_importances:
         print(t)
-def preprocessamento(tabella_completa):
+def null_accuracy_score(X, true_Y, model):
+    '''
+    Ritorna il rapporto tra le righe nulle indovinate (external accuracy) e il totale delle righe nulle
+    :param X: le istanze da predire (in genere il X_test)
+    :param true_Y: la predizione corretta (in genere Y_test)
+    :param model: il modello (in genere DecisionTree)
+    :return: righe nulle indovinate / righe nulle totali
+    '''
+    predicted_Y = model.predict(X)
+    tot_righe_nulle = 0
+    tot_righe_nulle_indovinate = 0
+    # andave bene anche true_Y.shape[0] pechè hanno lo stesso numero di righe
+    for row_index in range(0, X.shape[0]):
+        row_ptedicted_Y = predicted_Y[row_index, :]
+        row_true_Y = true_Y.iloc[row_index, :].values
+        # se l'isesima riga è nulla
+        if not np.any(row_true_Y):
+            tot_righe_nulle += 1
+            # e se il modello ha indovinato correttamente la riga nulla
+            if not np.any(row_ptedicted_Y):
+                tot_righe_nulle_indovinate += 1
+
+    # print("tot {}, ind {}, totot {}, rapp {}".format(tot_righe_nulle,tot_righe_nulle_indovinate,X.shape[0],tot_righe_nulle/X.shape[0]))
+    return tot_righe_nulle_indovinate / tot_righe_nulle
+def inernal_acc_score(X, true_Y, model):
+    '''
+    Riceve le istanze da classificare (X) su un modello allenato (model) e i risultati corretti (true_Y).
+    Ritorna l'accuratezza interna del modello: il rapporto tra tutti i bit e i bit indovinati di tutto il set
+    Differenza tra internal_acc_score() e model.score():
+        Se predicted_y = [0, 1, 1] e true_y = [0, 1, 0]
+        per model.score() questa istanza è 0
+        per internal_acc_score() è 0.66
+    La funzione calcola la media di tutte le accuracy di ogni riga
+    '''
+    avg_score = 0
+    # andava bene fare anche true_Y.shape[0] perchè hanno dimensione uguale
+    for row_index in range(0, X.shape[0]):
+        # i-esima riga di true_Y
+        y_true = true_Y.iloc[row_index, :].values
+        # il modello predice data l'iesima riga di X
+        y_predicted = model.predict(X.iloc[row_index, :].values.reshape(1, -1))
+        avg_score += accuracy_score(y_true, y_predicted[0, :])
+    return avg_score / X.shape[0]
+def no_null_accuracy_score(X, true_Y, model):
+    '''
+    Qual è la proporzione di elementi non nulli indovinati
+    X sono le istanze da prevedere del testset e Y_true sono le risposte(testset)
+    '''
+    predicted_Y = model.predict(X)
+    tot_righe_non_nulle = 0
+    tot_righe_non_nulle_indovinate = 0
+    # andave bene anche true_Y.shape[0] pechè hanno lo stesso numero di righe
+    for row_index in range(0, X.shape[0]):
+        row_ptedicted_Y = predicted_Y[row_index, :]
+        row_true_Y = true_Y.iloc[row_index, :].values
+        # se l'isesima riga non è complettamente nulla (almeno un 1 in qualche posizione)
+        if np.any(row_true_Y):
+            tot_righe_non_nulle += 1
+            # e se il modello ha indovinato correttamente la riga non nulla
+            if  list(row_ptedicted_Y) == list(row_true_Y):
+                tot_righe_non_nulle_indovinate += 1
+
+    # print("tot {}, ind {}, totot {}, rapp {}".format(tot_righe_nulle,tot_righe_nulle_indovinate,X.shape[0],tot_righe_nulle/X.shape[0]))
+    return tot_righe_non_nulle_indovinate / tot_righe_non_nulle
+def preprocessamento_vecchio(tabella_completa):
     def one_hot_encode(frame, column_name, regex, prefix):
         '''
         frame:
@@ -703,7 +1560,8 @@ def preprocessamento(tabella_completa):
     # one hot encoding di TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA
     tabella_completa['1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'].fillna("na,0 anni", inplace=True)
     tabella_completa, nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA = \
-        one_hot_encode(tabella_completa, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA','(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-zA-Z]*))|(\s[+][a-zA-Z]*)){0,1})','tos')
+        one_hot_encode(tabella_completa, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'
+                       ,'(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-zA-Z]*))|(\s[+][a-zA-Z]*)){0,1})','tos')
 
     # region separazione anni TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA
     # separo le date da TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA
@@ -791,6 +1649,7 @@ def preprocessamento(tabella_completa):
     tabella_completa['1 WARDS_BMD'].fillna(tabella_completa['1 WARDS_BMD'].mean(), inplace=True)
     # endregion
 
+    # region filtro completo
     # seleziono le colonne da usare per la predizione
     l = [
         '1 AGE',
@@ -931,178 +1790,197 @@ def preprocessamento(tabella_completa):
         '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',
         '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX'
     ]
+    # endregion
+
+    # filtro dopo che mi ha detto di non usare colonne non presenti nell'interfaccia
+    l = [
+            '1 AGE',
+            '1 SEX',
+            '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',  # quella sopra non fa un cazzo
+            'XXX_TERAPIA_OST_ORM_ANNI_XXX',  # fa niente e anche quella sopra
+            '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
+            'XXX_TERAPIA_OST_SPEC_ANNI_XXX',  # fa niente e anche quella sopra
+            '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
+            '1 TERAPIA_ALTRO_CHECKBOX',
+            '1 TERAPIA_COMPLIANCE',
+            '1 BMI',
+            '1 FRATTURE',
+            '1 USO_CORTISONE',
+            '1 FRATTURA_VERTEBRE',
+            '1 FRATTURA_FEMORE',
+            '1 FRATTURA_SITI_DIVERSI',
+            '1 FRATTURA_FAMILIARITA',
+            '1 ABUSO_FUMO_CHECKBOX',
+            '1 ABUSO_FUMO',  # fa niente
+            '1 USO_CORTISONE_CHECKBOX',
+            '1 MALATTIE_ATTUALI_CHECKBOX',
+            '1 MALATTIE_ATTUALI_ARTRITE_REUM',
+            '1 MALATTIE_ATTUALI_ARTRITE_PSOR',
+            '1 MALATTIE_ATTUALI_LUPUS',
+            '1 MALATTIE_ATTUALI_SCLERODERMIA',
+            '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',
+            '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
+            '1 PATOLOGIE_UTERINE_CHECKBOX',  # quello sopra non fa niente
+            '1 NEOPLASIA_CHECKBOX',
+            '1 SINTOMI_VASOMOTORI',
+            '1 SINTOMI_DISTROFICI',
+            '1 DISLIPIDEMIA_CHECKBOX',
+            '1 IPERTENSIONE',
+            '1 RISCHIO_TEV',
+            '1 PATOLOGIA_CARDIACA',
+            '1 PATOLOGIA_VASCOLARE',
+            '1 INSUFFICIENZA_RENALE',
+            '1 PATOLOGIA_RESPIRATORIA',
+            '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',
+            '1 PATOLOGIA_EPATICA',
+            '1 PATOLOGIA_ESOFAGEA',
+            '1 GASTRO_DUODENITE',
+            '1 GASTRO_RESEZIONE',
+            '1 RESEZIONE_INTESTINALE',
+            '1 MICI',
+            '1 VITAMINA_D_CHECKBOX',  # diminuito forse
+            '1 VITAMINA_D',  # aumentato tanto
+            '1 ALLERGIE_CHECKBOX',
+            '1 INTOLLERANZE_CHECKBOX'] + \
+        nomi_colonne_onehotencoded_STATO_MENOPAUSALE + \
+        nomi_colonne_onehotencoded_CAUSE_OSTEOPOROSI_SECONDARIA + \
+        nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA + \
+        nomi_colonne_onehotencoded_TERAPIA_STATO + \
+        nomi_colonne_onehotencode_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA + \
+        nomi_colonne_onehotencoded_SITUAZIONE_COLONNA + \
+        nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_SN + \
+        nomi_colonne_onehotencoded_SITUAZIONE_FEMORE_DX + \
+        nomi_colonne_onehotencoded_ULTIMA_MESTRUAZIONE + \
+        nomi_nuove_colonne_vectorized_TERAPIA_ALTRO + \
+        nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE + \
+        nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA + \
+        nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI + \
+        nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA + \
+        nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA + \
+        nomi_nuove_colonne_vectorized_ALLERGIE + \
+        nomi_nuove_colonne_vectorized_INTOLLERANZE + \
+        nomi_nuove_colonne_vectorized_ALTRO + \
+        nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO + \
+        nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA \
+        + [
+            '1 OSTEOPOROSI_GRAVE',  # aumentato tanto
+            '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # niente sembra
+            '1 VERTEBRE_NON_ANALIZZATE_L1',  # niente sembra
+            '1 VERTEBRE_NON_ANALIZZATE_L2',  # niente sembra
+            '1 VERTEBRE_NON_ANALIZZATE_L3',  # niente sembra
+            '1 VERTEBRE_NON_ANALIZZATE_L4',  # niente sembra
+            '1 COLONNA_NON_ANALIZZABILE',  # niente sembra
+            '1 COLONNA_VALORI_SUPERIORI',  # niente sembra
+            '1 FEMORE_NON_ANALIZZABILE',  # niente sembra
+            '1 FRAX_APPLICABILE',
+            '1 FRAX_FRATTURE_MAGGIORI_INTERO',  # aumento discreto
+            '1 FRAX_COLLO_FEMORE_INTERO',  # aumento discreto
+            '1 TBS_COLONNA_APPLICABILE',  # nessun aumento
+            '1 TBS_COLONNA_VALORE',  # nessun aumento
+            '1 DEFRA_INTERO',
+            '1 NORME_PREVENZIONE',  # aumento discreto
+            '1 NORME_COMPORTAMENTALI',  # diminuisce??
+            '1 ATTIVITA_FISICA',
+            '1 SOSPENSIONE_TERAPIA_CHECKBOX',
+            '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # fa nulla
+            '1 SOSPENSIONE_FUMO',
+            '1 CONTROLLO_DENSITOMETRICO_CHECKBOX',  # fa nulla
+            #'1 L1_AREA',
+            #'1 L2_AREA',
+            #'1 L3_AREA',
+            #'1 L4_AREA',
+            #'1 TOT_AREA',
+            #'1 L1_BMC',
+            #'1 L2_BMC',
+            #'1 L3_BMC',
+            #'1 L4_BMC',
+            #'1 TOT_BMC',
+            #'1 L1_BMD',
+            #'1 L2_BMD',
+            #'1 L3_BMD',
+            #'1 L4_BMD',
+            #'1 TOT_BMD',
+            #'1 L1_Tscore'non al 100% sicuro
+            #'1 L2_Tscore',non al 100% sicuro
+            #'1 L3_Tscore',non al 100% sicuro
+            #'1 L4_Tscore',non al 100% sicuro
+            '1 TOT_Tscore',
+            #'1 L1_Zscore',
+            #'1 L2_Zscore',
+            #'1 L3_Zscore',
+            #'1 L4_Zscore',
+            '1 TOT_Zscore',
+            #'1 NECK_AREA',
+            #'1 TROCH_AREA',
+            #'1 INTER_AREA',
+            #'1 HTOT_AREA',
+            #'1 WARDS_AREA',
+            #'1 NECK_BMC',
+            #'1 TROCH_BMC',
+            #'1 INTER_BMC',
+            #'1 HTOT_BMC',
+            #'1 WARDS_BMC',
+            #'1 NECK_BMD',
+            #'1 TROCH_BMD',
+            #'1 INTER_BMD',
+            #'1 HTOT_BMD',
+            #'1 WARDS_BMD',
+
+            '1 TERAPIE_ORMONALI_CHECKBOX',
+            '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX',
+            '1 VITAMINA_D_TERAPIA_CHECKBOX',
+            '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',
+            '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX'
+        ]
 
     return tabella_completa[l]
-def null_accuracy_score(X, true_Y, model):
+def multilabel():
     '''
-    Ritorna il rapporto tra le righe nulle indovinate (external accuracy) e il totale delle righe nulle
-    :param X: le istanze da predire (in genere il X_test)
-    :param true_Y: la predizione corretta (in genere Y_test)
-    :param model: il modello (in genere DecisionTree)
-    :return: righe nulle indovinate / righe nulle totali
+    tutto quello che c'era nel main una volta
+    media: 0.690
     '''
-    predicted_Y = model.predict(X)
-    tot_righe_nulle = 0
-    tot_righe_nulle_indovinate = 0
-    # andave bene anche true_Y.shape[0] pechè hanno lo stesso numero di righe
-    for row_index in range(0, X.shape[0]):
-        row_ptedicted_Y = predicted_Y[row_index, :]
-        row_true_Y = true_Y.iloc[row_index, :].values
-        # se l'isesima riga è nulla
-        if not np.any(row_true_Y):
-            tot_righe_nulle += 1
-            # e se il modello ha indovinato correttamente la riga nulla
-            if not np.any(row_ptedicted_Y):
-                tot_righe_nulle_indovinate += 1
+    num_classi = 5
 
-    # print("tot {}, ind {}, totot {}, rapp {}".format(tot_righe_nulle,tot_righe_nulle_indovinate,X.shape[0],tot_righe_nulle/X.shape[0]))
-    return tot_righe_nulle_indovinate / tot_righe_nulle
-def inernal_acc_score(X, true_Y, model):
-    '''
-    Riceve le istanze da classificare (X) su un modello allenato (model) e i risultati corretti (true_Y).
-    Ritorna l'accuratezza interna del modello: il rapporto tra tutti i bit e i bit indovinati di tutto il set
-    Differenza tra internal_acc_score() e model.score():
-        Se predicted_y = [0, 1, 1] e true_y = [0, 1, 0]
-        per model.score() questa istanza è 0
-        per internal_acc_score() è 0.66
-    La funzione calcola la media di tutte le accuracy di ogni riga
-    '''
-    avg_score = 0
-    # andava bene fare anche true_Y.shape[0] perchè hanno dimensione uguale
-    for row_index in range(0, X.shape[0]):
-        # i-esima riga di true_Y
-        y_true = true_Y.iloc[row_index, :].values
-        # il modello predice data l'iesima riga di X
-        y_predicted = model.predict(X.iloc[row_index, :].values.reshape(1, -1))
-        avg_score += accuracy_score(y_true, y_predicted[0, :])
-    return avg_score / X.shape[0]
-def no_null_accuracy_score(X, true_Y, model):
-    '''
-    Qual è la proporzione di elementi non nulli indovinati
-    X sono le istanze da prevedere del testset e Y_true sono le risposte(testset)
-    '''
-    predicted_Y = model.predict(X)
-    tot_righe_non_nulle = 0
-    tot_righe_non_nulle_indovinate = 0
-    # andave bene anche true_Y.shape[0] pechè hanno lo stesso numero di righe
-    for row_index in range(0, X.shape[0]):
-        row_ptedicted_Y = predicted_Y[row_index, :]
-        row_true_Y = true_Y.iloc[row_index, :].values
-        # se l'isesima riga non è complettamente nulla (almeno un 1 in qualche posizione)
-        if np.any(row_true_Y):
-            tot_righe_non_nulle += 1
-            # e se il modello ha indovinato correttamente la riga non nulla
-            if  list(row_ptedicted_Y) == list(row_true_Y):
-                tot_righe_non_nulle_indovinate += 1
+    tabella_completa = pd.read_csv("osteo.csv")
+    tabella_ridotta = preprocessamento_vecchio(tabella_completa)
+    tabella_ridotta.to_csv('osteo_r.csv', index=False)
 
-    # print("tot {}, ind {}, totot {}, rapp {}".format(tot_righe_nulle,tot_righe_nulle_indovinate,X.shape[0],tot_righe_nulle/X.shape[0]))
-    return tot_righe_non_nulle_indovinate / tot_righe_non_nulle
+    #tabella_ridotta = pd.read_csv('osteo_r.csv')
 
-class Proposizione:
-    '''
-    Classe per modellare una proposizione di una certa regola di un classificatore weka
-    se una proposizione di una regola è:
-    XXX_TERAPIA_OST_ORM_ANNI_XXX <= 0.5 AND
-    operatore diventerà: <=
-    nome_variabile_operando1 diventerà: XXX_TERAPIA_OST_ORM_ANNI_XXX
-    valore_costante_operando2 diventerà: 0.5
+    X = tabella_ridotta.iloc[:, :-num_classi]
+    Y = tabella_ridotta.iloc[:, -num_classi:]
 
-    ATTENZIONE:
-    Questa classe non può modellare la preposizione dell'ultima regola (: 0 (2.0))
-    cioè una prposizione sempre vera. Questo caso è gestito dentro la calsse Regola
-    '''
-    def __init__(self, operatore, nome_variabile_operando1, valore_costante_operando2):
-        self.operatore = operatore
-        self.nome_variabile_operando1 = nome_variabile_operando1
-        self.valore_costante_operando2 = valore_costante_operando2
+    kf = KFold(n_splits=4, shuffle=True)
 
+    tree = DecisionTreeClassifier()
+    tree = DecisionTreeClassifier(max_depth=6, max_leaf_nodes=25)
 
-    def valuta(self, istanza):
-        '''
-        Valuta se questa proposizione è vera o falsa.
-        esempio:
-            questa proposizione=XXX_TERAPIA_OST_ORM_ANNI_XXX <= 0.5
-            data un istanza si va nella colonna XXX_TERAPIA_OST_ORM_ANNI_XXX dell'istanza e si controlla se è <=0.5
-            se sì, si ritorna true, altrimenti no
-        '''
-        # vado nella colonna con il nome 'nome_variabile_operando1' e controllo se la condizione vale
-        if eval( str(istanza[self.nome_variabile_operando1])+self.operatore+self.valore_costante_operando2)==True:
-            return True
-        else:
-            return False
+    avg_ext_train_score = 0
+    avg_ext_test_score = 0
+    avg_int_train_score = 0
+    avg_int_test_score = 0
+    trainX = [];
+    trainY = [];
+    testX = [];
+    testY = []
+    for train_indexes, test_indexes in kf.split(X):
+        trainX = X.iloc[train_indexes, :]
+        trainY = Y.iloc[train_indexes, :]
+        testX = X.iloc[test_indexes, :]
+        testY = Y.iloc[test_indexes, :]
+        tree.fit(trainX, trainY)
+        avg_ext_test_score += tree.score(testX, testY)
+        avg_ext_train_score += tree.score(trainX, trainY)
+        # avg_int_train_score += inernal_acc_score(trainX,trainY,tree)
+        # avg_int_test_score += inernal_acc_score(testX,testY,tree)
+        # print("null: "+str(null_accuracy_score(testX,testY,tree)))
+        # print("no null:"+str(no_null_accuracy_score(testX, testY, tree)))
 
-    def __str__(self):
-        return self.nome_variabile_operando1+" "+self.operatore+" "+self.valore_costante_operando2
-class Regola:
-    '''
-    La classe contiene una regola un classificatore PART
-    una regola è una lista di proposizioni
-    ATTENZIONE: la lista deve essere ordinata perchè le proposizioni e le regole vanno lette
-    dall'alto al basso.
-    L'ultima regola del classeificatore è una regola sempre vera e che non contiene proposizioni. In questa classe
-    viene modellata impostando 'proposizioni' = true.
-    Ogni regola ha anche una predizione (intero), cioè la predizione della classe se la regola è vera
-    Ogni regola ha gs:.....
-    '''
-    proposizioni = []
-    def __init__(self, predizione, proposizioni, gs):
-        self.predizione = predizione
-        self.proposizioni = proposizioni
-        self.gs = gs
+    print_feature_importances(tree, trainX)
 
-    def valuta(self, istanza):
-        '''
-        Data un istanza(vettore) da classificare, la funzione ritorna True se l'istanza soddisfa la regola.
-        '''
-        # caso particore di una regola sempre vera
-        if isinstance(self.proposizioni, bool):
-            return True
-        # una regola per essere vera, deve avere tutte le sue proposizioni vere
-        for prop in self.proposizioni:
-            # se almeno una prop. è falsa, tutta la regola è falsa
-            if prop.valuta(istanza) == False:
-                return False
-        return True
-
-    def __str__(self):
-        if isinstance(self.proposizioni, list):
-            output = ""
-            for prop in self.proposizioni:
-                if prop!=self.proposizioni[-1]:
-                    output += str(prop)+" AND\n"
-                else:
-                    output+=str(prop)+": "+self.predizione+" "+self.gs
-                    return output
-        else:
-            return ": "+self.predizione+" "+self.gs
-class Regole:
-    '''
-    Semplicemente una lista di 'Regola'
-    Usato per prevedere una classe data un istanza
-    '''
-    def __init__(self, regole):
-        '''
-        ATTENZIONE: è importante l'ordine delle regole. La lista di decisione di PART va interpretata dall'altro
-        verso il basso
-        '''
-        self.regole = regole
-
-    def __str__(self):
-        output = ''
-        for r in self.regole:
-            output+= str(r) + '\n\n'
-        return output
-
-    def get_num_of_rules(self):
-        return len(self.regole)
-
-    '''
-    Se una regola è vera, ritorno la predizione di quella regola
-    '''
-    def predict(self, istanza):
-        for r in self.regole:
-            if r.valuta(istanza) == True:
-                return r.predizione
+    print("avg ext: {}, {}".format(
+        *[round(avg / kf.get_n_splits(), 3) for avg in [avg_ext_train_score, avg_ext_test_score]]))
+    # print("avg int: {}, {}".format(*[round(avg/kf.get_n_splits(), 3) for avg in [avg_int_train_score, avg_int_test_score]]))
 
 
 if __name__ == '__main__':
