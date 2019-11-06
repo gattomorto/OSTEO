@@ -30,23 +30,343 @@ import pymysql
 def main():
     jvm.start(max_heap_size="900m")
 
+    class_name = '1 TERAPIE_ORMONALI_CHECKBOX'
+    tabella_completa = pd.read_csv("osteo.csv")
+
+
+    tabella_preprocessata = preprocessamento_nuovo(tabella_completa, class_name)
+
+    #tabella_preprocessata.dropna(subset = [class_name], inplace = True)
+
+    tabella_preprocessata.to_csv('perwekacsv.csv', index=False)
+
+    # region Indici
+    # Tutto il paragrafo per indici
+    nomi_col_da_trasf_in_nominal = [
+        '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',
+        '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
+        '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
+        '1 TERAPIA_ALTRO_CHECKBOX',
+        '1 TERAPIA_COMPLIANCE',
+        '1 FRATTURE',
+        '1 FRATTURA_SITI_DIVERSI',
+        '1 FRATTURA_FAMILIARITA',
+        '1 ABUSO_FUMO_CHECKBOX',
+        '1 USO_CORTISONE_CHECKBOX',
+        '1 MALATTIE_ATTUALI_CHECKBOX',
+        '1 MALATTIE_ATTUALI_ARTRITE_REUM',
+        '1 MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
+        '1 MALATTIE_ATTUALI_LUPUS',  # NON
+        '1 MALATTIE_ATTUALI_SCLERODERMIA',  # NON
+        '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON
+        '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
+        '1 PATOLOGIE_UTERINE_CHECKBOX',  # NON
+        '1 NEOPLASIA_CHECKBOX',  # NON
+        '1 SINTOMI_VASOMOTORI',  # NON
+        '1 SINTOMI_DISTROFICI',  # NON
+        '1 DISLIPIDEMIA_CHECKBOX',  # NON
+        '1 IPERTENSIONE',  # NON
+        '1 RISCHIO_TEV',  # NON
+        '1 PATOLOGIA_CARDIACA',  # NON
+        '1 PATOLOGIA_VASCOLARE',  # NON
+        '1 INSUFFICIENZA_RENALE',  # NON
+        '1 PATOLOGIA_RESPIRATORIA',  # NON
+        '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
+        '1 PATOLOGIA_EPATICA',  # NON
+        '1 PATOLOGIA_ESOFAGEA',  # NON
+        '1 GASTRO_DUODENITE',  # NON
+        '1 GASTRO_RESEZIONE',  # NON
+        '1 RESEZIONE_INTESTINALE',  # NON
+        '1 MICI',  # NON
+        '1 VITAMINA_D_CHECKBOX',
+        '1 ALLERGIE_CHECKBOX',  # NON + quella sotto
+        '1 INTOLLERANZE_CHECKBOX',
+        '1 SITUAZIONE_COLONNA_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_DX',
+        '1 OSTEOPOROSI_GRAVE',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L1',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L2',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L3',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L4',  # NON
+        '1 COLONNA_NON_ANALIZZABILE',  # NON
+        '1 COLONNA_VALORI_SUPERIORI',  # NON
+        '1 FEMORE_NON_ANALIZZABILE',  # NON
+        '1 FRAX_APPLICABILE',  # NON**
+        '1 TBS_COLONNA_APPLICABILE',
+        '1 DEFRA_APPLICABILE',  # NON# NON**
+        '1 NORME_PREVENZIONE',  # NON
+        '1 ALTRO_CHECKBOX',  # NON
+        '1 NORME_COMPORTAMENTALI',  # NON
+        '1 ATTIVITA_FISICA',  # NON
+        '1 SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
+        '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
+        '1 SOSPENSIONE_FUMO',  # NON
+        '1 CONTROLLO_DENSITOMETRICO_CHECKBOX']
+    nomi_col_da_trasf_in_nominal.append(class_name)
+    # conterrà al posto dei nomi, gli indici. Serve per il filtro NumericToNominal
+    ind_col_da_trasf_in_nominal = []
+    for nome in nomi_col_da_trasf_in_nominal:
+        # dato il nome della colonna, ottengo l'indice a cui si trova
+        # +1 perchè weka conta da 1
+        ind_col_da_trasf_in_nominal.append(tabella_preprocessata.columns.get_loc(nome) + 1)
+    # options del filtro deve essere di questo tipo: "-R 2,8,9,10"
+    # allora dalla dalla lista in formato stringa: "[2, 8, 9, 10]" elimino il primo e l'ultimo carattere
+    # cosi diventa "2, 8, 9, 10"
+    ind_col_da_trasf_in_nominal = str(ind_col_da_trasf_in_nominal)
+    ind_col_da_trasf_in_nominal = ind_col_da_trasf_in_nominal[1:-1]
+    # endregion
+
+    loader = Loader(classname="weka.core.converters.CSVLoader")
+    data = loader.load_file("perwekacsv.csv")
+
+    data.class_is_last()
+
+    fltr = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal",
+                  options=["-R", ind_col_da_trasf_in_nominal])
+
+    fltr.inputformat(data)
+    data = fltr.filter(data)
+
+    saver = Saver(classname="weka.core.converters.ArffSaver")
+    saver.save_file(data, "perwekaarff.arff")
+
+    jvm.stop()
+
+
+# altri main()
+def prevedi_ceck():
     class_name = '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX'
 
-    tabella_completa = pd.read_csv("osteo.csv")
+    tabella_completa = pd.read_csv("osteo200.csv")
     # preprocessata e filtrata scegliendo solo gli attributi necessari + ultimo attributo è la classe
     tabella_preprocessata = preprocessamento_nuovo(tabella_completa, class_name)
 
-    cls = Classifier(classname="weka.classifiers.rules.PART", options=["-M","2","-C","0.25","-Q","1"])
+    tabella_preprocessata.to_csv('perwekacsv.csv', index=False)
+
+    # Tutto il paragrafo per indici
+    nomi_col_da_trasf_in_nominal = [
+        '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',
+        '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
+        '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
+        '1 TERAPIA_ALTRO_CHECKBOX',
+        '1 TERAPIA_COMPLIANCE',
+        '1 FRATTURE',
+        '1 FRATTURA_SITI_DIVERSI',
+        '1 FRATTURA_FAMILIARITA',
+        '1 ABUSO_FUMO_CHECKBOX',
+        '1 USO_CORTISONE_CHECKBOX',
+        '1 MALATTIE_ATTUALI_CHECKBOX',
+        '1 MALATTIE_ATTUALI_ARTRITE_REUM',
+        '1 MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
+        '1 MALATTIE_ATTUALI_LUPUS',  # NON
+        '1 MALATTIE_ATTUALI_SCLERODERMIA',  # NON
+        '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON
+        '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
+        '1 PATOLOGIE_UTERINE_CHECKBOX',  # NON
+        '1 NEOPLASIA_CHECKBOX',  # NON
+        '1 SINTOMI_VASOMOTORI',  # NON
+        '1 SINTOMI_DISTROFICI',  # NON
+        '1 DISLIPIDEMIA_CHECKBOX',  # NON
+        '1 IPERTENSIONE',  # NON
+        '1 RISCHIO_TEV',  # NON
+        '1 PATOLOGIA_CARDIACA',  # NON
+        '1 PATOLOGIA_VASCOLARE',  # NON
+        '1 INSUFFICIENZA_RENALE',  # NON
+        '1 PATOLOGIA_RESPIRATORIA',  # NON
+        '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
+        '1 PATOLOGIA_EPATICA',  # NON
+        '1 PATOLOGIA_ESOFAGEA',  # NON
+        '1 GASTRO_DUODENITE',  # NON
+        '1 GASTRO_RESEZIONE',  # NON
+        '1 RESEZIONE_INTESTINALE',  # NON
+        '1 MICI',  # NON
+        '1 VITAMINA_D_CHECKBOX',
+        '1 ALLERGIE_CHECKBOX',  # NON + quella sotto
+        '1 INTOLLERANZE_CHECKBOX',
+        '1 SITUAZIONE_COLONNA_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_DX',
+        '1 OSTEOPOROSI_GRAVE',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L1',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L2',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L3',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L4',  # NON
+        '1 COLONNA_NON_ANALIZZABILE',  # NON
+        '1 COLONNA_VALORI_SUPERIORI',  # NON
+        '1 FEMORE_NON_ANALIZZABILE',  # NON
+        '1 FRAX_APPLICABILE',  # NON**
+        '1 TBS_COLONNA_APPLICABILE',
+        '1 DEFRA_APPLICABILE',  # NON# NON**
+        '1 NORME_PREVENZIONE',  # NON
+        '1 ALTRO_CHECKBOX',  # NON
+        '1 NORME_COMPORTAMENTALI',  # NON
+        '1 ATTIVITA_FISICA',  # NON
+        '1 SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
+        '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
+        '1 SOSPENSIONE_FUMO',  # NON
+        '1 CONTROLLO_DENSITOMETRICO_CHECKBOX']
+    nomi_col_da_trasf_in_nominal.append(class_name)
+    # conterrà al posto dei nomi, gli indici. Serve per il filtro NumericToNominal
+    ind_col_da_trasf_in_nominal = []
+    for nome in nomi_col_da_trasf_in_nominal:
+        # dato il nome della colonna, ottengo l'indice a cui si trova
+        # +1 perchè weka conta da 1
+        ind_col_da_trasf_in_nominal.append(tabella_preprocessata.columns.get_loc(nome) + 1)
+    # options del filtro deve essere di questo tipo: "-R 2,8,9,10"
+    # allora dalla dalla lista in formato stringa: "[2, 8, 9, 10]" elimino il primo e l'ultimo carattere
+    # cosi diventa "2, 8, 9, 10"
+    ind_col_da_trasf_in_nominal = str(ind_col_da_trasf_in_nominal)
+    ind_col_da_trasf_in_nominal = ind_col_da_trasf_in_nominal[1:-1]
+
+    loader = Loader(classname="weka.core.converters.CSVLoader")
+    data = loader.load_file("perwekacsv.csv")
+
+    data.class_is_last()
+
+    fltr = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal",
+                  options=["-R", ind_col_da_trasf_in_nominal])
+
+    fltr.inputformat(data)
+    data = fltr.filter(data)
+
+    saver = Saver(classname="weka.core.converters.ArffSaver")
+    saver.save_file(data, "perwekaarff.arff")
+
+    cls = Classifier(classname="weka.classifiers.rules.JRip")
     cls.build_classifier(data)
 
     evl = Evaluation(data)
-    evl.test_model(cls,data)
+    evl.crossvalidate_model(cls, data, 4, Random(1))
+
+    print(evl.percent_correct)
     print(evl.summary())
+    print(evl.class_details())
+def stratified_train_test_split_arff(class_name):
+    '''
+    Ritorna train(75%) test(25%) preprocessato in formato .arff stratificato su 'class_name'.
+    I dataset avranno solo una delle cinque terapie (class_name)
+    Imposta la classe
 
+    Divido train-test usando sklearn e poi finisco il preprocessamento applicando il filtro NumericToNominal
+    a train e test, infine salvo train test in formato arff.
+    '''
+    tabella_completa = pd.read_csv("osteo200.csv")
+    # preprocessata e filtrata scegliendo solo gli attributi necessari + ultimo attributo è la classe
+    tabella_preprocessata = preprocessamento_nuovo(tabella_completa, class_name)
 
-    
-    jvm.stop()
-# altri main()
+    # weka non ha stratified train_test_split
+    train_, test_ = train_test_split(tabella_preprocessata, test_size=0.25,
+                                   stratify=tabella_preprocessata.iloc[:, -1])
+    # l'unico modo di comuicare con weka è salvando il file su hhd
+    train_.to_csv('train.csv', index=False)
+    test_.to_csv('test.csv', index=False)
+
+    # tutto questo paragrafo serve a creare gli indici delle colonne a cui applicare il filtro
+    # NumericToNominal di weka
+    nomi_col_da_trasf_in_nominal = [
+        '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',
+        '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
+        '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
+        '1 TERAPIA_ALTRO_CHECKBOX',
+        '1 TERAPIA_COMPLIANCE',
+        '1 FRATTURE',
+        '1 FRATTURA_SITI_DIVERSI',
+        '1 FRATTURA_FAMILIARITA',
+        '1 ABUSO_FUMO_CHECKBOX',
+        '1 USO_CORTISONE_CHECKBOX',
+        '1 MALATTIE_ATTUALI_CHECKBOX',
+        '1 MALATTIE_ATTUALI_ARTRITE_REUM',
+        '1 MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
+        '1 MALATTIE_ATTUALI_LUPUS',  # NON
+        '1 MALATTIE_ATTUALI_SCLERODERMIA',  # NON
+        '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON
+        '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
+        '1 PATOLOGIE_UTERINE_CHECKBOX',  # NON
+        '1 NEOPLASIA_CHECKBOX',  # NON
+        '1 SINTOMI_VASOMOTORI',  # NON
+        '1 SINTOMI_DISTROFICI',  # NON
+        '1 DISLIPIDEMIA_CHECKBOX',  # NON
+        '1 IPERTENSIONE',  # NON
+        '1 RISCHIO_TEV',  # NON
+        '1 PATOLOGIA_CARDIACA',  # NON
+        '1 PATOLOGIA_VASCOLARE',  # NON
+        '1 INSUFFICIENZA_RENALE',  # NON
+        '1 PATOLOGIA_RESPIRATORIA',  # NON
+        '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
+        '1 PATOLOGIA_EPATICA',  # NON
+        '1 PATOLOGIA_ESOFAGEA',  # NON
+        '1 GASTRO_DUODENITE',  # NON
+        '1 GASTRO_RESEZIONE',  # NON
+        '1 RESEZIONE_INTESTINALE',  # NON
+        '1 MICI',  # NON
+        '1 VITAMINA_D_CHECKBOX',
+        '1 ALLERGIE_CHECKBOX',  # NON + quella sotto
+        '1 INTOLLERANZE_CHECKBOX',
+        '1 SITUAZIONE_COLONNA_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_DX',
+        '1 OSTEOPOROSI_GRAVE',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L1',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L2',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L3',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L4',  # NON
+        '1 COLONNA_NON_ANALIZZABILE',  # NON
+        '1 COLONNA_VALORI_SUPERIORI',  # NON
+        '1 FEMORE_NON_ANALIZZABILE',  # NON
+        '1 FRAX_APPLICABILE',  # NON**
+        '1 TBS_COLONNA_APPLICABILE',
+        '1 DEFRA_APPLICABILE',  # NON# NON**
+        '1 NORME_PREVENZIONE',  # NON
+        '1 ALTRO_CHECKBOX',  # NON
+        '1 NORME_COMPORTAMENTALI',  # NON
+        '1 ATTIVITA_FISICA',  # NON
+        '1 SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
+        '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
+        '1 SOSPENSIONE_FUMO',  # NON
+        '1 CONTROLLO_DENSITOMETRICO_CHECKBOX']
+    nomi_col_da_trasf_in_nominal.append(class_name)
+    # conterrà al posto dei nomi, gli indici. Serve per il filtro NumericToNominal
+    ind_col_da_trasf_in_nominal = []
+    for nome in nomi_col_da_trasf_in_nominal:
+        # dato il nome della colonna, ottengo l'indice a cui si trova
+        # +1 perchè weka conta da 1
+        ind_col_da_trasf_in_nominal.append(tabella_preprocessata.columns.get_loc(nome) + 1)
+    # options del filtro deve essere di questo tipo: "-R 2,8,9,10"
+    # allora dalla dalla lista in formato stringa: "[2, 8, 9, 10]" elimino il primo e l'ultimo carattere
+    # cosi diventa "2, 8, 9, 10"
+    ind_col_da_trasf_in_nominal = str(ind_col_da_trasf_in_nominal)
+    ind_col_da_trasf_in_nominal = ind_col_da_trasf_in_nominal[1:-1]
+
+    loader = Loader(classname="weka.core.converters.CSVLoader")
+    train = loader.load_file("train.csv")
+    test = loader.load_file("test.csv")
+
+    fltr = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal",
+                            options=["-R", ind_col_da_trasf_in_nominal])
+
+    fltr.inputformat(train)
+    train = fltr.filter(train)
+
+    fltr.inputformat(test)
+    test = fltr.filter(test)
+
+    train.class_is_last()
+    test.class_is_last()
+
+    saver = Saver(classname="weka.core.converters.ArffSaver")
+    saver.save_file(train, "train.arff")
+    saver.save_file(test, "test.arff")
+
+    return train, test, train_, test_
+
+    #jvm.stop()
 def secondo_script():
     '''
     fare il preprocessing in base al dominio della colonna. cioè se è stringa lunga allora vettorizzo, se sono pochi valor
@@ -233,127 +553,6 @@ def estrazione_regole_e_verifica():
     print(accuracy_rules(testX, testY, rules))
 
 # funzioni moderne
-def stratified_train_test_split_arff(class_name):
-    '''
-    Ritorna train(75%) test(25%) preprocessato in formato .arff stratificato su 'class_name'.
-    I dataset avranno solo una delle cinque terapie (class_name)
-    Imposta la classe
-
-    Divido train-test usando sklearn e poi finisco il preprocessamento applicando il filtro NumericToNominal
-    a train e test, infine salvo train test in formato arff.
-    '''
-    tabella_completa = pd.read_csv("osteo.csv")
-    # preprocessata e filtrata scegliendo solo gli attributi necessari + ultimo attributo è la classe
-    tabella_preprocessata = preprocessamento_nuovo(tabella_completa, class_name)
-
-    # weka non ha stratified train_test_split
-    train_, test_ = train_test_split(tabella_preprocessata, test_size=0.25,
-                                   stratify=tabella_preprocessata.iloc[:, -1])
-    # l'unico modo di comuicare con weka è salvando il file su hhd
-    train_.to_csv('train.csv', index=False)
-    test_.to_csv('test.csv', index=False)
-
-    # tutto questo paragrafo serve a creare gli indici delle colonne a cui applicare il filtro
-    # NumericToNominal di weka
-    nomi_col_da_trasf_in_nominal = [
-        '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',
-        '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
-        '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
-        '1 TERAPIA_ALTRO_CHECKBOX',
-        '1 TERAPIA_COMPLIANCE',
-        '1 FRATTURE',
-        '1 FRATTURA_SITI_DIVERSI',
-        '1 FRATTURA_FAMILIARITA',
-        '1 ABUSO_FUMO_CHECKBOX',
-        '1 USO_CORTISONE_CHECKBOX',
-        '1 MALATTIE_ATTUALI_CHECKBOX',
-        '1 MALATTIE_ATTUALI_ARTRITE_REUM',
-        '1 MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
-        '1 MALATTIE_ATTUALI_LUPUS',  # NON
-        '1 MALATTIE_ATTUALI_SCLERODERMIA',  # NON
-        '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON
-        '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
-        '1 PATOLOGIE_UTERINE_CHECKBOX',  # NON
-        '1 NEOPLASIA_CHECKBOX',  # NON
-        '1 SINTOMI_VASOMOTORI',  # NON
-        '1 SINTOMI_DISTROFICI',  # NON
-        '1 DISLIPIDEMIA_CHECKBOX',  # NON
-        '1 IPERTENSIONE',  # NON
-        '1 RISCHIO_TEV',  # NON
-        '1 PATOLOGIA_CARDIACA',  # NON
-        '1 PATOLOGIA_VASCOLARE',  # NON
-        '1 INSUFFICIENZA_RENALE',  # NON
-        '1 PATOLOGIA_RESPIRATORIA',  # NON
-        '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
-        '1 PATOLOGIA_EPATICA',  # NON
-        '1 PATOLOGIA_ESOFAGEA',  # NON
-        '1 GASTRO_DUODENITE',  # NON
-        '1 GASTRO_RESEZIONE',  # NON
-        '1 RESEZIONE_INTESTINALE',  # NON
-        '1 MICI',  # NON
-        '1 VITAMINA_D_CHECKBOX',
-        '1 ALLERGIE_CHECKBOX',  # NON + quella sotto
-        '1 INTOLLERANZE_CHECKBOX',
-        '1 SITUAZIONE_COLONNA_CHECKBOX',  # NON**
-        '1 SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
-        '1 SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
-        '1 SITUAZIONE_FEMORE_DX',
-        '1 OSTEOPOROSI_GRAVE',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L1',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L2',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L3',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L4',  # NON
-        '1 COLONNA_NON_ANALIZZABILE',  # NON
-        '1 COLONNA_VALORI_SUPERIORI',  # NON
-        '1 FEMORE_NON_ANALIZZABILE',  # NON
-        '1 FRAX_APPLICABILE',  # NON**
-        '1 TBS_COLONNA_APPLICABILE',
-        '1 DEFRA_APPLICABILE',  # NON# NON**
-        '1 NORME_PREVENZIONE',  # NON
-        '1 ALTRO_CHECKBOX',  # NON
-        '1 NORME_COMPORTAMENTALI',  # NON
-        '1 ATTIVITA_FISICA',  # NON
-        '1 SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
-        '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
-        '1 SOSPENSIONE_FUMO',  # NON
-        '1 CONTROLLO_DENSITOMETRICO_CHECKBOX']
-    nomi_col_da_trasf_in_nominal.append(class_name)
-    # conterrà al posto dei nomi, gli indici. Serve per il filtro NumericToNominal
-    ind_col_da_trasf_in_nominal = []
-    for nome in nomi_col_da_trasf_in_nominal:
-        # dato il nome della colonna, ottengo l'indice a cui si trova
-        # +1 perchè weka conta da 1
-        ind_col_da_trasf_in_nominal.append(tabella_preprocessata.columns.get_loc(nome) + 1)
-    # options del filtro deve essere di questo tipo: "-R 2,8,9,10"
-    # allora dalla dalla lista in formato stringa: "[2, 8, 9, 10]" elimino il primo e l'ultimo carattere
-    # cosi diventa "2, 8, 9, 10"
-    ind_col_da_trasf_in_nominal = str(ind_col_da_trasf_in_nominal)
-    ind_col_da_trasf_in_nominal = ind_col_da_trasf_in_nominal[1:-1]
-
-    loader = Loader(classname="weka.core.converters.CSVLoader")
-    train = loader.load_file("train.csv")
-    test = loader.load_file("test.csv")
-
-    fltr = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal",
-                            options=["-R", ind_col_da_trasf_in_nominal])
-
-    fltr.inputformat(train)
-    train = fltr.filter(train)
-
-    fltr.inputformat(test)
-    test = fltr.filter(test)
-
-    train.class_is_last()
-    test.class_is_last()
-
-    saver = Saver(classname="weka.core.converters.ArffSaver")
-    saver.save_file(train, "train.arff")
-    saver.save_file(test, "test.arff")
-
-    return train, test, train_, test_
-
-    #jvm.stop()
 def accuracy_rules(test_X, test_Y, regole):
     '''
     Valuta l'accuratezza delle regole
@@ -558,10 +757,10 @@ def preprocessamento_nuovo(tabella_completa,class_name):
         stop_words = stopwords.words('italian')
         # 'non' è molto importante
         stop_words.remove('non')
-        stop_words += ['.', ',', 'm','t' ,'gg','die','fa','mg','cp', 'im', 'fino', 'uno', 'due', 'tre', 'quattro', 'cinque','sei', 'ogni',
+        stop_words += ['.', ',', 'm','t' ,'gg','die','fa', 'im', 'fino', 'uno', 'due', 'tre', 'quattro', 'cinque','sei', 'ogni',
                        'alcuni', 'giorni', 'giorno', 'mesi', 'mese', 'settimana', 'settimane', 'circa', 'aa', 'gtt',
                        'poi', 'gennaio', 'febbraio', 'marzo', 'maggio', 'aprile', 'giugno', 'luglio', 'agosto',
-                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett','pu','u']
+                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett','pu','u','dx','sn','l','nel']
 
         # trovo tutti i token da eliminare dalla frase
         to_be_removed = []
@@ -581,9 +780,11 @@ def preprocessamento_nuovo(tabella_completa,class_name):
 
         # converto da lista di token in striga
         output = ' '.join(tokens)
+        #print(output)
         return output
 
-    def vectorize(column_name, frame, prefix, regex=r'(?:[.a-zA-Z]+)', n_gram_range=(2, 2)):
+    def vectorize(column_name, frame, prefix, regex=r'(?:[a-zàéùò]+)|(?:(?:300000|300.000|100000|100.000|50000|50.000|25000|25.000|10000|10.000|2.000))', n_gram_range=(2, 2)):
+        # TODO: ha detto all'inizio di rimuovere gli grammi che compaiono poco
         # TODO:  vectorizer.fit_transform(column_list).toarray() è in grado di gestire i valori null, allora perchè metto 'na'?
         '''
         ATTENZIONE: se scegli solo bigrammi il vettore delle frasi diverse di una sola parola sarà nullo
@@ -597,7 +798,9 @@ def preprocessamento_nuovo(tabella_completa,class_name):
         :param column_name: nome colonna da vettorizzare
         :param frame: dataframe
         :param prefix: per differenziare i nomi delle colonne in output
-        :param regex: come dividere i token (cosa sarà un gramma) (il regex di default prende solo parole)
+        :param regex: come dividere i token (cosa sarà un gramma) (il regex di default prende solo parole+numeri
+        importanti di 10.000UI). Di default trova solo parole. C'è il punto per la parola 'M.I.C.I'
+        no 2000 perchè ci confondiamo con l'anno
         :param n_gram_range: (2,2) se voglio solo bigrammi, (1,2) se voglio bigrammi e monogrammi...
         :return: la tabella con le nuove colonne e i nomi delle nuove colonne
         '''
@@ -734,35 +937,89 @@ def preprocessamento_nuovo(tabella_completa,class_name):
     tabella_completa, nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI = \
         vectorize('1 PATOLOGIE_UTERINE_DIAGNOSI', tabella_completa, prefix= 'pud', n_gram_range=(1,2))
 
-
-    # sostituisco a 10000UI 10.000UI in VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
+    # region vettorizzato VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA (quella all'inizio)
+    # sostituisco a 10000UI 10.000UI e 25000 UI con 25.000UI in VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
     for row_index in range(0, tabella_completa.shape[0]):
         row = tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA']
         if not pd.isnull(row):
-            tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = re.sub(r'10000', r'10.000', row)
+            tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = re.sub(r'10000UI',
+                                                                                                   r'10.000UI',row)
+            tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA']\
+                = re.sub(r'25000\sUI', r'25.000UI',
+                         tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])
 
     # vettorizato VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
     tabella_completa['1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'].fillna('na', inplace=True)
     # regex: principio + per alcuni pricipi, anche la quantità
+    # TODO: puoi semplificare il regex perchè abbiamo fatto delle sost. nel paragrago prec.
     tabella_completa, nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA = \
         vectorize('1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA',
                   tabella_completa,
                   prefix='vidtol',
                   n_gram_range=(1, 2),
-                  regex=r'(?:(?:calcifediolo|colecalciferolo)\s[0-9]+[.]{0,1}[0-9]*(?:ui|\sui))|(?:Supplementazione giornaliera di vit D3|calcifediolo|^na$)')
+                  regex=r'(?:(?:calcifediolo|colecalciferolo)\s[0-9]+[.]{0,1}[0-9]*(?:ui|\sui))|'
+                        r'(?:Supplementazione giornaliera di vit D3|calcifediolo|^na$)')
+    # endregion
 
-    # TODO: seve un regex che prenda anche numeri del tipo 10.000UI perchè è comune
-    # vettorizato TERAPIA_ALTRO
+    # region sitemo VITAMINA_D_SUPPLEMENTAZIONE_LISTA (quella da prevedere)
+    # sostituisco a 10000UI 10.000UI e 25000 UI con 25.000UI in VITAMINA_D_SUPPLEMENTAZIONE_LISTA
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA']
+        if not pd.isnull(row):
+            tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = re.sub(r'10000UI', r'10.000UI',row)
+            tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA']\
+                = re.sub(r'25000\sUI', r'25.000UI',
+                         tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
+
+    # sostituisco alla cura solo il principio e la quantità
+    # esempio: 'colecalciferolo 25.000UI, 1 flacone monodose 1 volta al mese' va sostituita con 'calciferolo 25.000UI'
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA']
+        if not pd.isnull(row):
+            # faccio regex piu semplice dato che ho gia fatto delle sostituzioni nel paragrafo prec.
+            x = re.sub(r'^(colecalciferolo\s[0-9]*[.][0-9]*UI).*|^(Calcifediolo\scpr\smolli).*|'
+                       r'^(Calcifediolo\sgocce).*|^(Supplementazione\sgiornaliera\sdi\sVit\sD3).*', r'\1\2\3\4',row)
+            tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = x
+    # endregion
+
+    # region vettorizato TERAPIA_ALTRO
+    # questo paragrafo perchè voglio che 10000UI sia trattato come 10.000UI
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIA_ALTRO']
+        if not pd.isnull(row):
+            tabella_completa.loc[row_index, '1 TERAPIA_ALTRO'] = re.sub(r'10000',  r'10.000', row)
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIA_ALTRO']
+        if not pd.isnull(row):
+            tabella_completa.loc[row_index, '1 TERAPIA_ALTRO'] = re.sub(r'100000', r'100.000', row)
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIA_ALTRO']
+        if not pd.isnull(row):
+            tabella_completa.loc[row_index, '1 TERAPIA_ALTRO'] = re.sub(r'2000', r'2.000', row)
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIA_ALTRO']
+        if not pd.isnull(row):
+            tabella_completa.loc[row_index, '1 TERAPIA_ALTRO'] = re.sub(r'25000', r'25.000', row)
+
     tabella_completa['1 TERAPIA_ALTRO'].fillna('na', inplace=True)
-    tabella_completa, nomi_nuove_colonne_vectorized_TERAPIA_ALTRO = vectorize('1 TERAPIA_ALTRO', tabella_completa, 'ta')
+    tabella_completa, \
+    nomi_nuove_colonne_vectorized_TERAPIA_ALTRO\
+        = vectorize('1 TERAPIA_ALTRO',
+                    tabella_completa,
+                    'ta')
+    # endregion
+
 
     # vettorizzato ALTRE_PATOLOGIE
     tabella_completa['1 ALTRE_PATOLOGIE'].fillna('na', inplace=True)
-    tabella_completa, nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE = vectorize('1 ALTRE_PATOLOGIE', tabella_completa, 'ap')
+    tabella_completa, nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE = vectorize('1 ALTRE_PATOLOGIE', tabella_completa,
+                                                                                'ap')
 
     # vettorizzato CAUSE_OSTEOPOROSI_SECONDARIA
     tabella_completa['1 CAUSE_OSTEOPOROSI_SECONDARIA'].fillna('na', inplace=True)
-    tabella_completa, nomi_nuove_colonne_vectorized_CAUSE_OSTEOPOROSI_SECONDARIA = vectorize('1 CAUSE_OSTEOPOROSI_SECONDARIA', tabella_completa,'cos',n_gram_range=(1,2))
+    # questo regex ha il punto solo per la parola M.I.C.I .. in genere non vogliamo il punto perchè sembra abbassare l'acc.
+    tabella_completa, nomi_nuove_colonne_vectorized_CAUSE_OSTEOPOROSI_SECONDARIA =\
+        vectorize('1 CAUSE_OSTEOPOROSI_SECONDARIA', tabella_completa,'cos',n_gram_range=(1,2), regex=r'(?:[.a-z]+)')
 
 
 
@@ -841,6 +1098,33 @@ def preprocessamento_nuovo(tabella_completa,class_name):
     tabella_completa['1 USO_CORTISONE'].fillna('non usa cortisone', inplace=True)
     tabella_completa['1 TERAPIA_ALTRO_CHECKBOX'].fillna(0, inplace=True)
     # endregion
+
+
+    # region sostituisco solo con il principio TERAPIE_OSTEOPROTETTIVE_LISTA
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIE_OSTEOPROTETTIVE_LISTA']
+        if not pd.isnull(row):
+            # esempio: se row = 'alendronato 70 mg, 1cpr/settimana', poi diventa 'alendronato'
+            x = re.sub(r'^([a-zA-Z]+).*',r'\1',row)
+            tabella_completa.loc[row_index, '1 TERAPIE_OSTEOPROTETTIVE_LISTA'] = x
+    # endregion
+
+
+
+
+    # region sostituisco solo con il principio CALCIO_SUPPLEMENTAZIONE_LISTA
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 CALCIO_SUPPLEMENTAZIONE_LISTA']
+        if not pd.isnull(row):
+            # perchè ce 'calcio carbonato' e 'Calcio carbonato' e vogliamo trattarla come la stessa stringa
+            row = row.lower()
+            # esempio: 'calcio carbonato 600 mg per 2 / die' diventa 'calcio caronato'
+            x = re.sub(r'^([a-zA-Z]*\s[a-zA-Z]*).*',r'\1',row)
+            tabella_completa.loc[row_index, '1 CALCIO_SUPPLEMENTAZIONE_LISTA'] = x
+    # endregion
+
+
+
 
     l = [
             '1 AGE', #OK
@@ -943,8 +1227,9 @@ def preprocessamento_nuovo(tabella_completa,class_name):
             '1 TOT_Zscore',
         ]
     l.append(class_name)
-
     return tabella_completa[l]
+
+
 
 # classi
 class Proposizione:
