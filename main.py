@@ -30,6 +30,169 @@ import pymysql
 def main():
     jvm.start(max_heap_size="900m")
 
+    jvm.stop()
+
+# altri main()
+def accuracy_refined_not_refined():
+    jvm.start(max_heap_size="900m")
+
+    # class_name = '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX' #uguale (osteo.csv# )
+    # class_name = '1 TERAPIE_ORMONALI_CHECKBOX' #uguale
+    # class_name ='1 VITAMINA_D_TERAPIA_CHECKBOX' #uguale
+    # class_name ='1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX' #-tanto
+    class_name = '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX'  # + poco
+
+    tabella_completa = pd.read_csv("osteo.csv")
+
+    # ***
+    # tabella_preprocessata = preprocessamento_vecchio(tabella_completa,class_name)
+
+    tabella_preprocessata = preprocessamento_nuovo(tabella_completa, class_name)
+
+    # tabella_preprocessata.dropna(subset = [class_name], inplace = True)
+
+    tabella_preprocessata.to_csv('perwekacsv.csv', index=False)
+
+    # region Indici
+    # Tutto il paragrafo per indici
+    nomi_col_da_trasf_in_nominal = [
+        '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',
+        '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
+        '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
+        '1 TERAPIA_ALTRO_CHECKBOX',
+        '1 TERAPIA_COMPLIANCE',
+        '1 FRATTURE',
+        '1 FRATTURA_SITI_DIVERSI',
+        '1 FRATTURA_FAMILIARITA',
+        '1 ABUSO_FUMO_CHECKBOX',
+        '1 USO_CORTISONE_CHECKBOX',
+        '1 MALATTIE_ATTUALI_CHECKBOX',
+        '1 MALATTIE_ATTUALI_ARTRITE_REUM',
+        '1 MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
+        '1 MALATTIE_ATTUALI_LUPUS',  # NON
+        '1 MALATTIE_ATTUALI_SCLERODERMIA',  # NON
+        '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON
+        '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
+        '1 PATOLOGIE_UTERINE_CHECKBOX',  # NON
+        '1 NEOPLASIA_CHECKBOX',  # NON
+        '1 SINTOMI_VASOMOTORI',  # NON
+        '1 SINTOMI_DISTROFICI',  # NON
+        '1 DISLIPIDEMIA_CHECKBOX',  # NON
+        '1 IPERTENSIONE',  # NON
+        '1 RISCHIO_TEV',  # NON
+        '1 PATOLOGIA_CARDIACA',  # NON
+        '1 PATOLOGIA_VASCOLARE',  # NON
+        '1 INSUFFICIENZA_RENALE',  # NON
+        '1 PATOLOGIA_RESPIRATORIA',  # NON
+        '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
+        '1 PATOLOGIA_EPATICA',  # NON
+        '1 PATOLOGIA_ESOFAGEA',  # NON
+        '1 GASTRO_DUODENITE',  # NON
+        '1 GASTRO_RESEZIONE',  # NON
+        '1 RESEZIONE_INTESTINALE',  # NON
+        '1 MICI',  # NON
+        '1 VITAMINA_D_CHECKBOX',
+        '1 ALLERGIE_CHECKBOX',  # NON + quella sotto
+        '1 INTOLLERANZE_CHECKBOX',
+        '1 SITUAZIONE_COLONNA_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
+        '1 SITUAZIONE_FEMORE_DX',
+        '1 OSTEOPOROSI_GRAVE',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L1',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L2',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L3',  # NON
+        '1 VERTEBRE_NON_ANALIZZATE_L4',  # NON
+        '1 COLONNA_NON_ANALIZZABILE',  # NON
+        '1 COLONNA_VALORI_SUPERIORI',  # NON
+        '1 FEMORE_NON_ANALIZZABILE',  # NON
+        '1 FRAX_APPLICABILE',  # NON**
+        '1 TBS_COLONNA_APPLICABILE',
+        '1 DEFRA_APPLICABILE',  # NON# NON**
+        '1 NORME_PREVENZIONE',  # NON
+        '1 ALTRO_CHECKBOX',  # NON
+        '1 NORME_COMPORTAMENTALI',  # NON
+        '1 ATTIVITA_FISICA',  # NON
+        '1 SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
+        '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
+        '1 SOSPENSIONE_FUMO',  # NON
+        '1 CONTROLLO_DENSITOMETRICO_CHECKBOX']
+    nomi_col_da_trasf_in_nominal.append(class_name)
+    # conterrà al posto dei nomi, gli indici. Serve per il filtro NumericToNominal
+    ind_col_da_trasf_in_nominal = []
+    for nome in nomi_col_da_trasf_in_nominal:
+        # dato il nome della colonna, ottengo l'indice a cui si trova
+        # +1 perchè weka conta da 1
+        ind_col_da_trasf_in_nominal.append(tabella_preprocessata.columns.get_loc(nome) + 1)
+    # options del filtro deve essere di questo tipo: "-R 2,8,9,10"
+    # allora dalla dalla lista in formato stringa: "[2, 8, 9, 10]" elimino il primo e l'ultimo carattere
+    # cosi diventa "2, 8, 9, 10"
+    ind_col_da_trasf_in_nominal = str(ind_col_da_trasf_in_nominal)
+    ind_col_da_trasf_in_nominal = ind_col_da_trasf_in_nominal[1:-1]
+    # endregion
+
+    loader = Loader(classname="weka.core.converters.CSVLoader")
+    data = loader.load_file("perwekacsv.csv")
+
+    data.class_is_last()
+
+    fltr = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal",
+                  options=["-R", ind_col_da_trasf_in_nominal])
+    # ***
+    # fltr = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal",
+    # options=["-R", "last"])
+
+    fltr.inputformat(data)
+    data = fltr.filter(data)
+
+    fltr = Filter(classname="weka.filters.supervised.instance.StratifiedRemoveFolds",
+                  options=["-S", "0", "-N", "4", "-F", "1"])
+    fltr.inputformat(data)
+    test = fltr.filter(data)
+
+    fltr = Filter(classname="weka.filters.supervised.instance.StratifiedRemoveFolds",
+                  options=["-S", "0", "-V", "-N", "4", "-F", "1"])
+    fltr.inputformat(data)
+    train = fltr.filter(data)
+
+    saver = Saver(classname="weka.core.converters.ArffSaver")
+    saver.save_file(test, "testmm-nonull.arff")
+    saver.save_file(train, "trainn-nonull.arff")
+
+    '''loader = Loader(classname="weka.core.converters.ArffLoader")
+    test = loader.load_file("testmm.arff")
+    train = loader.load_file("trainn.arff")
+    test.class_is_last()
+    train.class_is_last()'''
+
+    cls = Classifier(classname="weka.classifiers.rules.PART")
+    cls.build_classifier(train)
+
+    evl = Evaluation(train)
+    evl.test_model(cls, test)
+    print(evl.summary())
+
+    rules = estrai_regole(cls)
+    # print(rules)
+
+    acc1, acc2 = accuracy_rules2(test, rules)
+    print("{} {}".format(acc1, acc2))
+
+    refine_rules(rules, train.num_instances)
+
+    acc1, acc2 = accuracy_rules2(test, rules)
+    print("{} {}".format(acc1, acc2))
+
+    jvm.stop()
+def prevedi():
+    '''
+    con questa funzione puoi prevedere sia check che terapie
+    l'unica cosa è che a volte vogliamo elminare le righe dove la classe è nulla
+    :return:
+    '''
+    jvm.start(max_heap_size="900m")
+
     class_name = '1 TERAPIE_ORMONALI_CHECKBOX'
     tabella_completa = pd.read_csv("osteo.csv")
 
@@ -133,240 +296,19 @@ def main():
     saver = Saver(classname="weka.core.converters.ArffSaver")
     saver.save_file(data, "perwekaarff.arff")
 
-    jvm.stop()
-
-
-# altri main()
-def prevedi_ceck():
-    class_name = '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX'
-
-    tabella_completa = pd.read_csv("osteo200.csv")
-    # preprocessata e filtrata scegliendo solo gli attributi necessari + ultimo attributo è la classe
-    tabella_preprocessata = preprocessamento_nuovo(tabella_completa, class_name)
-
-    tabella_preprocessata.to_csv('perwekacsv.csv', index=False)
-
-    # Tutto il paragrafo per indici
-    nomi_col_da_trasf_in_nominal = [
-        '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',
-        '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
-        '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
-        '1 TERAPIA_ALTRO_CHECKBOX',
-        '1 TERAPIA_COMPLIANCE',
-        '1 FRATTURE',
-        '1 FRATTURA_SITI_DIVERSI',
-        '1 FRATTURA_FAMILIARITA',
-        '1 ABUSO_FUMO_CHECKBOX',
-        '1 USO_CORTISONE_CHECKBOX',
-        '1 MALATTIE_ATTUALI_CHECKBOX',
-        '1 MALATTIE_ATTUALI_ARTRITE_REUM',
-        '1 MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
-        '1 MALATTIE_ATTUALI_LUPUS',  # NON
-        '1 MALATTIE_ATTUALI_SCLERODERMIA',  # NON
-        '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON
-        '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
-        '1 PATOLOGIE_UTERINE_CHECKBOX',  # NON
-        '1 NEOPLASIA_CHECKBOX',  # NON
-        '1 SINTOMI_VASOMOTORI',  # NON
-        '1 SINTOMI_DISTROFICI',  # NON
-        '1 DISLIPIDEMIA_CHECKBOX',  # NON
-        '1 IPERTENSIONE',  # NON
-        '1 RISCHIO_TEV',  # NON
-        '1 PATOLOGIA_CARDIACA',  # NON
-        '1 PATOLOGIA_VASCOLARE',  # NON
-        '1 INSUFFICIENZA_RENALE',  # NON
-        '1 PATOLOGIA_RESPIRATORIA',  # NON
-        '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
-        '1 PATOLOGIA_EPATICA',  # NON
-        '1 PATOLOGIA_ESOFAGEA',  # NON
-        '1 GASTRO_DUODENITE',  # NON
-        '1 GASTRO_RESEZIONE',  # NON
-        '1 RESEZIONE_INTESTINALE',  # NON
-        '1 MICI',  # NON
-        '1 VITAMINA_D_CHECKBOX',
-        '1 ALLERGIE_CHECKBOX',  # NON + quella sotto
-        '1 INTOLLERANZE_CHECKBOX',
-        '1 SITUAZIONE_COLONNA_CHECKBOX',  # NON**
-        '1 SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
-        '1 SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
-        '1 SITUAZIONE_FEMORE_DX',
-        '1 OSTEOPOROSI_GRAVE',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L1',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L2',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L3',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L4',  # NON
-        '1 COLONNA_NON_ANALIZZABILE',  # NON
-        '1 COLONNA_VALORI_SUPERIORI',  # NON
-        '1 FEMORE_NON_ANALIZZABILE',  # NON
-        '1 FRAX_APPLICABILE',  # NON**
-        '1 TBS_COLONNA_APPLICABILE',
-        '1 DEFRA_APPLICABILE',  # NON# NON**
-        '1 NORME_PREVENZIONE',  # NON
-        '1 ALTRO_CHECKBOX',  # NON
-        '1 NORME_COMPORTAMENTALI',  # NON
-        '1 ATTIVITA_FISICA',  # NON
-        '1 SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
-        '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
-        '1 SOSPENSIONE_FUMO',  # NON
-        '1 CONTROLLO_DENSITOMETRICO_CHECKBOX']
-    nomi_col_da_trasf_in_nominal.append(class_name)
-    # conterrà al posto dei nomi, gli indici. Serve per il filtro NumericToNominal
-    ind_col_da_trasf_in_nominal = []
-    for nome in nomi_col_da_trasf_in_nominal:
-        # dato il nome della colonna, ottengo l'indice a cui si trova
-        # +1 perchè weka conta da 1
-        ind_col_da_trasf_in_nominal.append(tabella_preprocessata.columns.get_loc(nome) + 1)
-    # options del filtro deve essere di questo tipo: "-R 2,8,9,10"
-    # allora dalla dalla lista in formato stringa: "[2, 8, 9, 10]" elimino il primo e l'ultimo carattere
-    # cosi diventa "2, 8, 9, 10"
-    ind_col_da_trasf_in_nominal = str(ind_col_da_trasf_in_nominal)
-    ind_col_da_trasf_in_nominal = ind_col_da_trasf_in_nominal[1:-1]
-
-    loader = Loader(classname="weka.core.converters.CSVLoader")
-    data = loader.load_file("perwekacsv.csv")
-
-    data.class_is_last()
-
-    fltr = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal",
-                  options=["-R", ind_col_da_trasf_in_nominal])
-
-    fltr.inputformat(data)
-    data = fltr.filter(data)
-
-    saver = Saver(classname="weka.core.converters.ArffSaver")
-    saver.save_file(data, "perwekaarff.arff")
-
-    cls = Classifier(classname="weka.classifiers.rules.JRip")
+    cls = Classifier(classname="weka.classifiers.rules.PART")
     cls.build_classifier(data)
 
     evl = Evaluation(data)
     evl.crossvalidate_model(cls, data, 4, Random(1))
 
-    print(evl.percent_correct)
+    #print(evl.percent_correct)
     print(evl.summary())
-    print(evl.class_details())
-def stratified_train_test_split_arff(class_name):
-    '''
-    Ritorna train(75%) test(25%) preprocessato in formato .arff stratificato su 'class_name'.
-    I dataset avranno solo una delle cinque terapie (class_name)
-    Imposta la classe
+    #print(evl.class_details())
 
-    Divido train-test usando sklearn e poi finisco il preprocessamento applicando il filtro NumericToNominal
-    a train e test, infine salvo train test in formato arff.
-    '''
-    tabella_completa = pd.read_csv("osteo200.csv")
-    # preprocessata e filtrata scegliendo solo gli attributi necessari + ultimo attributo è la classe
-    tabella_preprocessata = preprocessamento_nuovo(tabella_completa, class_name)
+    rules = estrai_regole(cls)
 
-    # weka non ha stratified train_test_split
-    train_, test_ = train_test_split(tabella_preprocessata, test_size=0.25,
-                                   stratify=tabella_preprocessata.iloc[:, -1])
-    # l'unico modo di comuicare con weka è salvando il file su hhd
-    train_.to_csv('train.csv', index=False)
-    test_.to_csv('test.csv', index=False)
-
-    # tutto questo paragrafo serve a creare gli indici delle colonne a cui applicare il filtro
-    # NumericToNominal di weka
-    nomi_col_da_trasf_in_nominal = [
-        '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',
-        '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
-        '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
-        '1 TERAPIA_ALTRO_CHECKBOX',
-        '1 TERAPIA_COMPLIANCE',
-        '1 FRATTURE',
-        '1 FRATTURA_SITI_DIVERSI',
-        '1 FRATTURA_FAMILIARITA',
-        '1 ABUSO_FUMO_CHECKBOX',
-        '1 USO_CORTISONE_CHECKBOX',
-        '1 MALATTIE_ATTUALI_CHECKBOX',
-        '1 MALATTIE_ATTUALI_ARTRITE_REUM',
-        '1 MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
-        '1 MALATTIE_ATTUALI_LUPUS',  # NON
-        '1 MALATTIE_ATTUALI_SCLERODERMIA',  # NON
-        '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON
-        '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
-        '1 PATOLOGIE_UTERINE_CHECKBOX',  # NON
-        '1 NEOPLASIA_CHECKBOX',  # NON
-        '1 SINTOMI_VASOMOTORI',  # NON
-        '1 SINTOMI_DISTROFICI',  # NON
-        '1 DISLIPIDEMIA_CHECKBOX',  # NON
-        '1 IPERTENSIONE',  # NON
-        '1 RISCHIO_TEV',  # NON
-        '1 PATOLOGIA_CARDIACA',  # NON
-        '1 PATOLOGIA_VASCOLARE',  # NON
-        '1 INSUFFICIENZA_RENALE',  # NON
-        '1 PATOLOGIA_RESPIRATORIA',  # NON
-        '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
-        '1 PATOLOGIA_EPATICA',  # NON
-        '1 PATOLOGIA_ESOFAGEA',  # NON
-        '1 GASTRO_DUODENITE',  # NON
-        '1 GASTRO_RESEZIONE',  # NON
-        '1 RESEZIONE_INTESTINALE',  # NON
-        '1 MICI',  # NON
-        '1 VITAMINA_D_CHECKBOX',
-        '1 ALLERGIE_CHECKBOX',  # NON + quella sotto
-        '1 INTOLLERANZE_CHECKBOX',
-        '1 SITUAZIONE_COLONNA_CHECKBOX',  # NON**
-        '1 SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
-        '1 SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
-        '1 SITUAZIONE_FEMORE_DX',
-        '1 OSTEOPOROSI_GRAVE',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L1',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L2',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L3',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L4',  # NON
-        '1 COLONNA_NON_ANALIZZABILE',  # NON
-        '1 COLONNA_VALORI_SUPERIORI',  # NON
-        '1 FEMORE_NON_ANALIZZABILE',  # NON
-        '1 FRAX_APPLICABILE',  # NON**
-        '1 TBS_COLONNA_APPLICABILE',
-        '1 DEFRA_APPLICABILE',  # NON# NON**
-        '1 NORME_PREVENZIONE',  # NON
-        '1 ALTRO_CHECKBOX',  # NON
-        '1 NORME_COMPORTAMENTALI',  # NON
-        '1 ATTIVITA_FISICA',  # NON
-        '1 SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
-        '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
-        '1 SOSPENSIONE_FUMO',  # NON
-        '1 CONTROLLO_DENSITOMETRICO_CHECKBOX']
-    nomi_col_da_trasf_in_nominal.append(class_name)
-    # conterrà al posto dei nomi, gli indici. Serve per il filtro NumericToNominal
-    ind_col_da_trasf_in_nominal = []
-    for nome in nomi_col_da_trasf_in_nominal:
-        # dato il nome della colonna, ottengo l'indice a cui si trova
-        # +1 perchè weka conta da 1
-        ind_col_da_trasf_in_nominal.append(tabella_preprocessata.columns.get_loc(nome) + 1)
-    # options del filtro deve essere di questo tipo: "-R 2,8,9,10"
-    # allora dalla dalla lista in formato stringa: "[2, 8, 9, 10]" elimino il primo e l'ultimo carattere
-    # cosi diventa "2, 8, 9, 10"
-    ind_col_da_trasf_in_nominal = str(ind_col_da_trasf_in_nominal)
-    ind_col_da_trasf_in_nominal = ind_col_da_trasf_in_nominal[1:-1]
-
-    loader = Loader(classname="weka.core.converters.CSVLoader")
-    train = loader.load_file("train.csv")
-    test = loader.load_file("test.csv")
-
-    fltr = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal",
-                            options=["-R", ind_col_da_trasf_in_nominal])
-
-    fltr.inputformat(train)
-    train = fltr.filter(train)
-
-    fltr.inputformat(test)
-    test = fltr.filter(test)
-
-    train.class_is_last()
-    test.class_is_last()
-
-    saver = Saver(classname="weka.core.converters.ArffSaver")
-    saver.save_file(train, "train.arff")
-    saver.save_file(test, "test.arff")
-
-    return train, test, train_, test_
-
-    #jvm.stop()
+    jvm.stop()
 def secondo_script():
     '''
     fare il preprocessing in base al dominio della colonna. cioè se è stringa lunga allora vettorizzo, se sono pochi valor
@@ -402,201 +344,75 @@ def primo_script():
         exit(-1)
 
     print(df)
-def preprocessamento_per_weka():
-    '''
-    attenzione produce tabella arff con tutte e  terapie
-    :return:
-    '''
-    tabella_completa = pd.read_csv("osteo200.csv")
-    tabella_ridotta = preprocessamento_nuovo(tabella_completa)
-
-    tabella_ridotta.to_csv('perwekacsv.csv', index=False)
-
-    nomi_col_da_trasf_in_nominal = [
-        '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',
-        '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',
-        '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',
-        '1 TERAPIA_ALTRO_CHECKBOX',
-        '1 TERAPIA_COMPLIANCE',
-        '1 FRATTURE',
-        '1 FRATTURA_SITI_DIVERSI',
-        '1 FRATTURA_FAMILIARITA',
-        '1 ABUSO_FUMO_CHECKBOX',
-        '1 USO_CORTISONE_CHECKBOX',
-        '1 MALATTIE_ATTUALI_CHECKBOX',
-        '1 MALATTIE_ATTUALI_ARTRITE_REUM',
-        '1 MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
-        '1 MALATTIE_ATTUALI_LUPUS',  # NON
-        '1 MALATTIE_ATTUALI_SCLERODERMIA',  # NON
-        '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON
-        '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',
-        '1 PATOLOGIE_UTERINE_CHECKBOX',  # NON
-        '1 NEOPLASIA_CHECKBOX',  # NON
-        '1 SINTOMI_VASOMOTORI',  # NON
-        '1 SINTOMI_DISTROFICI',  # NON
-        '1 DISLIPIDEMIA_CHECKBOX',  # NON
-        '1 IPERTENSIONE',  # NON
-        '1 RISCHIO_TEV',  # NON
-        '1 PATOLOGIA_CARDIACA',  # NON
-        '1 PATOLOGIA_VASCOLARE',  # NON
-        '1 INSUFFICIENZA_RENALE',  # NON
-        '1 PATOLOGIA_RESPIRATORIA',  # NON
-        '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
-        '1 PATOLOGIA_EPATICA',  # NON
-        '1 PATOLOGIA_ESOFAGEA',  # NON
-        '1 GASTRO_DUODENITE',  # NON
-        '1 GASTRO_RESEZIONE',  # NON
-        '1 RESEZIONE_INTESTINALE',  # NON
-        '1 MICI',  # NON
-        '1 VITAMINA_D_CHECKBOX',
-        '1 ALLERGIE_CHECKBOX',  # NON + quella sotto
-        '1 INTOLLERANZE_CHECKBOX',
-        '1 SITUAZIONE_COLONNA_CHECKBOX',  # NON**
-        '1 SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
-        '1 SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
-        '1 SITUAZIONE_FEMORE_DX',
-        '1 OSTEOPOROSI_GRAVE',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L1',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L2',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L3',  # NON
-        '1 VERTEBRE_NON_ANALIZZATE_L4',  # NON
-        '1 COLONNA_NON_ANALIZZABILE',  # NON
-        '1 COLONNA_VALORI_SUPERIORI',  # NON
-        '1 FEMORE_NON_ANALIZZABILE',  # NON
-        '1 FRAX_APPLICABILE',  # NON**
-        '1 TBS_COLONNA_APPLICABILE',
-        '1 DEFRA_APPLICABILE',  # NON# NON**
-        '1 NORME_PREVENZIONE',  # NON
-        '1 ALTRO_CHECKBOX',  # NON
-        '1 NORME_COMPORTAMENTALI',  # NON
-        '1 ATTIVITA_FISICA',  # NON
-        '1 SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
-        '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
-        '1 SOSPENSIONE_FUMO',  # NON
-        '1 CONTROLLO_DENSITOMETRICO_CHECKBOX',  # NON
-
-        '1 TERAPIE_ORMONALI_CHECKBOX',
-        '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX',
-        '1 VITAMINA_D_TERAPIA_CHECKBOX',
-        '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',
-        '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX']
-    # conterrà al posto dei nomi, gli indici. Serve per il filtro NumericToNominal
-    ind_col_da_trasf_in_nominal = []
-    for nome in nomi_col_da_trasf_in_nominal:
-        # dato il nome della colonna, ottengo l'indice a cui si trova
-        # +1 perchè weka conta da 1
-        ind_col_da_trasf_in_nominal.append(tabella_ridotta.columns.get_loc(nome) + 1)
-
-    # options del filtro deve essere di questo tipo: "-R 2,8,9,10"
-    # allora dalla dalla lista in formato stringa: "[2, 8, 9, 10]" elimino il primo e l'ultimo carattere
-    # cosi diventa "2, 8, 9, 10"
-    ind_col_da_trasf_in_nominal = str(ind_col_da_trasf_in_nominal)
-    ind_col_da_trasf_in_nominal = ind_col_da_trasf_in_nominal[1:-1]
-
-    jvm.start(max_heap_size="900m")
-    loader = Loader(classname="weka.core.converters.CSVLoader")
-    data = loader.load_file("perwekacsv.csv")
-
-    remove = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal",
-                    options=["-R", ind_col_da_trasf_in_nominal])
-    remove.inputformat(data)
-    filtered = remove.filter(data)
-
-    saver = Saver(classname="weka.core.converters.ArffSaver")
-    saver.save_file(filtered, "perwekaarff.arff")
-
-    jvm.stop()
-def estrazione_regole_e_verifica():
-
-    '''
-    tabella_ridotta = pd.read_csv("osteo_r.csv")
-    # voglio prevedere solo terapie orm. check.
-    tabella_ridotta = tabella_ridotta.iloc[:, :-4]
-
-    train, test = train_test_split(tabella_ridotta, test_size=0.25, stratify=tabella_ridotta.iloc[:, -1])
-
-    # lunico modo di comunicare con il wrapper è salvando e poi leggendo il file
-    # salvo due perchè poi voglio vedere se l'accuracy su interfaccia grafica è la stessa che ottengo con le regole estratte
-    train.to_csv('osteo_t_train.csv',index=False)
-    test.to_csv('osteo_t_test.csv',index=False)'''
-
-    # serve solo il test.. per verificare l'accuratezza
-    #train = pd.read_csv('osteo_t_train.csv')
-    test = pd.read_csv('osteo_t_test.csv')
-
-    jvm.start(max_heap_size="900m")
-
-    loader = Loader(classname="weka.core.converters.CSVLoader")
-    data = loader.load_file("osteo_t_train.csv")
-    data.class_is_last()
-
-    # se legge da scv vede ter. orm. come numerico e io lo voglio nominal, perhcè PART non funziona altrimenti
-    # non fare caso al nome 'remove'. dovrebbe essere 'converted'
-    remove = Filter(classname="weka.filters.unsupervised.attribute.NumericToNominal", options=["-R", "last"])
-    remove.inputformat(data)
-    filtered = remove.filter(data)
-
-    cls2 = Classifier(classname="weka.classifiers.rules.PART")
-    cls2.build_classifier(filtered)
-
-    print(cls2)
-
-    rules = estrai_regole(cls2)
-    # jvm.stop() sempre dopo estrai_regole
-    jvm.stop()
-
-    print(rules)
-
-    testX = test.iloc[:, 0:-1]
-    testY = test.iloc[:, -1]
-    print(accuracy_rules(testX, testY, rules))
 
 # funzioni moderne
-def accuracy_rules(test_X, test_Y, regole):
+def refine_rules(rules, num_train_instances, min_f1=0.8, min_f2=0.1):
     '''
-    Valuta l'accuratezza delle regole
-    Uso generale:
-        Si divide in test, train.
-        Si allena PART su train.
-        Si ricavano le regole da PART.
-        E si testa l'accuratezza su test.
-    :param test_X: DataFrame
-    :param test_Y: DataFrame
-    :param regole: Regole
+    Date delle regole il metodo rimuove le regole di 'bassa precisione'.
+    Una regola è di bassa precisione se il suo 'n' è grande rispetto al suo 'm' (f1), e se il suo 'm' è piccolo rispetto
+    al numero di istanze su cui il classificatore è stato allenato (f2).
+    :param rules: tipo di dato 'Regole'
+    :param num_train_instances: numero di istanze su cui il classificatore è stato allenato
+    :param min_f1: float compreso tra 0 e 1. Più grande è più le regole saranno 'pure'
+    :param min_f2: float compreso tra 0 e 1. Più grande è più le regole saranno 'popolari'
     :return: None
     '''
-    predicted_right = 0
-    # andava bene anche test_Y.shape[0]
-    num_instances = test_X.shape[0]
-    # per ogni riga
-    for row_index in range(0, num_instances):
-        istance_X = test_X.iloc[row_index,:]
-        true_Y = test_Y.values[row_index]
-        predicted_Y = regole.predict(istance_X)
-        # qui perchè il dato mi viene salvato in byte
-        strtt = str(true_Y)
-        strtt = re.search(r'\d',strtt)
-        strtt= strtt.group(0)
-        if predicted_Y == strtt:
-            predicted_right+=1
+    rules_to_be_removed = []
+    for rule in rules:
+        f1 = (1-rule.n/rule.m)
+        f2 = (rule.m/num_train_instances)
+        if f1 < min_f1 or f2 < min_f2:
+            rules_to_be_removed.append(rule)
+            # print("REMOVED: {}\nf1={}, f2={}\n".format(str(rule), f1, f2))
 
-    return predicted_right/num_instances
+    rules.remove_rules(rules_to_be_removed)
+def accuracy_rules2(test, regole):
+    #loader = Loader(classname="weka.core.converters.CSVLoader")
+    #test = loader.load_file("perwekacsv.csv")
+
+    predicted_right = 0
+    doesnt_know = 0
+    does_know = 0
+
+    attribute_name__position = {}
+    position__attribute = {}
+    for attribute_index, attribute in enumerate(test.attributes()):
+        # TODO: trovare un regex migliore per parole che non sono in mezzo a due apici (la seconda parte)
+        # TODO: prova con attribute.name
+        match_obj = re.search(r'((?<=^@attribute\s\')(.+(?=\'\s)))|((?<=^@attribute\s)[a-zA-Z0-9è+òàùèé+_]+)', str(attribute))
+        attribute_name = match_obj.group(0)
+        attribute_name__position[attribute_name] = attribute_index
+        position__attribute[attribute_index] = attribute
+
+    class_index = test.class_index
+
+    for inst in test:
+        inst.get_attribute_index = attribute_name__position
+        inst.get_attribute = position__attribute
+
+        predicted_y = regole.predict(inst)
+        right_y = inst.get_string_value(class_index)
+
+        if predicted_y is None:
+            doesnt_know += 1
+        else:
+            does_know += 1
+            if predicted_y == right_y:
+                predicted_right += 1
+
+    return predicted_right/does_know, doesnt_know/test.num_instances
 def estrai_regole(classifier):
     '''
     dato 'classifier' (classifier = Classifier(classname="weka.classifiers.rules.PART")), la funzione ritorna
     un oggetto di tipo Regole inizializzato con le regole di 'classifier'
     '''
 
-    #f = open("h.txt",'r+')
-    #classifier = f.read()
-
     # straggo le regole in formato testuale dal classificatore, esattamente quelle che vengono fuori nel software Weka
     regole_formato_testo = str(classifier)
-    # le regole hanno un header con scritto PART decision list con sotto una serie di lineette, allora li sostituisco
+    # le regole hanno un header con scritto 'PART decision list' con sotto una serie di lineette, allora li sostituisco
     # con la stringa vuota
     regole_formato_testo = re.sub(r'^PART decision list[\r\n][-]+[\r\n]{2}','',regole_formato_testo)
-    # stessa cosa: nel footer c'è Number of Rule: n. Sostituisco con la stringa vuota
+    # stessa cosa: nel footer c'è 'Number of Rule: n'. Sostituisco con la stringa vuota
     regole_formato_testo = re.sub(r'[\r\n][\r\n]Number of Rules\s+:\s+[0-9]+$','',regole_formato_testo)
 
     # conterrà tutte le regole
@@ -605,15 +421,20 @@ def estrai_regole(classifier):
     proposizioni_list = []
     # se la regola è vera, predizione è la classe predetta
     predizione = None
-    # stringa (m/n) di ogni regola
-    gs = None
+    # variabile temporanea per ricavare m ed n
+    mn = None
+    # ogni regola ha anche la precisione in formato '(m/n)'
+    # il primo numero della precisione
+    m = None
+    # il secondo
+    n = None
     # per ogni riga
     for line in str(regole_formato_testo).splitlines():
         # riga generica letta: 1 VERTEBRE_NON_ANALIZZATE_L4 <= 0 AND
         # match_obj_operando1 è un oggetto che conterrà il match: 1 VERTEBRE_NON_ANALIZZATE_L4
         # attenzione match_obj_operando1 non è una stringa ma un oggetto di tipo MatchObject, la stringa si estrae
-        # in seguito
-        # regex parte dall inizio della riga fino ad arrivare ad un operatore
+        # in seguito.
+        # regex estrae tutto ciò che c'è tra l'inizio della riga e l'operatore
         match_obj_operando1 = re.search(r'^.+(?=\s(=|<|>|<=|>=)\s)', line)
 
         # se match_obj_operando1 è None, ci sono due possibilità:
@@ -624,8 +445,12 @@ def estrai_regole(classifier):
             if line != '':
                 # : 0 (2.0) tiro fuori lo 0 che è in mezzo a due spazi
                 predizione = re.search(r'(?<=:\s)\d(?=\s)', line).group(0)
-                # tiro fuori (2.0) che è in mezzo tra uno spazio e la fine
-                gs = re.search(r'(?<=\s)[(].*[)]$', line).group(0)
+                # tiro fuori m = 2, n = 0 (attenzione codice ripetuto e uguale a sotto)
+                mn = re.search(r'(?<=\s)[(].*[)]$', line).group(0)
+                mn = re.sub(r'(?<=^\()(\d+(?:[.]\d+){0,1})(?=\)$)', r'\1/0)', mn)
+                matched_elems = re.findall(r'(?:\d+(?:[.]\d+)?)', mn)
+                m = matched_elems[0]
+                n = matched_elems[1]
                 # dato che è un caso particolare che non ha proposizioni,
                 # alora questo caso è gestito trasformando la lista 'proposizioni' in variabile booleana = true
                 # cioè che le proposizioni sono tutte vere
@@ -634,7 +459,7 @@ def estrai_regole(classifier):
             # caso 1) caso generico, parte quando si finisce di leggere una regola
             # qui la lista 'proposizioni' è riempita di proposizioni della regola opppure proposizioni = true se è
             # l'ultima regola. predizione letta dall'ultima riga dellA regolA
-            r = Regola(predizione, proposizioni_list, gs)
+            r = Regola(predizione, proposizioni_list, m,n)
             regole_list.append(r)
             # svuoto per far posto alle nuove proposizioni della regola successiva
             proposizioni_list = []
@@ -673,7 +498,14 @@ def estrai_regole(classifier):
         # altrimenti ignora
         match_obj_gs = re.search(r'(?<=\s)[(].*[)]$', line)
         if match_obj_gs is not None:
-            gs = match_obj_gs.group(0)
+            # contiene solo la strunga di tipo (m/n) oppure (m)
+            mn = match_obj_gs.group(0)
+            # se mn è del tipo '(m)' allora mn diventa '(m/0)', altrimenti rimane così
+            mn = re.sub(r'(?<=^\()(\d+(?:[.]\d+){0,1})(?=\)$)',r'\1/0)',mn)
+            # matched_elems ha nell prima posizione m, e nella seconda n
+            matched_elems = re.findall(r'(?:\d+(?:[.]\d+)?)', mn)
+            m = matched_elems[0]
+            n = matched_elems[1]
 
         # se line: '1 VERTEBRE_NON_ANALIZZATE_L4 <= 0 AND'
         # operatore: <=
@@ -942,6 +774,7 @@ def preprocessamento_nuovo(tabella_completa,class_name):
     for row_index in range(0, tabella_completa.shape[0]):
         row = tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA']
         if not pd.isnull(row):
+            # TODO: regex sul secodo parametro???
             tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = re.sub(r'10000UI',
                                                                                                    r'10.000UI',row)
             tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA']\
@@ -1230,7 +1063,6 @@ def preprocessamento_nuovo(tabella_completa,class_name):
     return tabella_completa[l]
 
 
-
 # classi
 class Proposizione:
     '''
@@ -1258,8 +1090,23 @@ class Proposizione:
             data un istanza si va nella colonna XXX_TERAPIA_OST_ORM_ANNI_XXX dell'istanza e si controlla se è <=0.5
             se sì, si ritorna true, altrimenti no
         '''
+        vco2 = self.valore_costante_operando2
+        nvo1_index = istanza.get_attribute_index[self.nome_variabile_operando1]
+        nvo1_attribute = istanza.get_attribute[nvo1_index]
+
+        if nvo1_attribute.is_numeric:
+            nvo1_value = istanza.get_value(nvo1_index)
+            if str(nvo1_value) == 'nan':
+                return False
+
+        else:
+            nvo1_value = istanza.get_string_value(nvo1_index)
+            nvo1_value = '"'+str(nvo1_value)+'"'
+            vco2 = '"'+vco2+'"'
+
+        strr = str(nvo1_value) + self.operatore + str(vco2)
         # vado nella colonna con il nome 'nome_variabile_operando1' e controllo se la condizione vale
-        if eval( str(istanza[self.nome_variabile_operando1])+self.operatore+self.valore_costante_operando2)==True:
+        if eval(strr) == True:
             return True
         else:
             return False
@@ -1275,18 +1122,21 @@ class Regola:
     L'ultima regola del classeificatore è una regola sempre vera e che non contiene proposizioni. In questa classe
     viene modellata impostando 'proposizioni' = true.
     Ogni regola ha anche una predizione (intero), cioè la predizione della classe se la regola è vera
-    Ogni regola ha gs:.....
+    Ogni regola ha 'm' e 'n' che rappresenta la precisione di ogni regola ((m/n))
     '''
     proposizioni = []
-    def __init__(self, predizione, proposizioni, gs):
+    def __init__(self, predizione, proposizioni, m,n):
         self.predizione = predizione
         self.proposizioni = proposizioni
-        self.gs = gs
+        self.m = float(m)
+        self.n = float(n)
+
 
     def valuta(self, istanza):
         '''
         Data un istanza(vettore) da classificare, la funzione ritorna True se l'istanza soddisfa la regola.
         '''
+        # TODO: non sembra molto chiaro
         # caso particore di una regola sempre vera
         if isinstance(self.proposizioni, bool):
             return True
@@ -1304,10 +1154,10 @@ class Regola:
                 if prop!=self.proposizioni[-1]:
                     output += str(prop)+" AND\n"
                 else:
-                    output+=str(prop)+": "+self.predizione+" "+self.gs
+                    output+=str(prop)+": "+self.predizione+" ("+str(self.m)+"/"+str(self.n)+")"
                     return output
         else:
-            return ": "+self.predizione+" "+self.gs
+            return ": "+self.predizione+" ("+str(self.m)+"/"+str(self.n)+")"
 class Regole:
     '''
     Semplicemente una lista di 'Regola'
@@ -1326,16 +1176,37 @@ class Regole:
             output+= str(r) + '\n\n'
         return output
 
+    def remove_rules(self, rules_to_remove):
+        for rule in rules_to_remove:
+            self.regole.remove(rule)
+
+
+    def __iter__(self):
+        self.current_index_rule = 0
+        return self
+
+    def __next__(self):
+        if self.current_index_rule < len(self.regole):
+            to_be_returned = self.regole[self.current_index_rule]
+            self.current_index_rule += 1
+            return to_be_returned
+        else:
+            raise StopIteration
+
     def get_num_of_rules(self):
         return len(self.regole)
 
-    '''
-    Se una regola è vera, ritorno la predizione di quella regola
-    '''
+
     def predict(self, istanza):
+        '''
+        Se una regola è vera, ritorno la predizione di quella regola
+        '''
         for r in self.regole:
+            # penso che non ci sia bisogno dell'else perchè ce l'ultima regola che è sempre vera
             if r.valuta(istanza) == True:
                 return r.predizione
+
+        return None
 
 # funzioni antiche
 def print_feature_importances(model, X):
@@ -1410,7 +1281,7 @@ def no_null_accuracy_score(X, true_Y, model):
 
     # print("tot {}, ind {}, totot {}, rapp {}".format(tot_righe_nulle,tot_righe_nulle_indovinate,X.shape[0],tot_righe_nulle/X.shape[0]))
     return tot_righe_non_nulle_indovinate / tot_righe_non_nulle
-def preprocessamento_vecchio(tabella_completa):
+def preprocessamento_vecchio(tabella_completa,class_name):
     def one_hot_encode(frame, column_name, regex, prefix):
         '''
         frame:
@@ -2210,13 +2081,8 @@ def preprocessamento_vecchio(tabella_completa):
             #'1 INTER_BMD',
             #'1 HTOT_BMD',
             #'1 WARDS_BMD',
-
-            '1 TERAPIE_ORMONALI_CHECKBOX',
-            '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX',
-            '1 VITAMINA_D_TERAPIA_CHECKBOX',
-            '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',
-            '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX'
         ]
+    l.append(class_name)
 
     return tabella_completa[l]
 def multilabel():
@@ -2266,7 +2132,35 @@ def multilabel():
     print("avg ext: {}, {}".format(
         *[round(avg / kf.get_n_splits(), 3) for avg in [avg_ext_train_score, avg_ext_test_score]]))
     # print("avg int: {}, {}".format(*[round(avg/kf.get_n_splits(), 3) for avg in [avg_int_train_score, avg_int_test_score]]))
+def accuracy_rules(test_X, test_Y, regole):
+    '''
+    Valuta l'accuratezza delle regole
+    Uso generale:
+        Si divide in test, train.
+        Si allena PART su train.
+        Si ricavano le regole da PART.
+        E si testa l'accuratezza su test.
+    :param test_X: DataFrame
+    :param test_Y: DataFrame
+    :param regole: Regole
+    :return: None
+    '''
+    predicted_right = 0
+    # andava bene anche test_Y.shape[0]
+    num_instances = test_X.shape[0]
+    # per ogni riga
+    for row_index in range(0, num_instances):
+        istance_X = test_X.iloc[row_index, :]
+        true_Y = test_Y.values[row_index]
+        predicted_Y = regole.predict(istance_X)
+        # qui perchè il dato mi viene salvato in byte
+        strtt = str(true_Y)
+        strtt = re.search(r'\d',strtt)
+        strtt= strtt.group(0)
+        if predicted_Y == strtt:
+            predicted_right+=1
 
+    return predicted_right/num_instances
 
 if __name__ == '__main__':
     main()

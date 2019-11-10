@@ -1,5 +1,3 @@
-1)in FRATTURA_FEMORE c'è un volore: 'piu di 1'. lo cambiato in 1 (sul file locale osteo.csv)
-
 
 uso stratified fold perchè sembrano sproporzionati
 uso StratifiedShuffleSplit invece di stratifiedKFold perchè non funziona con multiclasse
@@ -44,6 +42,7 @@ il medico dice in seguito: METOCAL D3. ASSUME ALENDRONATO DAL 2008, CON INTERRUZ
 
 12) TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg,3 mesi anni
 a riga 72 in TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA  sostituisco con 1 anno
+(nel file osteo.csv)...bisogna chiedere dopo cosa fare.. perchè è l'unico valore strano mi sembra
 
 13) non posso assegnare dei numeri ad ogni categoria in STATO_MENOPAUSALE.. bisogna cambire in one-hot-encoder
 
@@ -72,6 +71,7 @@ seconda fase:stemming
 terza fase: vettorizazione con bigrammi
 
 23)1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA vectorized
+non ho tirato fuori solo il principio perchè sarebbero solo due: calciferolo, colecalciferolo
 
 24) 1 USO_CORTISONE vectorized
 
@@ -99,3 +99,213 @@ null di SITUAZIONE_FEMORE_DX vengono sostituiti con i valori di SITUAZIONE_FEMOR
 prevedo FRAX_COLLO_FEMORE_INTERO usando FRAX_FRATTURE_MAGGIORI_INTERO con la regressione
 prevedo FRAX_FRATTURE_MAGGIORI_INTERO usando FRAX_COLLO_FEMORE_INTERO  con la regressione
 prevedo DEFRA_INTERO usando FRAX_FRATTURE_MAGGIORI_INTERO con la regressione
+
+33) ULTIMA_MESTR..  categorizzo in intervalli grandi sigma e una classe NULL per quelli che non hanno ancora mestruato
+categorizzo non ULTIMA_MESTRUAZIONE ma la differenza tra ULTIMA_MESTRUAZIONE-BIRTHDATE
+
+34) USO_CORTISONE è fisso come valore allora basta categorizzarlo
+devo cambiare quello che ho gatto prima
+
+35) metto in categorie uso cortisone dato che sono solo 2 valori
+
+
+m è il numero di volte che è potenzialmente applicabile
+n il numero di volte che ha sbaliato... 1/confidenza
+
+prendiamo sole le regole che hanno quel rapporto molto buono
+
+
+36) prendo fino al 30 settembre perchè ci quelle che sono arrivate di revente stanno ancora aspettando diagnosi
+
+
+Migliori risultati facendo 5 classificatori differenti
+[[358   5]
+ [  5   4]]
+TERAPIE_ORMONALI_CHECKBOX
+avg ext: 0.987, 0.981||98.3 3 folds,, 98.2 4 folds..
+
+[[269  16]
+ [ 13  74]]
+TERAPIE_OSTEOPROTETTIVE_CHECKBOX
+avg ext: 0.927, 0.897||87.1761 jrip 6 folds,87.5 5 folds,88.57 4 FOLDS,88.03 3 FOLDS
+
+[[361   0]
+ [  8   3]]
+VITAMINA_D_TERAPIA_CHECKBOX
+avg ext: 0.981, 0.975|| 97.6 con jrip 6 folds
+
+[[139  21]
+ [ 24 188]]
+VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX
+avg ext: 0.912, 0.879|||86.91 jrip 5 folds
+
+
+[[242  27]
+ [ 16  87]]
+CALCIO_SUPPLEMENTAZIONE_CHECKBOX
+avg ext: 0.928, 0.883|||88.37 JRIP 5 folds, 89 jrip 6 folds|| 88.7 jrip 7 folds
+
+
+37) bisogna chiedere cosa fare con gli anni XXX_TERAPIA_OST_SPEC_ANNI_XXX
+perchè se è null io metto 0 anni che non mi sembra proprio giusto
+
+
+38)
+mi ha detto di togliere tutte le colonne che non ci sono nell'interfaccia:
+ #'1 L1_AREA',
+#'1 L2_AREA',
+#'1 L3_AREA',
+#'1 L4_AREA',
+#'1 TOT_AREA',
+#'1 L1_BMC',
+#'1 L2_BMC',
+#'1 L3_BMC',
+#'1 L4_BMC',
+#'1 TOT_BMC',
+#'1 L1_BMD',
+#'1 L2_BMD',
+#'1 L3_BMD',
+#'1 L4_BMD',
+#'1 TOT_BMD',
+#'1 L1_Tscore' tolto.. non al 100% sicuro
+#'1 L2_Tscore',tolto.. non al 100% sicuro
+#'1 L3_Tscore',tolto.. non al 100% sicuro
+#'1 L4_Tscore',tolto.. non al 100% sicuro
+
+1 TOT_Tscore' tenuta.. ma non sono sicuro al 100%
+1 TOT_Zscore', tenuta.. ma non sono sicuro al 100%
+
+Dove sono i dati che ci sono nell'interfaccia?: Neck T score x2, Neck Z score x2 (Diagnosi Densitometrica)
+                                                t score, z score di colonna lombare, femore collo (Densitometria Precedente)
+
+
+
+39) preprocessamento_nuovo
+AGE: non fatto niente, come in quello vecchio
+SEX: lasciato cosi, com'e..weka trasforma in nominal
+STATO_MENOPAUSALE: lascio cosi com'è, weka trasforma in nominal
+ULTIMA_MESTRUAZIONE: prima facevo la differenza con data di nascita, poi creavo le categorie in base alla dev. standard
+                     (medio,poco,tanto )e le celle null mettevo: 'maschio_o_attiva' e poi onehotencode...
+                      adesso faccio la stessa cosa tranne onehotencode e sostituire i nullTERAPIA_STATO
+TERAPIA_STATO: prima onehotencoding adesso lascio cosi com'è
+TERAPIA_OSTEOPROTETTIVA_ORMONALE: weka non trasforma in nominal automaticamente
+XXX_TERAPIA_OST_ORM_ANNI_XXX: lascio cosi perchè è numeric.. prima nei null metttevo 0, adesso lascio null
+TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA: prima avevo onehot-encoding, adesso lascio i valori cosi come sono, weka li
+                                        riconosce come nominali
+TERAPIA_OSTEOPROTETTIVA_SPECIFICA'stessa cosa che ho fatto sopra
+1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'...
+XXX_TERAPIA_OST_SPEC_ANNI_XXX',...
+VITAMINA_D_TERAPIA_OSTEOPROTETTIVA: lascio cosi
+VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA: lascio vettorizzato cosi
+TERAPIA_ALTRO_CHECKBOX: i null sostituisco con 0 (anche prima) chiedere se va bene
+TERAPIA_ALTRO: lascio vettorizzato
+TERAPIA_COMPLIANCE
+BMI: togliere il meno uno e lasciare null!!
+FRATTURA_VERTEBRE: trasformo in nominale.. al posto di null metto 'no fratture' e il resto invariato.. bisogna chedere se è giusto
+FRATTURA_FEMORE: stessa cosa di sopra..
+ABUSO_FUMO: lascio i valori nominali, però al mosto null metto 'no fuma'
+USO_CORTISONE: lascio i nominal, e al posto di null metto 'non usa corisone'
+CAUSE_OSTEOPOROSI_SECONDARIA: lascio cosi.. non metto niente al posto di null... è meglio mettere 'nessuna causa'?
+PATOLOGIE_UTERINE_DIAGNOSI: lasciato vettorizzato.. bisognerebbe mettere ? e non 'na'
+NEOPLASIA_MAMMARIA_TERAPIA: lasciato vettorizzato..
+DISLIPIDEMIA_TERAPIA: lasciato vettorizzato..
+VITAMINA_D: prima al posto di null avevo zero, adesso lascio null
+ALTRE_PATOLOGIE: lascio cosi
+SITUAZIONE_COLONNA: lasciato cosi
+1 FRAX_FRATTURE_MAGGIORI_INTERO: tenuto com'è
+
+40)
+sistema ULTIMA_MESTRUAZIONE percè ci sono troppi valori medi e poi tanto e poco non sono troppo pari
+
+41)
+TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA.. due cure per cella..cosa fare? VETTORIZZARE!!!
+TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA de cure per cella
+
+42) dove vettorizzo bisogna metttere ? al posto di na
+
+43)VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA ha piu valori per riga
+
+44) VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA.. rifaccio la vettorizzazione con un regex piu preciso
+mi è venuta l'idea di categorizzarli, ma ci sono piu cure per riga
+
+
+
+45) 'na' delle vettorizzazioni va sostituito con ?
+
+46) ci accorgiamo che CAUSE_OSTEOPOROSI_SECONDARIA puo avere piu valori per cella... allora bisogna vettorizzare
+
+47) TBS_COLONNA_APPLICABILE valori molto strani
+
+48) DEFRA_INTERO ci sono 0 dove dovrebbe essere null...
+49) DEFRA_APPLICABILE = 0 -> DEFRA_INTERI = 0, il contrario no
+/*mostra che chi ha DEFRA = 0 ha comunque l'osteoporosi*/
+select DEFRA_INTERO, SITUAZIONE_COLONNA, SITUAZIONE_FEMORE_DX, SITUAZIONE_FEMORE_SN, OSTEOPOROSI_GRAVE, FRAX_FRATTURE_MAGGIORI_INTERO, FRAX_COLLO_FEMORE_INTERO from diagnosi
+where DEFRA_INTERO=0;
+
+50)VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA sostituisco 10000UI con 10.000UI
+e 25000 a 25.000
+stessaroba per VITAMINA_D_SUPPLEMENTAZIONE_LISTA
+
+
+
+51) in 1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA ce solo 1 cella con 2 cure
+per adesso prendo il primo principio che trovo poi cosa fare si vedrà
+
+52) VITAMINA_D_SUPPLEMENTAZIONE_LISTA: sistituisco tutta la cura solo con il principio e la qta
+
+VITAMINA_D_SUPPLEMENTAZIONE_LISTA: 81% fold JRip (principio+quantità se nella forma X.XUI, altri un po diverso) poi 80% 4fold
+TERAPIE_ORMONALI_LISTA: 83.7(10 fold) con PART e non funziona se rimuovo i null (cosi com'e)
+TERAPIE_OSTEOPROTETTIVE_LISTA: 61% JRip (solo principio)..63% Jrip 4fold non rimuovendo i null, 60% 4fold rimuovendo i null, 61 7fold e senza null
+CALCIO_SUPPLEMENTAZIONE_LISTA:73 con jrip (solo principio)..71 4 folf .. 73 10fold..tutti senza null
+VITAMINA_D_TERAPIA_LISTA: 42 con part (tenuto cosi com'è perchè ha poche istanze)
+
+VITAMINA_D_SUPPLEMENTAZIONE_CHECK
+
+53)
+401
+489
+1010
+1065
+1465
+indici righe in cui VITAMINA_D_SUPPLEMENTAZIONE_check = 1 e LISTA = NULL
+
+
+
+    #class_name = '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX' #uguale (osteo.csv# )
+    #class_name = '1 TERAPIE_ORMONALI_CHECKBOX' #uguale
+    #class_name ='1 VITAMINA_D_TERAPIA_CHECKBOX' #uguale
+    #class_name ='1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX' #-tanto
+    class_name ='1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX' #+ poco
+    se è un campo è null, e quindi la regola non si applica,,.. quanto aumento(+) o diminuzione(-) ce
+    se dico che la regola è falsa e vado alla successiva... rispetto ad eseguire con i campi null tappati
+
+
+
+
+la prima colonna=di quelli di cui ho deciso di dire qualcosa, quanti ne ho fatti guisti
+seconda colonna = quanti non ho detto non so rispetto al totale delle istanze
+prima riga= le regole non rifined
+seconda riga = regole refined
+
+min_f1=0.8, min_f2=0.1
+TERAPIE_OSTEOPROTETTIVE_CHECKBOX
+0.8859416445623343 0.0
+0.9595959595959596 0.47480106100795755
+
+TERAPIE_ORMONALI_CHECKBOX
+0.9602122015915119 0.0
+1.0 0.3209549071618037
+
+VITAMINA_D_TERAPIA_CHECKBOX
+0.946949602122016 0.0
+1.0 0.7639257294429708
+
+VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX
+0.8541114058355438 0.0
+0.9895287958115183 0.493368700265252
+
+CALCIO_SUPPLEMENTAZIONE_CHECKBOX
+0.8461538461538461 0.0
+0.9402390438247012 0.33421750663129973
+
+
