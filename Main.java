@@ -13,7 +13,6 @@ import weka.core.converters.CSVLoader;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.StratifiedRemoveFolds;
 import weka.filters.unsupervised.attribute.NumericToNominal;
-
 import javax.swing.*;
 import javax.swing.text.html.HTMLDocument;
 import java.io.File;
@@ -21,82 +20,108 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.sql.*;
 
 public class Main {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception
+    {
+        /*Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO","utente_web","CMOREL96T45");
+        Statement myStmt = myConn.createStatement();
+
+        ResultSet myRs = myStmt.executeQuery("select * from GestioneInterna");
+        while(myRs.next())
+        {
+            System.out.println(myRs.getString("TIPO"));//CMOREL96T45
+        }*/
+
+
+         //Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO","utente_web","CMOREL96T45");
+        // Statement myStmt = myConn.createStatement();
+
+         //myStmt.executeUpdate( "create table if not exists regole( id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, terapia VARCHAR(256) NOT NULL UNIQUE, regola_refined VARCHAR(1024), regola_not_refined VARCHAR(1024))");
+
+         //myStmt.executeUpdate("insert into regole (terapia,regola_refined, regola_not_refined) values ('TERAPIE_OSTEOPROTETTIVE_CHECKBOX','a','b' )");
+         //myStmt.executeUpdate("update regole set regola_refined = 'nnn', regola_not_refined = 'lll' where terapia = 'TERAPIE_OSTEOPROTETTIVE_CHECKBOX'");
+
+        vecchiomain();
+
+    }
+
+    static private void vecchiomain() throws Exception
+    {
         //System.out.println(args[0]);
 
-        String className = "1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX";
+        //String className = "1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX";
         //String className= "1 TERAPIE_ORMONALI_CHECKBOX";
         //String className="1 VITAMINA_D_TERAPIA_CHECKBOX" ;
         //String className="1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX" ;
-        //String className = "1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX";
+        String className = "1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX";
 
 
         String[] tmp = {
-        "1 TERAPIA_OSTEOPROTETTIVA_ORMONALE",
-        "1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA",
-        "1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA",
-        "1 TERAPIA_ALTRO_CHECKBOX",
-        "1 TERAPIA_COMPLIANCE",
-        "1 FRATTURE",
-        "1 FRATTURA_SITI_DIVERSI",
-        "1 FRATTURA_FAMILIARITA",
-        "1 ABUSO_FUMO_CHECKBOX",
-        "1 USO_CORTISONE_CHECKBOX",
-        "1 MALATTIE_ATTUALI_CHECKBOX",
-        "1 MALATTIE_ATTUALI_ARTRITE_REUM",
-        "1 MALATTIE_ATTUALI_ARTRITE_PSOR",
-        "1 MALATTIE_ATTUALI_LUPUS",   
-        "1 MALATTIE_ATTUALI_SCLERODERMIA",   
-        "1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI",   
-        "1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX",
-        "1 PATOLOGIE_UTERINE_CHECKBOX",
-        "1 NEOPLASIA_CHECKBOX",   
-        "1 SINTOMI_VASOMOTORI",   
-        "1 SINTOMI_DISTROFICI",   
-        "1 DISLIPIDEMIA_CHECKBOX",   
-        "1 IPERTENSIONE",   
-        "1 RISCHIO_TEV",   
-        "1 PATOLOGIA_CARDIACA",   
-        "1 PATOLOGIA_VASCOLARE",   
-        "1 INSUFFICIENZA_RENALE",   
-        "1 PATOLOGIA_RESPIRATORIA",   
-        "1 PATOLOGIA_CAVO_ORALE_CHECKBOX",   
-        "1 PATOLOGIA_EPATICA",   
-        "1 PATOLOGIA_ESOFAGEA",   
-        "1 GASTRO_DUODENITE",   
-        "1 GASTRO_RESEZIONE",   
-        "1 RESEZIONE_INTESTINALE",   
-        "1 MICI",   
-        "1 VITAMINA_D_CHECKBOX",
-        "1 ALLERGIE_CHECKBOX",
-        "1 INTOLLERANZE_CHECKBOX",
-        "1 SITUAZIONE_COLONNA_CHECKBOX",
-        "1 SITUAZIONE_FEMORE_SN_CHECKBOX",   
-        "1 SITUAZIONE_FEMORE_DX_CHECKBOX",   
-        "1 SITUAZIONE_FEMORE_DX",
-        "1 OSTEOPOROSI_GRAVE",
-        "1 VERTEBRE_NON_ANALIZZATE_CHECKBOX",
-        "1 VERTEBRE_NON_ANALIZZATE_L1",
-        "1 VERTEBRE_NON_ANALIZZATE_L2",
-        "1 VERTEBRE_NON_ANALIZZATE_L3",
-        "1 VERTEBRE_NON_ANALIZZATE_L4",
-        "1 COLONNA_NON_ANALIZZABILE",
-        "1 COLONNA_VALORI_SUPERIORI",   
-        "1 FEMORE_NON_ANALIZZABILE",
-        "1 FRAX_APPLICABILE",   
-        "1 TBS_COLONNA_APPLICABILE",
-        "1 DEFRA_APPLICABILE",
-        "1 NORME_PREVENZIONE",   
-        "1 ALTRO_CHECKBOX",   
-        "1 NORME_COMPORTAMENTALI",   
-        "1 ATTIVITA_FISICA",   
-        "1 SOSPENSIONE_TERAPIA_CHECKBOX",   
-        "1 INDAGINI_APPROFONDIMENTO_CHECKBOX",   
-        "1 SOSPENSIONE_FUMO",   
-        "1 CONTROLLO_DENSITOMETRICO_CHECKBOX"
+                "1 TERAPIA_OSTEOPROTETTIVA_ORMONALE",
+                "1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA",
+                "1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA",
+                "1 TERAPIA_ALTRO_CHECKBOX",
+                "1 TERAPIA_COMPLIANCE",
+                "1 FRATTURE",
+                "1 FRATTURA_SITI_DIVERSI",
+                "1 FRATTURA_FAMILIARITA",
+                "1 ABUSO_FUMO_CHECKBOX",
+                "1 USO_CORTISONE_CHECKBOX",
+                "1 MALATTIE_ATTUALI_CHECKBOX",
+                "1 MALATTIE_ATTUALI_ARTRITE_REUM",
+                "1 MALATTIE_ATTUALI_ARTRITE_PSOR",
+                "1 MALATTIE_ATTUALI_LUPUS",
+                "1 MALATTIE_ATTUALI_SCLERODERMIA",
+                "1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI",
+                "1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX",
+                "1 PATOLOGIE_UTERINE_CHECKBOX",
+                "1 NEOPLASIA_CHECKBOX",
+                "1 SINTOMI_VASOMOTORI",
+                "1 SINTOMI_DISTROFICI",
+                "1 DISLIPIDEMIA_CHECKBOX",
+                "1 IPERTENSIONE",
+                "1 RISCHIO_TEV",
+                "1 PATOLOGIA_CARDIACA",
+                "1 PATOLOGIA_VASCOLARE",
+                "1 INSUFFICIENZA_RENALE",
+                "1 PATOLOGIA_RESPIRATORIA",
+                "1 PATOLOGIA_CAVO_ORALE_CHECKBOX",
+                "1 PATOLOGIA_EPATICA",
+                "1 PATOLOGIA_ESOFAGEA",
+                "1 GASTRO_DUODENITE",
+                "1 GASTRO_RESEZIONE",
+                "1 RESEZIONE_INTESTINALE",
+                "1 MICI",
+                "1 VITAMINA_D_CHECKBOX",
+                "1 ALLERGIE_CHECKBOX",
+                "1 INTOLLERANZE_CHECKBOX",
+                "1 SITUAZIONE_COLONNA_CHECKBOX",
+                "1 SITUAZIONE_FEMORE_SN_CHECKBOX",
+                "1 SITUAZIONE_FEMORE_DX_CHECKBOX",
+                "1 SITUAZIONE_FEMORE_DX",
+                "1 OSTEOPOROSI_GRAVE",
+                "1 VERTEBRE_NON_ANALIZZATE_CHECKBOX",
+                "1 VERTEBRE_NON_ANALIZZATE_L1",
+                "1 VERTEBRE_NON_ANALIZZATE_L2",
+                "1 VERTEBRE_NON_ANALIZZATE_L3",
+                "1 VERTEBRE_NON_ANALIZZATE_L4",
+                "1 COLONNA_NON_ANALIZZABILE",
+                "1 COLONNA_VALORI_SUPERIORI",
+                "1 FEMORE_NON_ANALIZZABILE",
+                "1 FRAX_APPLICABILE",
+                "1 TBS_COLONNA_APPLICABILE",
+                "1 DEFRA_APPLICABILE",
+                "1 NORME_PREVENZIONE",
+                "1 ALTRO_CHECKBOX",
+                "1 NORME_COMPORTAMENTALI",
+                "1 ATTIVITA_FISICA",
+                "1 SOSPENSIONE_TERAPIA_CHECKBOX",
+                "1 INDAGINI_APPROFONDIMENTO_CHECKBOX",
+                "1 SOSPENSIONE_FUMO",
+                "1 CONTROLLO_DENSITOMETRICO_CHECKBOX"
         };
 
         List<String> nomiColDaTrasInNominal = new ArrayList<String>();
@@ -105,7 +130,7 @@ public class Main {
         Collections.addAll(nomiColDaTrasInNominal,tmp);
 
         CSVLoader loader = new CSVLoader();
-        loader.setFile(new File("/var/www/html/mmm/perwekacsv.csv"));
+        loader.setFile(new File("/home/kkk/PycharmProjects/OstPy/perwekacsv.csv"));
         Instances data = loader.getDataSet();
         //System.out.println(data);
         data.setClassIndex(data.numAttributes()-1);
@@ -158,13 +183,23 @@ public class Main {
         evl.evaluateModel(cls,test);
         System.out.println(evl.toSummaryString());
 
-        System.out.println(cls);
+        //System.out.println(cls);
 
         Rules rules = new Rules(cls);
-        System.out.println(rules);
+        String not_refined = rules.toString();
+        //System.out.println(not_refined);
         System.out.println(rules.getAccuracy(test));
         rules.refineRules(train.numInstances(),0.8,0.1);
         System.out.println(rules.getAccuracy(test));
+        String refined_rules = rules.toString();
+
+
+        String qry = String.format("update regole set regola_refined = '%s', regola_not_refined = '%s' where terapia = 'TERAPIE_OSTEOPROTETTIVE_CHECKBOX'",refined_rules,not_refined);
+        //System.out.println(qry);
+
+        Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO","utente_web","CMOREL96T45");
+        Statement myStmt = myConn.createStatement();
+        myStmt.executeUpdate(qry);
 
 
     }
@@ -413,7 +448,8 @@ class Rules implements Iterable<Regola>
         for(Regola r: this.rules)
             output+=r.toString() + "\n\n";
 
-        return output;
+        //rimuovo \n\n dell'ultima regola
+        return output.substring(0,output.length()-2);
     }
 
     public String predict(Instance inst)

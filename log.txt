@@ -309,3 +309,42 @@ CALCIO_SUPPLEMENTAZIONE_CHECKBOX
 0.9402390438247012 0.33421750663129973
 
 
+x)
+perchè nel excel che mi ha dato non ce da quanti anni è sospesa?
+poi sospesa da x anni per quale terapia che se ne possono selezionare piu
+
+Y)
+Densitometria Precedente ... mi sembra collegato alla storia passata.. considerarlo?? se compare nelle regole???
+
+*Anno U.M. onchage() non fa il refresh subito
+
+*VITAMINA_D_TERAPIA_OSTEOPROTETTIVA nel database come ordine 
+corrisponde a Vitamina D supplementazione nel sito...
+
+*TERAPIA_ALTRO_CHECKBOX ha null al poso di 0
+
+
+*ALCOL_CHECKBOX tutti zero in excel.. ma non in db
+
+
+*Colonna vertebrale parzialmente non analizzabile per deformazioni morfologiche di densità; vertebre valutate
+però poi corrispondono a VERTEBRE NON ANALIZZATE nel db
+
+
+FRAX_PERCENTUALE: tutto zero!?
+
+
+TBS_COLONNA_VALORE: sia zeri che null??
+
+DEFRA_INTERO: quando leggo online metto 0 se null
+
+Valutazione integrata di dati clinici e densitometrici  non ce nel exl che mi ha dato
+
+
+Densitometria Precedente
+non la consideriamo!?
+
+
+#TODO: DEFRA_INTERO cosa fare con gli 0 che sarebbero null?
+#TODO CONTROLLO_DENSITOMETRICO_CHECKBOX togliere
+
