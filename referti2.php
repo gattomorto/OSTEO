@@ -1,4 +1,9 @@
+
+
+
 <!DOCTYPE html>
+
+
 
 <?php
 	define('PATH_REPORT_A', './report/tipoA/');
@@ -122,6 +127,13 @@
 			
 	  	</style>
   	</head>
+
+
+	
+
+
+
+
 
   	<body>
     	<a href="index.php">
@@ -798,6 +810,44 @@
 
     			</div>
     			
+
+<!-- *******************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************7
+ *******************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ *******************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ *******************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************-->
+
     			<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
     			<!-- DA QUA PARTE LA PARTE RELATIVA ALL'ANAMNESI. -->
 	      		<br/><br/>
@@ -933,13 +983,6 @@
 				        							</script>
 			        					<?php 	} ?> 
  
- 
- 
-
-				        						
-				        					
-				        				
-				        			
 
 				        				<div class="col-sm-4">
 				          					<div class="input-group">
@@ -965,11 +1008,10 @@
 				          					</div>
 				        				</div>
 				            			
-
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 			            						<span class="input-group-addon">
-				              						<input type="radio" id="input-2" name="Sesso" value="Maschio" <?php echo $maschioChecked; ?> >
+				              						<input type="radio" id="radio_maschio" onclick="stickyheaddsadaer()" name="Sesso" value="Maschio" <?php echo $maschioChecked; ?> >
 				            					</span>
 				            					<input type="text" class="form-control" value="Maschio" readonly>
 				          					</div><!-- /input-group -->
@@ -978,7 +1020,7 @@
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="radio" id="input-2" name="Sesso" value="Femmina" <?php echo $femminaChecked; ?>>
+				              						<input type="radio" id="radio_femmina" onclick="stickyheaddsadaer()" name="Sesso" value="Femmina" <?php echo $femminaChecked; ?>>
 				            					</span>
 				            					<input type="text" class="form-control" value="Femmina" readonly>
 				          					</div><!-- /input-group -->
@@ -1098,7 +1140,7 @@
 
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input type="radio" name="Statomenopausale" value="Premenopausa" <?php echo $premenopausaChecked; ?>/>
+			                						<input type="radio" id="radio_premenopausa"  onclick="stickyheaddsadaer()" name="Statomenopausale" value="Premenopausa" <?php echo $premenopausaChecked; ?>/>
 			              						</span>
 			              						<!--<span value="Premenopausa" class="input-group-addon" id="sizing-addon2">Premenopausa</span>-->
 			              						<input type="text" class="form-control" value="Premenopausa" class="input-group-addon" readonly>
@@ -1115,7 +1157,7 @@
 
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input type="radio"  name="Statomenopausale" value="Perimenopausa" <?php echo $perimenopausaChecked; ?>/>
+			                						<input type="radio" id="radio_perimenopausa"  onclick="stickyheaddsadaer()"  name="Statomenopausale" value="Perimenopausa" <?php echo $perimenopausaChecked; ?>/>
 			                					</span>
 			              						<!--<span value="Perimenopausa" style="height:53px;" class="form-control" readonly>Perimenopausa</span>-->
 				              					<input type="text" class="form-control" value="Perimenopausa" readonly>
@@ -1127,7 +1169,7 @@
 
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input type="radio" name="Statomenopausale" value="Postmenopausa spontanea" <?php echo $postmenopausaSpontaneaChecked; ?>/>
+			                						<input type="radio" id="radio_post_spontanea"  onclick="stickyheaddsadaer()" name="Statomenopausale" value="Postmenopausa spontanea" <?php echo $postmenopausaSpontaneaChecked; ?>/>
 			                					</span>
 			              						<!--<span value="Postmenopausa spontanea">Postmenopausa spontanea</span>-->
 				              					<input type="text" class="form-control" value="Postmenopausa spontanea" readonly>
@@ -1144,7 +1186,7 @@
 				          					
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input  type="radio" name="Statomenopausale" value="Indotta" <?php echo $indottaChecked; ?>/>
+			                						<input  type="radio" id ="radio_indotta"  onclick="stickyheaddsadaer()" name="Statomenopausale" value="Indotta" <?php echo $indottaChecked; ?>/>
 			                					</span>
 			              						<!--<span style="height:53px;" class="form-control" value="Indotta(farmaci-radioterapia)" readonly>Indotta(farmaci-radioterapia)</span>-->
 				              					<input type="text" class="form-control" value="Indotta (farmaci-radioterapia)" readonly>
@@ -1159,7 +1201,7 @@
 				            				
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input type="radio" name="Statomenopausale" value="Ister-ann bil" <?php echo $isterannBilChecked; ?>/>
+			                						<input type="radio" id ="radio_ister_ann_bil"  onclick="stickyheaddsadaer()" name="Statomenopausale" value="Ister-ann bil" <?php echo $isterannBilChecked; ?>/>
 			                					</span>
 				              					<!--<span value="Ister-ann bill" style="height:53px;" class="form-control" readonly>Ister-ann bil</span>-->
 				              					<input type="text" class="form-control"value="Ister-ann bil" readonly>
@@ -1173,7 +1215,7 @@
 				          					
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input type="radio" name="Statomenopausale" value="Ister-ann mono" <?php echo $isterannMonoChecked; ?>/>
+			                						<input type="radio" id = "radio_ister_ann_mono"  onclick="stickyheaddsadaer()" name="Statomenopausale" value="Ister-ann mono" <?php echo $isterannMonoChecked; ?>/>
 			                					</span>
 			              						<!--<span value="Ister-ann mono">Ister-ann mono</span>-->
 				              					<input type="text" class="form-control" value="Ister-ann mono" readonly>
@@ -1185,7 +1227,7 @@
 				   
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input type="radio" id="input-2" name="Statomenopausale" value="Solo isterectomia" <?php echo $soloIsterectomiaChecked; ?>/>
+			                						<input type="radio" id="radio_solo_isterectomia" onclick="stickyheaddsadaer()" name="Statomenopausale" value="Solo isterectomia" <?php echo $soloIsterectomiaChecked; ?>/>
 			                					</span>
 				              					<!--<span value="Solo isterectomia">Solo isterectomia</span>-->
 				              					<input type="text" class="form-control" value="Solo isterectomia" readonly>
@@ -1212,7 +1254,7 @@
 				        							Anno U.M.
 				        						</span>
 				        						
-				        						<input type="text"  class="form-control" name="ultima_mestruazione" id="UltimaMestruazione" value="<?php if($um != null) echo $um; ?>" placeholder="Anno">
+				        						<input type="text"  class="form-control" name="ultima_mestruazione" id="UltimaMestruazione"  onchange="stickyheaddsadaer()" value="<?php if($um != null) echo $um; ?>" placeholder="Anno">
 				        						
 				        					</div>
 				        				</div>
@@ -1250,18 +1292,17 @@
 				            					
 				            					<span class="input-group-addon">
 					          						Mai
-					          						<input type="radio" id="stato_mai" name="stato_terapia" value="Mai" <?php echo $statoMaiChecked; ?>/>
+					          						<input type="radio" id="stato_mai" onclick="stickyheaddsadaer()" name="stato_terapia" value="Mai" <?php echo $statoMaiChecked; ?>/>
 
 					          					</span>
-
 				            					<span class="input-group-addon" style="text-align:left;">
 				            						In atto
-				            						<input type="radio" id="stato_inatto" name="stato_terapia" value="In atto" <?php echo $statoInAttoChecked; ?>/>
+				            						<input type="radio" id="stato_inatto" onclick="stickyheaddsadaer()" name="stato_terapia" value="In atto" <?php echo $statoInAttoChecked; ?>/>
 				      							</span>
 
 				      							<span class="input-group-addon" style="text-align:left;">
 				            						Sospesa
-				            						<input type="radio" id="stato_sospesa" name="stato_terapia" value="Sospesa" <?php echo $statoSospesaChecked; ?>/>
+				            						<input type="radio" id="stato_sospesa" onclick="stickyheaddsadaer()" name="stato_terapia" value="Sospesa" <?php echo $statoSospesaChecked; ?>/>
 				          						</span>
 
 				          						<span class="input-group-addon">
@@ -1447,7 +1488,7 @@
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="Ormonale" name="Ormonale" value="true" <?php echo $ormonaleChecked; ?> disabled> <!--deve partire da disabled-->
+				              						<input type="checkbox" id="Ormonale" name="Ormonale" onchange="stickyheaddsadaer()" value="true" <?php echo $ormonaleChecked; ?> disabled> <!--deve partire da disabled-->
 				            					</span>
 				            					<!--<input type="text" class="form-control" value="Orm.sost. / C.O." readonly>-->
 				            					<span class="form-control"  readonly>Orm.sost. / C.O.</span>
@@ -1462,6 +1503,7 @@
 				            					<select class="form-control" name="TipoOrmonale" id="TipoOrmonale" disabled>
 				            						<option value="">Tipo</option>
 				            						<?php
+                                                        //stiamo seleziondo da GESTIONE INTERNA!!!
 				            							$ormonale = "SELECT NOME FROM GestioneInterna WHERE TIPO = 'Orm.Sost./C.O.'";
 				            							$res = mysqli_query($mysqli,$ormonale);
 				            							while($row = mysqli_fetch_assoc($res)):
@@ -1479,9 +1521,9 @@
 				            					<input type="text" autocomplete="off" style="width:115px;" class="form-control" placeholder="Durata in anni" id="DurataOrmonale" name="DurataOrmonale" disabled>
 				          						
 				          						
-				          					</div><!--/input-group-->
-				          					<input type="button" value="Aggiungi" class="dimensione" name="inserisci" id="inserisci" onclick="app2();" disabled>
-			        						<input type="button"  value="Cancella" class="dimensione" name="CancellaOrmonale" id="Cancella" onclick="remove2();" disabled>
+				          					</div>                                                                                        <!--rimosso onclick di questa e quella sotto perchè  onclick="app2(), onclick="remove2() non esistono-->
+				          					<input type="button" value="Aggiungi" class="dimensione" name="inserisci" id="inserisci"  disabled>
+			        						<input type="button"  value="Cancella" class="dimensione" name="CancellaOrmonale" id="Cancella"  disabled>
 
 				          					<!--<input type="button" name="inserisci" id="inserisci" value="Aggiungi" disabled/>-->
 				          					
@@ -1490,7 +1532,7 @@
 				        				<div class="col-sm-7">
 				        					<!--<div><textarea class="text_area_orm_sost" name="text_area_orm_sost" id="text_area_orm_sost"></textarea></div>-->
 				        					<?php $i = 0; ?>
-				        					<select style="height:100px;width:500px" size="5" class="text_area_orm_sost" name="text_area_orm_sost" id="text_area_orm_sost">
+				        					<select style="height:100px;width:500px" size="5" class="text_area_orm_sost" name="text_area_orm_sost" id="text_area_orm_sost" onchange="stickyheaddsadaer()" >
 				        						<?php  
 				        						while ($pezzi_ormonale[$i] != null){ if($pezzi_ormonale[$i] != 'NULL')  echo "<option> $pezzi_ormonale[$i] </option>"; $i = $i + 1;} 
 				        						?>
@@ -1519,16 +1561,20 @@
 											
 											var durata = $("#DurataOrmonale").val();
 											var st = tipo + ","+ durata + " anni";
+
 											if(tipi2[st]){
 												alert("Tipo già inserito");
 											}
-											else{
+											else
+                                            {
 												$("textarea#valori_ormonale").val($("textarea#valori_ormonale").val() + st+"\n");
 
 												tipi2[st] = true;
 												option.text = st;
 												x.add(option);
 											}
+											//quando schiaccia aggiungi() su Orm.sost. / C.O.
+											stickyheaddsadaer();
 											
 										});
 
@@ -1552,6 +1598,8 @@
       												$('#Cancella').prop('disabled',true);
     											}
   											}
+											stickyheaddsadaer();
+
 										});
 
 			        				</script>
@@ -1589,8 +1637,8 @@
 									<div class="row">
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
-				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="Osteoprotettiva" name="Osteoprotettiva" value="true" <?php if( $osteoprotettiva == 1) echo "checked='checked'"; ?> disabled> <!--deve partire da disabled-->
+				            					<span class="input-group-addon">                                                           <!--solo query-->
+				              						<input type="checkbox" id="Osteoprotettiva" name="Osteoprotettiva" onchange="stickyheaddsadaer()" value="true" <?php if( $osteoprotettiva == 1) echo "checked='checked'"; ?> disabled> <!--deve partire da disabled-->
 				            					</span>
 				            					<!--<input type="text" class="form-control" value="Orm.sost. / C.O." readonly>-->
 				            					<span class="form-control"  readonly>Osteoprotettiva specifica</span>
@@ -1680,6 +1728,8 @@
 													
 													
 												}
+
+												stickyheaddsadaer();
 												
 											});
 				        					/*
@@ -1725,6 +1775,8 @@
 	      												
 	    											}
 	  											}
+
+												  stickyheaddsadaer();
 											});
 
 
@@ -1769,7 +1821,7 @@
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="VitaminaD" name="VitaminaD" value="true" <?php echo $vitamina_dChecked; ?> disabled> <!--deve partire da disabled-->
+				              						<input type="checkbox" id="VitaminaD" name="VitaminaD" value="true" onchange="stickyheaddsadaer()" <?php echo $vitamina_dChecked; ?> disabled> <!--deve partire da disabled-->
 				            					</span>
 				            					<!--<input type="text" class="form-control" value="Orm.sost. / C.O." readonly>-->
 				            					<span class="form-control"  readonly>Vitamina D supplementazione</span>
@@ -1866,6 +1918,8 @@
 												option.text = tipo;
 												x.add(option);
 											}
+
+											stickyheaddsadaer();
 											
 										}
 
@@ -1888,6 +1942,8 @@
       												$('#CancellaVitaminaD').prop('disabled',true);
     											}
   											}
+
+											  stickyheaddsadaer();
 										}
 
 			        				</script>
@@ -1921,11 +1977,11 @@
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="AltroTerapie" name="TerapieProtettive" value="true" <?php if( $altro_terapie == 1) echo "checked='checked'"; ?> disabled>
+				              						<input type="checkbox" id="AltroTerapie" onchange="stickyheaddsadaer()" name="TerapieProtettive" value="true" <?php if( $altro_terapie == 1) echo "checked='checked'"; ?> disabled>
 				            					</span>
 				            					<span class="input-group-addon" value="Altro">Altro</span>
 				            					<!--<input type="text" class="form-control" value="Altro" readonly>-->
-				            					<input class="form-control" type="text" placeholder="Altro" id="ValueAltroTerapie" name="ValueAltroTerapie" value="<?php if($value_altro_terapia != 'NULL') echo $value_altro_terapia;?>" disabled>
+				            					<input class="form-control" type="text" placeholder="Altro" id="ValueAltroTerapie" onchange="stickyheaddsadaer()" name="ValueAltroTerapie" value="<?php if($value_altro_terapia != 'NULL') echo $value_altro_terapia;?>" disabled>
 				          					</div><!--/input-group-->
 
 				        				</div><!--/col-sm-4-->
@@ -1936,7 +1992,7 @@
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="ComplianceAllaTerapia" name="ComplianceAllaTerapia" <?php if($compliance_alla_terapia == 1) echo "checked='checked'"; ?> disabled>
+				              						<input type="checkbox" id="ComplianceAllaTerapia" name="ComplianceAllaTerapia" onchange="stickyheaddsadaer()" <?php if($compliance_alla_terapia == 1) echo "checked='checked'"; ?> disabled>
 				            					</span>
 				            					<input type="text" class="form-control" value="Compliance alla terapia >= 75%" readonly>
 				            					
@@ -1986,7 +2042,7 @@
 				            					<span class="input-group-addon">
 				              						<b>Peso(Kg)</b>
 				            					</span>
-				            					<input type="text" class="form-control" id="Peso" name="Peso" value="<?php echo $peso;?>">
+				            					<input type="text" class="form-control" id="Peso" onchange = "stickyheaddsadaer()" name="Peso" value="<?php echo $peso;?>">
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-3-->
 
@@ -1995,7 +2051,7 @@
 				            					<span class="input-group-addon">
 				              						<b>Altezza(cm)</b>
 				            					</span>
-				            					<input type="text" class="form-control" id="Altezza" name="Altezza" value="<?php echo $altezza;?>">
+				            					<input type="text" class="form-control" id="Altezza" onchange = "stickyheaddsadaer()" name="Altezza" value="<?php echo $altezza;?>">
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-3-->
 
@@ -2019,7 +2075,7 @@
 				        				<div class="col-sm-1">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="FratturaFragilitaVertebrosa" name="FratturaFragilitaVertebrosa" <?php if($frattura_fragilità_vertebrosa == 1) echo "checked='checked'"  ?>/>
+				              						<input type="checkbox" id="FratturaFragilitaVertebrosa" name="FratturaFragilitaVertebrosa" onchange="stickyheaddsadaer()" <?php if($frattura_fragilità_vertebrosa == 1) echo "checked='checked'"  ?>/>
 				            					</span>
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-2-->
@@ -2033,11 +2089,11 @@
 				        							<b>Vertebre</b>
 				          							<span class="input-group-addon">
 				            							1
-				            							<input type="radio" id="FratturaVertebreUna" name="FratturaVertebre" value="1" <?php if(strcmp($vertebre, "1")==0) echo "checked='checked'";  ?> disabled>
+				            							<input type="radio" id="FratturaVertebreUna" name="FratturaVertebre" value="1" onchange="stickyheaddsadaer()" <?php if(strcmp($vertebre, "1")==0) echo "checked='checked'";  ?> disabled>
 				          							</span>
 				          							<span class="input-group-addon">
 				            							più di 1
-				           	 							<input type="radio" id="FratturaVertebrePiuDiUna" name="FratturaVertebre" value="piu di 1" <?php if(strcmp($vertebre, "piu di 1")==0) echo "checked='checked'";  ?> disabled>
+				           	 							<input type="radio" id="FratturaVertebrePiuDiUna" name="FratturaVertebre" value="piu di 1" onchange="stickyheaddsadaer()" <?php if(strcmp($vertebre, "piu di 1")==0) echo "checked='checked'";  ?> disabled>
 				          							</span>
 				          						</span>
 
@@ -2045,11 +2101,11 @@
 			        								<b>Femore</b>
 			          								<span class="input-group-addon">
 			            								1
-			            								<input type="radio" id="FratturaFemoreUna" name="FratturaFemore" value="1" disabled <?php if(strcmp($femore, "1")==0) echo "checked='checked'";  ?> disabled>
+			            								<input type="radio" id="FratturaFemoreUna" name="FratturaFemore" onchange="stickyheaddsadaer()" value="1" disabled <?php if(strcmp($femore, "1")==0) echo "checked='checked'";  ?> disabled>
 			          								</span>
 			          								<span class="input-group-addon">
 			            								più di 1
-			           	 								<input type="radio" id="FratturaFemorePiuDiUna" name="FratturaFemore" value="piu di 1" <?php if(strcmp($femore, "piu di 1")==0) echo "checked='checked'";  ?> disabled>
+			           	 								<input type="radio" id="FratturaFemorePiuDiUna" name="FratturaFemore" value="piu di 1" onchange="stickyheaddsadaer()" <?php if(strcmp($femore, "piu di 1")==0) echo "checked='checked'";  ?> disabled>
 	          										</span>
 			          							</span>
 				          						
@@ -2090,7 +2146,7 @@
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
 
-				            						<input type="checkbox" id="PregresseFratture1" name="PregresseFratture1"  <?php if($fratture_siti_diversi == 1) echo "checked='checked'" ?>/>
+				            						<input type="checkbox" id="PregresseFratture1" name="PregresseFratture1" onchange="stickyheaddsadaer()" <?php if($fratture_siti_diversi == 1) echo "checked='checked'" ?>/>
 				            					</span>
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-2-->
@@ -2131,7 +2187,7 @@
 				        				<div class="col-sm-1">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="FamiliaritaperFrattura" name="FamiliaritaperFrattura"  <?php if($familiarita_per_frattura == 1) echo "checked='checked'" ?>/>
+				              						<input type="checkbox" id="FamiliaritaperFrattura" name="FamiliaritaperFrattura" onchange="stickyheaddsadaer()"  <?php if($familiarita_per_frattura == 1) echo "checked='checked'" ?>/>
 
 				            					</span>
 				         	 				</div><!-- /input-group -->
@@ -2155,7 +2211,7 @@
 				        				<div class="col-sm-1">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="Abusofumo1" name="Abusofumo1" <?php if($abuso_fumo == 1) echo "checked='checked'" ?>/>
+				              						<input type="checkbox" id="Abusofumo1" name="Abusofumo1" onchange="stickyheaddsadaer()" <?php if($abuso_fumo == 1) echo "checked='checked'" ?>/>
 				            					</span>
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-2-->
@@ -2168,11 +2224,11 @@
 
 				            					<span class="input-group-addon" style="text-align:left;">
 				            						<= 10 sigarette/dì
-				            						<input type="radio" name="Abusofumo" id="menodi10" value="<= 10 sigarette/di" <?php if(strcmp($quantita_sigarette, "<= 10 sigarette/di") == 0) echo "checked='checked'" ?> disabled>
+				            						<input type="radio" name="Abusofumo" id="menodi10" value="<= 10 sigarette/di" onchange="stickyheaddsadaer()" <?php if(strcmp($quantita_sigarette, "<= 10 sigarette/di") == 0) echo "checked='checked'" ?> disabled>
 				          						</span>
 				          						<span class="input-group-addon" style="text-align:left;">
 				            						> 10 sigarette/dì
-				            						<input type="radio" name="Abusofumo" id="piudi10" value="> 10 sigarette/di" <?php if(strcmp($quantita_sigarette, "> 10 sigarette/di")==0) echo "checked='checked'" ?> disabled>
+				            						<input type="radio" name="Abusofumo" id="piudi10" value="> 10 sigarette/di" onchange="stickyheaddsadaer()" <?php if(strcmp($quantita_sigarette, "> 10 sigarette/di")==0) echo "checked='checked'" ?> disabled>
 				          						</span>  
 				          					</div><!--/input-group-->
 				        				</div><!--/col-sm-7-->
@@ -2202,7 +2258,7 @@
 				        				<div class="col-sm-1">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="Usocortisone1" name="Usocortisone1" <?php if($cortisone == 1) echo "checked='checked'" ?>/>
+				              						<input type="checkbox" id="Usocortisone1" name="Usocortisone1"  onchange="stickyheaddsadaer()" <?php if($cortisone == 1) echo "checked='checked'" ?>/>
 				            					</span>
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-2-->
@@ -2214,12 +2270,12 @@
 
 				            					<span class="input-group-addon" style="text-align:left;">
 				            						> 2,5 mg e < 5 mg
-				            						<input type="radio" id="tradueecinque" name="Usocortisone" value="> 2.5 mg e < 5 mg" <?php if(strcmp($uso_cortisone, "> 2.5 mg e < 5 mg")==0) echo "checked='checked'"  ?> disabled/>
+				            						<input type="radio" id="tradueecinque" name="Usocortisone" value="> 2.5 mg e < 5 mg"  onchange="stickyheaddsadaer()" <?php if(strcmp($uso_cortisone, "> 2.5 mg e < 5 mg")==0) echo "checked='checked'"  ?> disabled/>
 				          						</span>
 				          
 				          						<span class="input-group-addon" style="text-align:left;">
 				            						>= 5 mg (Prednisone)
-				            						<input type="radio" id="piudicinque" name="Usocortisone" value=">= 5 mg (Prednisone)" <?php if(strcmp($uso_cortisone, ">= 5 mg (Prednisone)")==0) echo "checked='checked'"  ?> disabled/>
+				            						<input type="radio" id="piudicinque" name="Usocortisone" value=">= 5 mg (Prednisone)"  onchange="stickyheaddsadaer()" <?php if(strcmp($uso_cortisone, ">= 5 mg (Prednisone)")==0) echo "checked='checked'"  ?> disabled/>
 				          						</span>
 				          					</div><!--/input-group-->
 				        				</div><!--/col-sm-7-->
@@ -2249,7 +2305,7 @@
 				        				<div class="col-sm-1">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="MalattieAttuali" name="Malattieattuali" <?php if($malattie_attuali == 1) echo "checked='checked'" ?> />
+				              						<input type="checkbox" id="MalattieAttuali" onchange="stickyheaddsadaer()"  name="Malattieattuali" <?php if($malattie_attuali == 1) echo "checked='checked'" ?> />
 				            					</span>
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-2-->
@@ -2261,27 +2317,27 @@
 
 				            					<span class="input-group-addon" style="text-align:left;">
 				            						artrite reumatoide
-				            						<input type="checkbox" id="artritereumatoide" name="Artrite" <?php if($artrite == 1) echo "checked='checked'" ?> disabled>
+				            						<input type="checkbox" id="artritereumatoide" onchange="stickyheaddsadaer()" name="Artrite" <?php if($artrite == 1) echo "checked='checked'" ?> disabled>
 				      							</span>
 
 				      							<span class="input-group-addon" style="text-align:left;">
 				            						artrite psoriasica
-				            						<input type="checkbox" id="artritepsoriasica" name="Psoriasi"  <?php if($psoriasi == 1) echo "checked='checked'" ?>   disabled>
+				            						<input type="checkbox" id="artritepsoriasica" onchange="stickyheaddsadaer()" name="Psoriasi"  <?php if($psoriasi == 1) echo "checked='checked'" ?>   disabled>
 				          						</span>
 				          
 					          					<span class="input-group-addon" style="text-align:left;">
 					            					lupus
-					            					<input type="checkbox" id="lupus" name="Lupus"  <?php if($lupus == 1) echo "checked='checked'" ?> disabled>
+					            					<input type="checkbox" id="lupus" name="Lupus" onchange="stickyheaddsadaer()"  <?php if($lupus == 1) echo "checked='checked'" ?> disabled>
 					          					</span>
 					          
 					          					<span class="input-group-addon" style="text-align:left;">
 					            					sclerodermia
-					            					<input type="checkbox" id="sclerodermia" name="Sclerodermia"  <?php if($sclerodermia == 1) echo "checked='checked'" ?> disabled>
+					            					<input type="checkbox" id="sclerodermia" name="Sclerodermia" onchange="stickyheaddsadaer()"  <?php if($sclerodermia == 1) echo "checked='checked'" ?> disabled>
 					          					</span>
 
 					          					<span class="input-group-addon" style="text-align:left;">
 					            					altre connettiviti
-					            					<input type="checkbox" id="altreconnettiviti" name="AltreConnettiviti"  <?php if($altre_connettiviti == 1) echo "checked='checked'" ?> disabled>
+					            					<input type="checkbox" id="altreconnettiviti" name="AltreConnettiviti"  onchange="stickyheaddsadaer()" <?php if($altre_connettiviti == 1) echo "checked='checked'" ?> disabled>
 					          					</span>
 
 				          					</div><!--/input-group-->
@@ -2324,7 +2380,7 @@
 				        				<div class="col-sm-1">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="Osteoporosisecondaria" name="Osteoporosisecondaria" <?php if($cause_secondarie == 1) echo "checked='checked'" ?>/>
+				              						<input type="checkbox" id="Osteoporosisecondaria" onchange="stickyheaddsadaer()" name="Osteoporosisecondaria" <?php if($cause_secondarie == 1) echo "checked='checked'" ?>/>
 				            					</span>
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-2-->
@@ -2402,6 +2458,8 @@
 
 												
 											}
+
+											stickyheaddsadaer();
 											
 										}
 
@@ -2426,6 +2484,8 @@
 
 												}
 											}
+
+											stickyheaddsadaer();
 										}
 			        				</script>
 				      				
@@ -2489,7 +2549,7 @@
 		    									<div class="input-group">		
 					      							<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="PatologieUterine" name="PatologieUterine" <?php if($patologie_uterine == 1) echo "checked='checked'"  ?>/>
+					            						<input type="checkbox" id="PatologieUterine" onchange="stickyheaddsadaer()" name="PatologieUterine" <?php if($patologie_uterine == 1) echo "checked='checked'"  ?>/>
 					            					</span>
 					            					<span class="input-group-addon" style="text-align:left;background:#eee">
 					            						<div>Patologie uterine</div>
@@ -2497,7 +2557,7 @@
 					            				
 					            				
 					            				
-					            					<input type="text"  class="form-control" id="diagnosi1" name="diagnosi1" placeholder="Diagnosi" value="<?php if($diagnosi_patologie_uterine != 'NULL') echo $diagnosi_patologie_uterine; ?>" disabled>
+					            					<input type="text"  class="form-control" id="diagnosi1" onchange="stickyheaddsadaer()" name="diagnosi1" placeholder="Diagnosi" value="<?php if($diagnosi_patologie_uterine != 'NULL') echo $diagnosi_patologie_uterine; ?>" disabled>
 
 					          					</div>
 					          				</div>
@@ -2526,7 +2586,7 @@
 		    									<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="Neoplasia" name="Neoplasia" value="Neoplasia Magligna mammaria" <?php if($neoplasia == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Neoplasia" onchange="stickyheaddsadaer()" name="Neoplasia" value="Neoplasia Magligna mammaria" <?php if($neoplasia == 1) echo "checked='checked'" ?>/>
 					            						
 					            					</span>
 					            					<span class="input-group-addon" style="width:100%;text-align:left">
@@ -2541,7 +2601,7 @@
 					            					</span>
 
 					            					<span class="input-group-addon" style="text-align:left">	
-					            						<input type="text" id="terapia_neoplasia"  name="terapia_neoplasia" placeholder="Terapia" value="<?php if($terapia_neoplasia != 'NULL') echo $terapia_neoplasia; ?>" disabled>
+					            						<input type="text" id="terapia_neoplasia" onchange="stickyheaddsadaer()"  name="terapia_neoplasia" placeholder="Terapia" value="<?php if($terapia_neoplasia != 'NULL') echo $terapia_neoplasia; ?>" disabled>
 					            					</span>
 					            				
 					            					
@@ -2577,7 +2637,7 @@
 										        <div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="SintomiVasomotori" name="SintomiVasomotori" <?php if($sintomi_vasomotori == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="SintomiVasomotori"  onchange="stickyheaddsadaer()" name="SintomiVasomotori" <?php if($sintomi_vasomotori == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" class="form-control" value="Sintomi vasomotori presenti" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Sintomi vasomotori presenti</span>
@@ -2593,7 +2653,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="SintomiDistrofici" name="SintomiDistrofici" <?php if($sintomi_distrofici == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="SintomiDistrofici" onchange="stickyheaddsadaer()" name="SintomiDistrofici" <?php if($sintomi_distrofici == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Sintomi distrofici" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Sintomi distrofici</span> 
@@ -2613,10 +2673,10 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="Dislipidemia" name="Dislipidemia" <?php if($dislipidemia == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Dislipidemia" onchange="stickyheaddsadaer()" name="Dislipidemia" <?php if($dislipidemia == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<span class="input-group-addon" style="text-align:left">Dislipidemia</span>
-					            					<input type="text"  class="form-control" id="dislipidemia_terapia" name="dislipidemia_terapia" placeholder="Terapia" value="<?php if($dislipidemia_terapia != 'NULL') echo $dislipidemia_terapia ?>"> 
+					            					<input type="text"  class="form-control" id="dislipidemia_terapia" onchange="stickyheaddsadaer()" name="dislipidemia_terapia" placeholder="Terapia" value="<?php if($dislipidemia_terapia != 'NULL') echo $dislipidemia_terapia ?>"> 
 					            					
 					          					</div>
 					          				</div>
@@ -2665,7 +2725,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="Ipertensione" name="Ipertensione" <?php if($ipertensione == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Ipertensione" onchange="stickyheaddsadaer()" name="Ipertensione" <?php if($ipertensione == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Ipertensione in terapia" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Ipertensione in terapia</span>
@@ -2682,7 +2742,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="RischioTev" name="RischioTev" <?php if($rischio_tev == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="RischioTev" onchange="stickyheaddsadaer()" name="RischioTev" <?php if($rischio_tev == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Rischio TEV" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Rischio TEV</span> 
@@ -2699,7 +2759,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="PatologiaCardiaca" name="PatologiaCardiaca" <?php if($patologia_cardiaca == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="PatologiaCardiaca" onchange="stickyheaddsadaer()" name="PatologiaCardiaca" <?php if($patologia_cardiaca == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Patologia cardiaca (infarto,coronaropatia)" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Patologia cardiaca (infarto,coronaropatia)</span>
@@ -2717,7 +2777,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="PatologiaVascolare" name="PatologiaVascolare" <?php if($patologia_vascolare == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="PatologiaVascolare" onchange="stickyheaddsadaer()" name="PatologiaVascolare" <?php if($patologia_vascolare == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Patologia vascolare cerebrale (ictus,TIA,altro)" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Patologia vascolare cerebrale (ictus,TIA,altro)</span>
@@ -2734,7 +2794,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="InsufficienzaRenale" name="InsufficienzaRenale" <?php if($insufficienza_renale == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="InsufficienzaRenale" onchange="stickyheaddsadaer()" name="InsufficienzaRenale" <?php if($insufficienza_renale == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Insufficienza renale" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Insufficienza renale</span>
@@ -2751,7 +2811,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="PatologiaRespiratoria" name="PatologiaRespiratoria" <?php if($patologia_respiratoria == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="PatologiaRespiratoria" onchange="stickyheaddsadaer()" name="PatologiaRespiratoria" <?php if($patologia_respiratoria == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Patologia respiratoria (asma,B.P.C.O.)" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Patologia respiratoria (asma,B.P.C.O.)</span>
@@ -2772,7 +2832,7 @@
 					      						<div class="input-group">
 					      							<span class="input-group-addon">
 					            						
-					            						<input type="checkbox" id="PatologiaDelCavoOrale" name="PatologiaDelCavoOrale" <?php if($patologia_del_cavo_orale == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="PatologiaDelCavoOrale" onchange="stickyheaddsadaer()" name="PatologiaDelCavoOrale" <?php if($patologia_del_cavo_orale == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<span class="input-group-addon" style="text-align:left">Patologia del cavo orale</span>
 					            						<!--Patologia del cavo orale-->
@@ -2809,7 +2869,7 @@
 		        								<div class="input-group">
 					      							<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="PatologiaEpatica" name="PatologiaEpatica" <?php if($patologia_epatica == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="PatologiaEpatica" onchange="stickyheaddsadaer()" name="PatologiaEpatica" <?php if($patologia_epatica == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" class="form-control" style="width:29em;" value="Grave patologia epatica (epatite acuta/cronica,cirrosi)" readonly>-->
 					            					<span class="form-control" style="width:100%" readonly>Grave patologia epatica (epatite acuta/cronica,cirrosi)</span>
@@ -2828,7 +2888,7 @@
 				          					<div style="width:100%">
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
-					            						<input type="checkbox" id="PatologiaEsofagea" name="PatologiaEsofagea" <?php if($patologia_esofagea == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="PatologiaEsofagea" onchange="stickyheaddsadaer()" name="PatologiaEsofagea" <?php if($patologia_esofagea == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" class="form-control" style="width:70%;" value="Patologia esofagea (esofagite,diverticoli,reflusso g.e. , ernia iatale)" readonly>-->
 					            					<span class="form-control" style="width:100%" readonly>Patologia esofagea (esofagite,diverticoli,reflusso g.e., ernia iatale)</span>
@@ -2844,7 +2904,7 @@
 				          					<div style="width:100%">
 										        <div class="input-group">
 					          						<span class="input-group-addon">
-					            						<input type="checkbox" id="Gastroduodenite" name="Gastroduodenite" <?php if($gastro_duodenite == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Gastroduodenite" onchange="stickyheaddsadaer()" name="Gastroduodenite" <?php if($gastro_duodenite == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" class="form-control" value="Gastro-duodenite, ulcera g.d." readonly>-->
 					          						<span class="form-control" style="width:100%" readonly>Gastro-duodenite, ulcera g.d.</span>
@@ -2858,7 +2918,7 @@
 				          					<div style="width:100%">
 										        <div class="input-group">
 					          						<span class="input-group-addon">
-					            						<input type="checkbox" id="Gastroresezione" name="Gastroresezione" <?php if($gastro_resezione == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Gastroresezione" onchange="stickyheaddsadaer()" name="Gastroresezione" <?php if($gastro_resezione == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" class="form-control" value="Gastro-resezione" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Gastro-resezione</span>
@@ -2873,7 +2933,7 @@
 				          					<div style="width:100%">
 										        <div class="input-group">
 					          						<span class="input-group-addon">
-					            						<input type="checkbox" id="Resezioneintestinale" name="Resezioneintestinale" <?php if($resezione_intestinale == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Resezioneintestinale" onchange="stickyheaddsadaer()" name="Resezioneintestinale" <?php if($resezione_intestinale == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" class="form-control" value="Resezione intestinale" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Resezione intestinale</span>
@@ -2887,7 +2947,7 @@
 				          					<div style="width:100%">
 										        <div class="input-group">
 					          						<span class="input-group-addon">
-					            						<input type="checkbox" id="mici" name="mici" <?php if($mici == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="mici" onchange="stickyheaddsadaer()" name="mici" <?php if($mici == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" class="form-control" value="M.I.C.I." readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">M.I.C.I.</span>
@@ -2907,10 +2967,10 @@
 				          					<div style="width:100%">
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
-					          							<input type="checkbox" id="Ipovitaminosi" name="Ipovitaminosi" <?php if($ipovitaminosi == 1) echo "checked='checked'" ?>/>
+					          							<input type="checkbox" id="Ipovitaminosi" onchange="stickyheaddsadaer()" name="Ipovitaminosi" <?php if($ipovitaminosi == 1) echo "checked='checked'" ?>/>
 					          						</span>
 					          						<span class="input-group-addon">25 OH Vitamina D ng/ml</span>
-					          						<input type="text" class="form-control"  name="valore_ipovitaminosi" id="valore_ipovitaminosi" class="form-control" placeholder="ng/ml" value="<?php if($valore_ipovitaminosi != 'NULL') echo $valore_ipovitaminosi  ?>" disabled>
+					          						<input type="text" class="form-control"  name="valore_ipovitaminosi" onchange="stickyheaddsadaer()" id="valore_ipovitaminosi" class="form-control" placeholder="ng/ml" value="<?php if($valore_ipovitaminosi != 'NULL') echo $valore_ipovitaminosi  ?>" disabled>
 					          					</div>
 					          				</div>
 				          				</div>
@@ -2959,10 +3019,10 @@
 				            				<div style="width:100%">
 				            					<div class="input-group">
 				            						<span class="input-group-addon">
-				            							<input type="checkbox" id="AltroPatologie" name="AltroPatologie" <?php if($altre_patologie == 1) echo "checked='checked'" ?>/>
+				            							<input type="checkbox" id="AltroPatologie" onchange="stickyheaddsadaer()" name="AltroPatologie" <?php if($altre_patologie == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<span class="input-group-addon" style="text-align:left;background:#eee">Altro</span>
-					            					<input type="text" class="form-control" id="altro_patologie" name="altro_patologie" placeholder="Altro" value="<?php if($altre_patologie_testo != 'NULL') echo $altre_patologie_testo ?>" disabled>		
+					            					<input type="text" class="form-control" id="altro_patologie" onchange="stickyheaddsadaer()" name="altro_patologie" placeholder="Altro" value="<?php if($altre_patologie_testo != 'NULL') echo $altre_patologie_testo ?>" disabled>		
 					          					</div>
 					          				</div>
 				          				</div>
@@ -2992,10 +3052,10 @@
 				          					<div style="width:100%">
 					          					<div class="input-group">
 				            						<span class="input-group-addon">
-				            							<input type="checkbox" id="Allergie" name="Allergie" <?php if($allergie == 1) echo "checked='checked'" ?>/>
+				            							<input type="checkbox" id="Allergie" onchange="stickyheaddsadaer()" name="Allergie" <?php if($allergie == 1) echo "checked='checked'" ?>/>
 				            						</span>
 					            					<span class="input-group-addon" style="text-align:left;background:#eee">Allergie</span>
-					            					<input type="text" class="form-control" id="allergie" name="allergie" placeholder="Allergie" value="<?php if($valori_allergie != 'NULL') echo $valori_allergie ?>" disabled>
+					            					<input type="text" class="form-control" id="allergie" onchange="stickyheaddsadaer()" name="allergie" placeholder="Allergie" value="<?php if($valori_allergie != 'NULL') echo $valori_allergie ?>" disabled>
 					            				</div>
 					            			</div>
 				            			</div>
@@ -3022,13 +3082,13 @@
 				            				<div style="width:100%">
 					            				<div class="input-group">
 					            					<span class="input-group-addon">
-					            						<input type="checkbox" id="Intolleranza" name="Intolleranza" <?php if($intolleranza == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Intolleranza" onchange="stickyheaddsadaer()" name="Intolleranza" <?php if($intolleranza == 1) echo "checked='checked'" ?>/>
 					          						</span>
 					          						<span class="input-group-addon" style="text-align:left;background:#eee">	
 					          							Intolleranza/non accettabilità terapie per osteoporosi
 					          						</span>
 
-					          						<input type="text" class="form-control" id="value_intolleranze" name="value_intolleranze" placeholder="Intolleranze" value="<?php if($valori_intolleranze != 'NULL') echo $valori_intolleranze ?>">
+					          						<input type="text" class="form-control" id="value_intolleranze" onchange="stickyheaddsadaer()" name="value_intolleranze" placeholder="Intolleranze" value="<?php if($valori_intolleranze != 'NULL') echo $valori_intolleranze ?>">
 
 					            					<br/>
 					            					
@@ -3417,6 +3477,13 @@
 	      							</script>
 
 
+
+
+
+
+
+
+
 				     	 			<!--SONO ARRIVATO QUA 13.5.18 -->
 				     	 			<div class="row">
 				     	 				<div class="col-sm-2">
@@ -3468,6 +3535,45 @@
         				'slow');
 					});
 				</script>
+
+
+
+<!-- CONSULENZA PER OSTEOPOROSI*******************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************7
+ *******************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ *******************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ *******************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************-->
 
 
 
@@ -3550,12 +3656,6 @@
 	          						//echo $row[TOT_Tscore];
 	          						$Tscore_HipR = $row[NECK_Tscore];
 	          						$Zscore_HipR = $row[NECK_Zscore];
-
-
-
-
-
-
 	          					?>
 
 	          					<div class="col-sm-11">
@@ -3567,11 +3667,11 @@
 	          							<div class="col-sm-6">
 	          								<div class="input-group">
 	          									<span class="input-group-addon">
-		          									<input type="checkbox"  name="colonna_vertebrale" id="colonna_vertebrale" <?php if($colonna_vertebrale_check == 1) echo "checked='checked'"; ?>/>
+		          									<input type="checkbox"  name="colonna_vertebrale" id="colonna_vertebrale" onchange="stickyheaddsadaer()" <?php if($colonna_vertebrale_check == 1) echo "checked='checked'"; ?>/>
 		          								</span>
 	          									<span class="form-control" style="width:50%;background:#eee"><b>Colonna vertebrale&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></span>
 		          								
-		          								<select class="form-control" style="width:50%" id="situazione_colonna" name = "situazione_colonna" disabled>
+		          								<select class="form-control" style="width:50%" id="situazione_colonna" onchange="stickyheaddsadaer()" name = "situazione_colonna" disabled>
 		          									<option>Situazione di normalità</option>
 		          									<option>Osteopenia</option>
 		          									<option>Osteoporosi</option>
@@ -3674,10 +3774,10 @@
 	          							<div class="col-sm-6">
 	          								<div class="input-group">
 	          									<span class="input-group-addon">
-		          									<input type="checkbox"  name="collo_femore_sn" id="collo_femore_sn" <?php if($collo_femore_sn_check == 1) echo "checked='checked'"; ?>/>
+		          									<input type="checkbox"  name="collo_femore_sn" id="collo_femore_sn" onchange="stickyheaddsadaer()" <?php if($collo_femore_sn_check == 1) echo "checked='checked'"; ?>/>
 		          								</span>
 	          									<span class="form-control" style="width:50%;background:#eee"><b>Collo femore sinistro</b></span>
-		          								<select class="form-control" style="width:50%" id="situazione_femore_sn"  name = "situazione_femore_sn" disabled>
+		          								<select class="form-control" style="width:50%" id="situazione_femore_sn" onchange="stickyheaddsadaer()"  name = "situazione_femore_sn" disabled>
 		          									<option>Situazione di normalità</option>
 		          									<option>Osteopenia</option>
 		          									<option>Osteoporosi</option>
@@ -3777,10 +3877,10 @@
 	          								<div style="width:100%">
 		          								<div class="input-group">
 		          									<span class="input-group-addon">
-			          									<input type="checkbox"  name="collo_femore_dx" id="collo_femore_dx" <?php if($collo_femore_dx_check == 1) echo "checked='checked'"; ?>/>
+			          									<input type="checkbox"  name="collo_femore_dx" id="collo_femore_dx" onchange="stickyheaddsadaer()" <?php if($collo_femore_dx_check == 1) echo "checked='checked'"; ?>/>
 			          								</span>
 		          									<span class="form-control" style="width:50%;background:#eee"><b>Collo femore destro</b></span>
-			          								<select class="form-control" style="width:50%" id="situazione_femore_dx" name = "situazione_femore_dx" disabled>
+			          								<select class="form-control" style="width:50%" id="situazione_femore_dx" onchange="stickyheaddsadaer()" name = "situazione_femore_dx" disabled>
 			          									<option>Situazione di normalità</option>
 			          									<option>Osteopenia</option>
 			          									<option>Osteoporosi</option>
@@ -3871,7 +3971,7 @@
 		          						<div class="col-sm-5">
 		          							<div class="input-group">
 		          								<span class="input-group-addon">
-		          									<input type="checkbox" id="OsteoporosiGrave" name="OsteoporosiGrave" <?php if($osteoporosi_grave == 1) echo "checked='checked'" ?>/>
+		          									<input type="checkbox" id="OsteoporosiGrave" onchange="stickyheaddsadaer()" name="OsteoporosiGrave" <?php if($osteoporosi_grave == 1) echo "checked='checked'" ?>/>
 		          								</span>
 		          								<span class="form-control" readonly><b>Osteoporosi grave per pregresse fratture</b></span>
 		          							</div>
@@ -3888,7 +3988,7 @@
 		              						<div style="width:100%">
 		            							<div class="input-group">
 		              								<span class="input-group-addon">
-		                								<input type="checkbox" name="ColonnaVertebraleParzialmenteNonAnalizzabile" id="ColonnaVertebraleParzialmenteNonAnalizzabile" <?php if($vertebre_non_analizzate == 1) echo "checked='checked'"; ?>/>
+		                								<input type="checkbox" name="ColonnaVertebraleParzialmenteNonAnalizzabile" id="ColonnaVertebraleParzialmenteNonAnalizzabile"  onchange="stickyheaddsadaer()" <?php if($vertebre_non_analizzate == 1) echo "checked='checked'"; ?>/>
 		              								</span>
 		              								
 		              								<span class="input-group-addon" style="width:100%;text-align:left">
@@ -3899,20 +3999,20 @@
 
 		            								
 		            								<span class="input-group-addon">
-		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L1" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L1"  <?php if($vertebre_non_analizzate_L1 == 1) echo "checked='checked'"; ?> disabled>L1
+		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L1" onchange="stickyheaddsadaer()" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L1"  <?php if($vertebre_non_analizzate_L1 == 1) echo "checked='checked'"; ?> disabled>L1
 		            									
 		            								</span>
 
 		            								<span class="input-group-addon">
-		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L2" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L2"  <?php if($vertebre_non_analizzate_L2 == 1) echo "checked='checked'"; ?>disabled>L2
+		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L2" onchange="stickyheaddsadaer()" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L2"  <?php if($vertebre_non_analizzate_L2 == 1) echo "checked='checked'"; ?>disabled>L2
 		            								</span>
 
 		            								<span class="input-group-addon">
-		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L3" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L3" <?php if($vertebre_non_analizzate_L3 == 1) echo "checked='checked'"; ?> disabled>L3
+		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L3" onchange="stickyheaddsadaer()" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L3" <?php if($vertebre_non_analizzate_L3 == 1) echo "checked='checked'"; ?> disabled>L3
 		            								</span>
 
 		            								<span class="input-group-addon">
-		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L4" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L4" <?php if($vertebre_non_analizzate_L4 == 1) echo "checked='checked'"; ?> disabled>L4
+		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L4" onchange="stickyheaddsadaer()" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L4" <?php if($vertebre_non_analizzate_L4 == 1) echo "checked='checked'"; ?> disabled>L4
 		            								</span>
 		            							</div><!--/input-group-->
 	            							</div>
@@ -3987,7 +4087,7 @@
 		              						<div style="width:100%">
 			                					<div class="input-group">
 			                  						<span class="input-group-addon">
-			                    						<input type="checkbox"  id="colonnavertebralenonanalizzabile" name="colonnavertebralenonanalizzabile" <?php if($colonna_non_analizzabile == 1) echo "checked='checked'";   ?>/>
+			                    						<input type="checkbox"  onchange="stickyheaddsadaer()" id="colonnavertebralenonanalizzabile" name="colonnavertebralenonanalizzabile" <?php if($colonna_non_analizzabile == 1) echo "checked='checked'";   ?>/>
 			                  						</span>
 			                  						<!--<input type="text" class="form-control" value="Colonna vertebrale interamente non analizzabile per deformazioni morfologiche e artefatti" readonly>-->
 			                						<span class="form-control" style="width:100%;background:#eee">
@@ -4006,7 +4106,7 @@
 		            							<div class="input-group">
 
 			                  						<span class="input-group-addon">
-			                    						<input type="checkbox" id="input-2" name="colonnavertebraleconvalori"  <?php if($colonna_valori_superiori == 1) echo "checked='checked'" ?>/>
+			                    						<input type="checkbox" id="radio_colonna_valori_sup" onchange="stickyheaddsadaer()"  name="colonnavertebraleconvalori"  <?php if($colonna_valori_superiori == 1) echo "checked='checked'" ?>/>
 			                  						</span>
 			                  						
 			                  						<span class="form-control" style="width:100%;text-align:left;background:#eee">
@@ -4025,7 +4125,7 @@
 		              						<div style="width:100%">
 			                					<div class="input-group">
 			                  						<span class="input-group-addon">
-			                    						<input type="checkbox" name="femorenonanalizzabile" id="femore_non_analizzabile" <?php if($femore_non_analizzabile == 1) echo "checked='checked'" ?>/>
+			                    						<input type="checkbox" name="femorenonanalizzabile" id="femore_non_analizzabile" onchange="stickyheaddsadaer()" <?php if($femore_non_analizzabile == 1) echo "checked='checked'" ?>/>
 			                  						</span>
 
 			                  						<span class="form-control" style="width:100%;text-align:left;background:#eee">
@@ -4156,7 +4256,7 @@
 		              						<div style="width:100%">
 		                					<div class="input-group">
 		                						<span style="align:center" class="input-group-addon">
-			            							<input type="checkbox" id="Frax_applicabile" name="Frax_applicabile" value="applicabile" <?php if($frax_applicabile == 1) echo "checked='checked'"  ?>/>
+			            							<input type="checkbox" id="Frax_applicabile" onchange="stickyheaddsadaer()" name="Frax_applicabile" value="applicabile" <?php if($frax_applicabile == 1) echo "checked='checked'"  ?>/>
 			            							Applicabile
 
 			            						</span>
@@ -4176,7 +4276,7 @@
 	                  								
 		              								<span class="input-group-addon" id="sizing-addon2">Fratture maggiori&nbsp;&nbsp;</span>
 		              									<span class="input-group-addon"><input type="checkbox" id="percentuale_frax" name="percentuale_frax" <?php if($frax_percentuale == 1) echo "checked='checked'" ?>/>&nbsp;&nbsp;&nbsp;< 0.1%</span>
-		              									<input type="text" style="text-align:right;width:70px"  class="frax form-control" id = "frax"  name="frax_fratture_maggiori_intero" value="<?php if($frax_fratture_maggiori_intero != 'NULL') echo $frax_fratture_maggiori_intero ?>">
+		              									<input type="text" style="text-align:right;width:70px"  class="frax form-control" id = "frax" onchange="stickyheaddsadaer()" name="frax_fratture_maggiori_intero" value="<?php if($frax_fratture_maggiori_intero != 'NULL') echo $frax_fratture_maggiori_intero ?>">
 		              									<!--
 		              									<input type="text" style="width:30px;font-size:20px" value="." class="form-control" readonly>
 		              									<input type="text" style="width:50px" class="frax form-control" id = "frax"  name="frax_fratture_maggiori_decimale" value="<?php if($frax_fratture_maggiori_decimale != 'NULL') echo $frax_fratture_maggiori_decimale ?>">
@@ -4197,7 +4297,7 @@
 	              								<span class="input-group-addon" id="sizing-addon2">Collo femore&nbsp;&nbsp;</span>
 	              								<span class="input-group-addon"><input type="checkbox" id="percentuale_collo_femore" name="percentuale_collo_femore" <?php if($frax_collo_femore_percentuale == 1) echo "checked='checked'" ?>/>&nbsp;&nbsp;&nbsp;< 0.1%</span>
 	              								
-	              									<input type="text" style="text-align:right;width:70px"  class="frax_collo_femore form-control" id = "frax_collo_femore" name="collo_femore_intero" value="<?php if($frax_collo_femore_intero != 'NULL') echo $frax_collo_femore_intero ?>">
+	              									<input type="text" style="text-align:right;width:70px"  class="frax_collo_femore form-control" id = "frax_collo_femore" onchange="stickyheaddsadaer()" name="collo_femore_intero" value="<?php if($frax_collo_femore_intero != 'NULL') echo $frax_collo_femore_intero ?>">
 	              									<!--
 	              									<input type="text" style="width:30px;font-size:20px" value="." class="form-control" readonly>
 	              									<input type="text" style="width:50px" class="frax_collo_femore form-control" id = "frax_collo_femore"  name="collo_femore_decimale" value="<?php if($frax_collo_femore_decimale != 'NULL') echo $frax_collo_femore_decimale ?>">
@@ -4474,7 +4574,7 @@
 		              						<div style="width:100%">
 		                					<div class="input-group">
 		                						<span style="align:center" class="input-group-addon">
-			            							<input type="checkbox" id="tbs_colonna_applicabile" name="tbs_colonna_applicabile" value="applicabile" <?php if($tbs_colonna_applicabile == 1) echo "checked='checked'"  ?>/>
+			            							<input type="checkbox" id="tbs_colonna_applicabile" onchange="stickyheaddsadaer()" name="tbs_colonna_applicabile" value="applicabile" <?php if($tbs_colonna_applicabile == 1) echo "checked='checked'"  ?>/>
 			            							Applicabile
 
 			            						</span>
@@ -4493,7 +4593,7 @@
 	                  								<!--NON SO COSA SCRIVERCI QUINDI LO COMMENTO NEL CASO DOVRO' SCRIVERE QUALCOSA-->
 		              								<!--<span class="input-group-addon" id="sizing-addon2">Fratture maggiori&nbsp;&nbsp;</span>-->
 	              									<span class="input-group-addon"><input type="checkbox" id="percentuale_tbs_colonna" name="percentuale_tbs_colonna" <?php if($percentuale_tbs_colonna == 1) echo "checked='checked'" ?>/>&nbsp;&nbsp;&nbsp;< 0.1%</span>
-	              									<input type="text" style="text-align:right;width:70px"  class="tbs_colonna_valore form-control" id = "tbs_colonna_valore"  name="tbs_colonna_valore" value="<?php if($tbs_colonna_valore != 'NULL') echo $tbs_colonna_valore ?>">
+	              									<input type="text" style="text-align:right;width:70px"  class="tbs_colonna_valore form-control" onchange="stickyheaddsadaer()" id = "tbs_colonna_valore"  name="tbs_colonna_valore" value="<?php if($tbs_colonna_valore != 'NULL') echo $tbs_colonna_valore ?>">
 		              									
 
 		              							</div>
@@ -4613,7 +4713,7 @@
 		              						<div style="width:100%">
 		                					<div class="input-group">
 		                						<span style="align:center" class="input-group-addon">
-			            							<input type="checkbox" id="defra_applicabile" name="defra_applicabile" value="defra_applicabile" <?php if($defra_applicabile == 1) echo "checked='checked'" ?>/>
+			            							<input type="checkbox" id="defra_applicabile" onchange="stickyheaddsadaer()" name="defra_applicabile" value="defra_applicabile" <?php if($defra_applicabile == 1) echo "checked='checked'" ?>/>
 			            							Applicabile
 
 			            						</span>
@@ -4634,7 +4734,7 @@
 		              						<div class="input-group">
 		              							<span class="input-group-addon"><input type="checkbox" id="percentuale_defra_01" class="percentuale_defra" name="defra_percentuale_01" <?php if($defra_percentuale_01 == 1) echo "checked='checked'" ?> disabled/>&nbsp;&nbsp;< 0.1%</span>
 	                  							<span class="input-group-addon"><input type="checkbox" id="percentuale_defra_50" class="percentuale_defra" name="defra_percentuale_50" <?php if($defra_percentuale_50 == 1) echo "checked='checked'" ?> disabled/>&nbsp;&nbsp;> 50%</span>
-              									<input type="text" style="text-align:right;width:70px"  class="defra form-control" id = "defra_intero"  name="defra_intero" value="<?php if($defra_intero != 'NULL') echo $defra_intero ?>">
+              									<input type="text" style="text-align:right;width:70px"  class="defra form-control" id = "defra_intero" onchange="stickyheaddsadaer()"  name="defra_intero" value="<?php if($defra_intero != 'NULL') echo $defra_intero ?>">
               									<!--
               									<input type="text" style="width:30px;font-size:20px" value="." class="form-control" readonly>
               									<input type="text" style="width:50px" class="defra form-control" id = "defra_decimale"  name="defra_decimale" value="<?php if($defra_decimale != 'NULL') echo $defra_decimale ?>">
@@ -4720,6 +4820,7 @@
 			            						$('#defra_decimale').prop('disabled',false);
 			            						
 			            					}
+											stickyheaddsadaer();
 			            				});
 
 			            				$('#percentuale_defra_50').bind('click',function(){	
@@ -4735,6 +4836,7 @@
 			            						$('#defra_decimale').prop('disabled',false);
 			            						
 			            					}
+											stickyheaddsadaer();
 			            				});
 
 			            				
@@ -4770,8 +4872,43 @@
 		            				</script>
 
 
-		            				
-				            		
+<!--INDICAZIONI DI PREVENZIONE E TERAPIA *******************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************7
+ *******************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ *******************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ *******************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************
+ **********************************************************************************************************************************************************-->
+
 
 
 		            				<h4><p style="text-align:center;"><b>INDICAZIONI DI PREVENZIONE E TERAPIA</b></p></h4>
@@ -4787,6 +4924,860 @@
 									?>
 									<br/><br/>
 									<!--TERAPIE ORMONALI-->
+                                    ---
+									
+									<br>
+
+
+                                    <script type="text/javascript">
+                                    function stickyheaddsadaer()
+                                    {   console.clear();
+                                        var SEX="";
+                                        var is__radio_maschio__checked = document.getElementById('radio_maschio').checked
+                                        var is__radio_femmina__checked = document.getElementById('radio_femmina').checked
+                                        if(is__radio_maschio__checked == true)
+                                            SEX = "M";
+                                        if(is__radio_femmina__checked)
+                                            SEX = "F";
+
+                                        console.log("SEX:\n"+SEX);
+
+                                        var STATO_MENOPAUSALE="";
+
+                                        var is__radio_premenopausa__checked = document.getElementById('radio_premenopausa').checked
+                                        var is__radio_perimenopausa__checked = document.getElementById('radio_perimenopausa').checked
+                                        var is__radio_post_spontanea__checked = document.getElementById('radio_post_spontanea').checked
+                                        var is__radio_indotta__checked = document.getElementById('radio_indotta').checked
+                                        var is__radio_ister_ann_bil__checked = document.getElementById('radio_ister_ann_bil').checked
+                                        var is__radio_ister_ann_mono__checked = document.getElementById('radio_ister_ann_mono').checked
+                                        var is__solo_isterectomia__checked = document.getElementById('radio_solo_isterectomia').checked
+
+
+                                        if(is__radio_premenopausa__checked)
+                                            STATO_MENOPAUSALE = "Premenopausa";
+                                        else if(is__radio_perimenopausa__checked)
+                                            STATO_MENOPAUSALE = "Perimenopausa";
+                                        else if(is__radio_post_spontanea__checked)
+                                            STATO_MENOPAUSALE = "Postmenopausa spontanea";
+                                        else if (is__radio_indotta__checked)
+                                            STATO_MENOPAUSALE = "Indotta";
+                                        else if(is__radio_ister_ann_bil__checked)
+                                            STATO_MENOPAUSALE = "Ister-ann bil";
+                                        else if(is__radio_ister_ann_mono__checked)
+                                            STATO_MENOPAUSALE = "Ister-ann mono";
+                                        else if(is__solo_isterectomia__checked)
+                                            STATO_MENOPAUSALE = "Solo isterectomia";
+
+                                        console.log("STATO_MENOPAUSALE:\n"+STATO_MENOPAUSALE)
+
+
+
+                                        var ULTIMA_MESTRUAZIONE="";
+                                        var anno_ultima_mestruazione = document.getElementById('UltimaMestruazione').value;
+                                        ULTIMA_MESTRUAZIONE = anno_ultima_mestruazione;
+                                        console.log("ULTIMA_MESTRUAZIONE:\n"+ULTIMA_MESTRUAZIONE)
+
+
+                                        var TERAPIA_STATO = "";
+                                        var radio_stato_mai_checked = document.getElementById('stato_mai').checked;
+                                        var radio_stato_in_atto_checked = document.getElementById('stato_inatto').checked;
+                                        var radio_stato_sospesa_checked = document.getElementById('stato_sospesa').checked;
+
+                                        if(radio_stato_mai_checked)
+                                            TERAPIA_STATO="Mai";
+                                        if(radio_stato_sospesa_checked)
+                                            TERAPIA_STATO="Sospesa";
+                                        if(radio_stato_in_atto_checked)
+                                            TERAPIA_STATO="In atto";
+
+                                        console.log("TERAPIA_STATO:\n"+TERAPIA_STATO);
+
+										var TERAPIA_OSTEOPROTETTIVA_ORMONALE = "";
+                                        var radio_terapia_orm_sost_checked = document.getElementById('Ormonale').checked;
+										if(radio_terapia_orm_sost_checked)
+											TERAPIA_OSTEOPROTETTIVA_ORMONALE=1;
+										else
+											TERAPIA_OSTEOPROTETTIVA_ORMONALE=0;
+										console.log("TERAPIA_OSTEOPROTETTIVA_ORMONALE:\n"+TERAPIA_OSTEOPROTETTIVA_ORMONALE);
+										
+
+
+
+                                        var TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA = "";
+                                        var select_area_orm_sost = document.getElementById('text_area_orm_sost');
+                                        for (i = 0; i < select_area_orm_sost.options.length; i++) {
+                                            TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA +=  select_area_orm_sost.options[i].text+" ";
+                                        }
+                                        console.log("TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA:\n"+TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA);
+
+										
+										var TERAPIA_OSTEOPROTETTIVA_SPECIFICA = "";
+                                        var radio_terapia_osteo_spec_checked = document.getElementById('Osteoprotettiva').checked;
+										if(radio_terapia_osteo_spec_checked)
+											TERAPIA_OSTEOPROTETTIVA_SPECIFICA=1;
+										else
+											TERAPIA_OSTEOPROTETTIVA_SPECIFICA=0;
+										console.log("TERAPIA_OSTEOPROTETTIVA_SPECIFICA:\n"+TERAPIA_OSTEOPROTETTIVA_SPECIFICA);
+										var TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA = "";
+                                        var select_area_ter_ost_spec = document.getElementById('text_area_osteoprotettiva');
+                                        for (i = 0; i < select_area_ter_ost_spec.options.length; i++)
+                                            TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA +=  select_area_ter_ost_spec.options[i].text+" ";
+                                        console.log("TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA:\n"+TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA);
+
+
+
+										var VITAMINA_D_TERAPIA_OSTEOPROTETTIVA = "";
+                                        var radio_vitd_supp_checked = document.getElementById('VitaminaD').checked;
+										if(radio_vitd_supp_checked)
+											VITAMINA_D_TERAPIA_OSTEOPROTETTIVA=1;
+										else
+											VITAMINA_D_TERAPIA_OSTEOPROTETTIVA=0;
+										console.log("VITAMINA_D_TERAPIA_OSTEOPROTETTIVA:\n"+VITAMINA_D_TERAPIA_OSTEOPROTETTIVA);
+										var VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA = "";
+                                        var select_area_text_area_vitamina_d = document.getElementById('text_area_vitamina_d');
+                                        for (i = 0; i < select_area_text_area_vitamina_d.options.length; i++)
+                                            VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA +=  select_area_text_area_vitamina_d.options[i].text+" ";
+                                        console.log("VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA:\n"+VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA);
+
+
+										var TERAPIA_ALTRO_CHECKBOX = "";
+                                        var radio_terapie_altro = document.getElementById('AltroTerapie').checked;
+										// lascio di proposito "", se checkbox not selected. perchè nel d è registrato cosi
+										if(radio_terapie_altro)
+											TERAPIA_ALTRO_CHECKBOX=1;
+										console.log("TERAPIA_ALTRO_CHECKBOX:\n"+TERAPIA_ALTRO_CHECKBOX);
+
+                                        var TERAPIA_ALTRO = document.getElementById('ValueAltroTerapie').value;
+										console.log("TERAPIA_ALTRO:\n"+TERAPIA_ALTRO);
+
+
+										TERAPIA_COMPLIANCE = "";
+                                        var radio_terapia_compliance_checked = document.getElementById('ComplianceAllaTerapia').checked;
+										if(radio_terapia_compliance_checked)
+											TERAPIA_COMPLIANCE=1;
+										else
+											TERAPIA_COMPLIANCE=0;
+										console.log("TERAPIA_COMPLIANCE:\n"+TERAPIA_COMPLIANCE);
+
+
+										var BMI;
+										var peso = document.getElementById('Peso').value;
+										var altezza = document.getElementById('Altezza').value;
+										BMI = peso / Math.pow(altezza/100,2);
+										BMI = parseFloat(BMI).toFixed(3);
+										// TODO: tofixed arrotonda, quello sul sito tronca
+										console.log("BMI:\n"+BMI);
+
+										
+										var FRATTURE;
+										var radio_fratture_checked = document.getElementById('FratturaFragilitaVertebrosa').checked;
+										if(radio_fratture_checked)
+											FRATTURE=1;
+										else
+											FRATTURE=0;
+										console.log("FRATTURE:\n"+FRATTURE);
+
+										var FRATTURA_VERTEBRE="";
+										var radio_frattura_una_checked = document.getElementById('FratturaVertebreUna').checked;
+										var radio_frattura_piu_di_una_checked = document.getElementById('FratturaVertebrePiuDiUna').checked;
+										if(radio_frattura_una_checked)
+											FRATTURA_VERTEBRE=1;
+										else if(radio_frattura_piu_di_una_checked)
+											FRATTURA_VERTEBRE="piu di 1";
+										console.log("FRATTURA_VERTEBRE:\n"+FRATTURA_VERTEBRE);
+
+										var FRATTURA_FEMORE="";
+										var radio_frattura_una_checked = document.getElementById('FratturaFemoreUna').checked;
+										var radio_frattura_piu_di_una_checked = document.getElementById('FratturaFemorePiuDiUna').checked;
+										if(radio_frattura_una_checked)
+											FRATTURA_FEMORE=1;
+										else if(radio_frattura_piu_di_una_checked)
+											FRATTURA_FEMORE="piu di 1";
+										console.log("FRATTURA_FEMORE:\n"+FRATTURA_FEMORE);
+
+										var FRATTURA_SITI_DIVERSI;
+										var radio_fratture_siti_diversi_checked = document.getElementById('PregresseFratture1').checked;
+										if(radio_fratture_siti_diversi_checked)
+											FRATTURA_SITI_DIVERSI=1;
+										else
+											FRATTURA_SITI_DIVERSI=0;
+										console.log("FRATTURA_SITI_DIVERSI:\n"+FRATTURA_SITI_DIVERSI);
+
+
+										var FRATTURA_FAMILIARITA;
+										var radio_fratture_fam_checked = document.getElementById('FamiliaritaperFrattura').checked;
+										if(radio_fratture_fam_checked)
+										FRATTURA_FAMILIARITA=1;
+										else
+										FRATTURA_FAMILIARITA=0;
+										console.log("FRATTURA_FAMILIARITA:\n"+FRATTURA_FAMILIARITA);
+
+
+										var ABUSO_FUMO_CHECKBOX;
+										var radio_abuso_fumo_checked = document.getElementById('Abusofumo1').checked;
+										if(radio_abuso_fumo_checked)
+										ABUSO_FUMO_CHECKBOX=1;
+										else
+										ABUSO_FUMO_CHECKBOX=0;
+										console.log("ABUSO_FUMO_CHECKBOX:\n"+ABUSO_FUMO_CHECKBOX);
+
+										var ABUSO_FUMO="";
+										var radio_meno_di_10_checked = document.getElementById('menodi10').checked;
+										var radio_piu_di_10_checked = document.getElementById('piudi10').checked;
+										if(radio_meno_di_10_checked)
+											ABUSO_FUMO="<= 10 sigarette/di";
+										else if(radio_piu_di_10_checked)
+											ABUSO_FUMO="> 10 sigarette/di";
+										console.log("ABUSO_FUMO:\n"+ABUSO_FUMO);
+
+
+
+										var USO_CORTISONE_CHECKBOX;
+										var radio_uso_cortisone_checked = document.getElementById('Usocortisone1').checked;
+										if(radio_uso_cortisone_checked)
+											USO_CORTISONE_CHECKBOX=1;
+										else
+											USO_CORTISONE_CHECKBOX=0;
+										console.log("USO_CORTISONE_CHECKBOX:\n"+USO_CORTISONE_CHECKBOX);
+
+										var USO_CORTISONE="";
+										var radio_traduecinue_checked = document.getElementById('tradueecinque').checked;
+										var radio_piudicinque_checked = document.getElementById('piudicinque').checked;
+										if(radio_traduecinue_checked)
+											USO_CORTISONE="> 2.5 mg e < 5 mg";
+										else if(radio_piudicinque_checked)
+											USO_CORTISONE=">= 5 mg (Prednisone)";
+										console.log("USO_CORTISONE:\n"+USO_CORTISONE);
+
+
+
+										var MALATTIE_ATTUALI_CHECKBOX;
+										var radio_malatt_att_checked = document.getElementById('MalattieAttuali').checked;
+										if(radio_malatt_att_checked)
+											MALATTIE_ATTUALI_CHECKBOX=1;
+										else
+											MALATTIE_ATTUALI_CHECKBOX=0;
+										console.log("MALATTIE_ATTUALI_CHECKBOX:\n"+MALATTIE_ATTUALI_CHECKBOX);
+										
+										var MALATTIE_ATTUALI_ARTRITE_REUM;
+										var radio_artride_checked = document.getElementById('artritereumatoide').checked;
+										if(radio_artride_checked)
+										MALATTIE_ATTUALI_ARTRITE_REUM=1;
+										else
+										MALATTIE_ATTUALI_ARTRITE_REUM=0;
+										console.log("MALATTIE_ATTUALI_ARTRITE_REUM:\n"+MALATTIE_ATTUALI_ARTRITE_REUM);
+
+										var MALATTIE_ATTUALI_ARTRITE_PSOR;
+										var radio_artrite_pros_checked = document.getElementById('artritepsoriasica').checked;
+										if(radio_artrite_pros_checked)
+										MALATTIE_ATTUALI_ARTRITE_PSOR=1;
+										else
+										MALATTIE_ATTUALI_ARTRITE_PSOR=0;
+										console.log("MALATTIE_ATTUALI_ARTRITE_PSOR:\n"+MALATTIE_ATTUALI_ARTRITE_PSOR);
+
+										var MALATTIE_ATTUALI_LUPUS;
+										var radio_lupus_checked = document.getElementById('lupus').checked;
+										if(radio_lupus_checked)
+										MALATTIE_ATTUALI_LUPUS=1;
+										else
+										MALATTIE_ATTUALI_LUPUS=0;
+										console.log("MALATTIE_ATTUALI_LUPUS:\n"+MALATTIE_ATTUALI_LUPUS);
+
+										var MALATTIE_ATTUALI_SCLERODERMIA;
+										var radio_scleroderm_checked = document.getElementById('sclerodermia').checked;
+										if(radio_scleroderm_checked)
+										MALATTIE_ATTUALI_SCLERODERMIA=1;
+										else
+										MALATTIE_ATTUALI_SCLERODERMIA=0;
+										console.log("MALATTIE_ATTUALI_SCLERODERMIA:\n"+MALATTIE_ATTUALI_SCLERODERMIA);
+
+										var MALATTIE_ATTUALI_ALTRE_CONNETTIVITI;
+										var radio_altri_connet_checked = document.getElementById('altreconnettiviti').checked;
+										if(radio_altri_connet_checked)
+										MALATTIE_ATTUALI_ALTRE_CONNETTIVITI=1;
+										else
+										MALATTIE_ATTUALI_ALTRE_CONNETTIVITI=0;
+										console.log("MALATTIE_ATTUALI_ALTRE_CONNETTIVITI:\n"+MALATTIE_ATTUALI_ALTRE_CONNETTIVITI);
+
+										
+										
+										var CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX;
+										var radio_checked = document.getElementById('Osteoporosisecondaria').checked;
+										if(radio_checked)
+										CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX=1;
+										else
+										CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX=0;
+										console.log("CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX:\n"+CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX);
+
+										var CAUSE_OSTEOPOROSI_SECONDARIA = "";
+                                        var select_area_osteo_second = document.getElementById('text_area_causesecondarie');
+                                        for (i = 0; i < select_area_osteo_second.options.length; i++) 
+                                            CAUSE_OSTEOPOROSI_SECONDARIA +=  select_area_osteo_second.options[i].text+" ";
+                                        console.log("CAUSE_OSTEOPOROSI_SECONDARIA:\n"+CAUSE_OSTEOPOROSI_SECONDARIA);
+
+
+
+										var PATOLOGIE_UTERINE_CHECKBOX;
+										var radio_pat_uterine_checked = document.getElementById('PatologieUterine').checked;
+										if(radio_pat_uterine_checked)
+											PATOLOGIE_UTERINE_CHECKBOX=1; 
+										else 
+											PATOLOGIE_UTERINE_CHECKBOX=0;
+										console.log("PATOLOGIE_UTERINE_CHECKBOX:\n"+PATOLOGIE_UTERINE_CHECKBOX);
+
+										var PATOLOGIE_UTERINE_DIAGNOSI;
+										if(radio_pat_uterine_checked)
+											PATOLOGIE_UTERINE_DIAGNOSI = document.getElementById('diagnosi1').value;
+										else
+											PATOLOGIE_UTERINE_DIAGNOSI="NULL"
+										console.log("PATOLOGIE_UTERINE_DIAGNOSI:\n"+PATOLOGIE_UTERINE_DIAGNOSI);
+
+
+
+										var NEOPLASIA_CHECKBOX;
+										var radio_neoplasia_checked = document.getElementById('Neoplasia').checked;
+										if(radio_neoplasia_checked) NEOPLASIA_CHECKBOX=1; else NEOPLASIA_CHECKBOX=0;
+										console.log("NEOPLASIA_CHECKBOX:\n"+NEOPLASIA_CHECKBOX);
+
+										var NEOPLASIA_MAMMARIA_TERAPIA;
+										if(radio_neoplasia_checked)
+											NEOPLASIA_MAMMARIA_TERAPIA = document.getElementById('terapia_neoplasia').value;
+										else
+											NEOPLASIA_MAMMARIA_TERAPIA="NULL"
+										console.log("NEOPLASIA_MAMMARIA_TERAPIA:\n"+NEOPLASIA_MAMMARIA_TERAPIA);
+
+
+
+										var SINTOMI_VASOMOTORI;
+										var radio_checked = document.getElementById('SintomiVasomotori').checked;
+										if(radio_checked) SINTOMI_VASOMOTORI=1; else SINTOMI_VASOMOTORI=0;
+										console.log("SINTOMI_VASOMOTORI:\n"+SINTOMI_VASOMOTORI);
+
+
+
+										var SINTOMI_DISTROFICI;
+										var radio_checked = document.getElementById('SintomiDistrofici').checked;
+										if(radio_checked) SINTOMI_DISTROFICI=1; else SINTOMI_DISTROFICI=0;
+										console.log("SINTOMI_DISTROFICI:\n"+SINTOMI_DISTROFICI);
+
+
+
+										var DISLIPIDEMIA_CHECKBOX;
+										var radio_dislip_checked = document.getElementById('Dislipidemia').checked;
+										if(radio_dislip_checked) DISLIPIDEMIA_CHECKBOX=1; else DISLIPIDEMIA_CHECKBOX=0;
+										console.log("DISLIPIDEMIA_CHECKBOX:\n"+DISLIPIDEMIA_CHECKBOX);
+
+										var DISLIPIDEMIA_TERAPIA;
+										if(radio_dislip_checked)
+										DISLIPIDEMIA_TERAPIA = document.getElementById('dislipidemia_terapia').value;
+										else
+										DISLIPIDEMIA_TERAPIA="NULL"
+										console.log("DISLIPIDEMIA_TERAPIA:\n"+DISLIPIDEMIA_TERAPIA);
+
+
+
+										var IPERTENSIONE;
+										var radio_checked = document.getElementById('Ipertensione').checked;
+										if(radio_checked) IPERTENSIONE=1; else IPERTENSIONE=0;
+										console.log("IPERTENSIONE:\n"+IPERTENSIONE);
+
+
+										var RISCHIO_TEV;
+										var radio_checked = document.getElementById('RischioTev').checked;
+										if(radio_checked) RISCHIO_TEV=1; else RISCHIO_TEV=0;
+										console.log("RISCHIO_TEV:\n"+RISCHIO_TEV);
+
+
+										var PATOLOGIA_CARDIACA;
+										var radio_checked = document.getElementById('PatologiaCardiaca').checked;
+										if(radio_checked) PATOLOGIA_CARDIACA=1; else PATOLOGIA_CARDIACA=0;
+										console.log("PATOLOGIA_CARDIACA:\n"+PATOLOGIA_CARDIACA);
+										
+
+										var PATOLOGIA_VASCOLARE;
+										var radio_checked = document.getElementById('PatologiaVascolare').checked;
+										if(radio_checked) PATOLOGIA_VASCOLARE=1; else PATOLOGIA_VASCOLARE=0;
+										console.log("PATOLOGIA_VASCOLARE:\n"+PATOLOGIA_VASCOLARE);
+
+
+										var INSUFFICIENZA_RENALE;
+										var radio_checked = document.getElementById('InsufficienzaRenale').checked;
+										if(radio_checked) INSUFFICIENZA_RENALE=1; else INSUFFICIENZA_RENALE=0;
+										console.log("INSUFFICIENZA_RENALE:\n"+INSUFFICIENZA_RENALE);
+
+
+										var PATOLOGIA_RESPIRATORIA;
+										var radio_checked = document.getElementById('PatologiaRespiratoria').checked;
+										if(radio_checked) PATOLOGIA_RESPIRATORIA=1; else PATOLOGIA_RESPIRATORIA=0;
+										console.log("PATOLOGIA_RESPIRATORIA:\n"+PATOLOGIA_RESPIRATORIA);
+
+
+										var PATOLOGIA_CAVO_ORALE_CHECKBOX;
+										var radio_checked = document.getElementById('PatologiaDelCavoOrale').checked;
+										if(radio_checked) PATOLOGIA_CAVO_ORALE_CHECKBOX=1; else PATOLOGIA_CAVO_ORALE_CHECKBOX=0;
+										console.log("PATOLOGIA_CAVO_ORALE_CHECKBOX:\n"+PATOLOGIA_CAVO_ORALE_CHECKBOX);
+
+
+										var PATOLOGIA_EPATICA;
+										var radio_checked = document.getElementById('PatologiaEpatica').checked;
+										if(radio_checked) PATOLOGIA_EPATICA=1; else PATOLOGIA_EPATICA=0;
+										console.log("PATOLOGIA_EPATICA:\n"+PATOLOGIA_EPATICA);
+
+
+										var PATOLOGIA_ESOFAGEA;
+										var radio_checked = document.getElementById('PatologiaEsofagea').checked;
+										if(radio_checked) PATOLOGIA_ESOFAGEA=1; else PATOLOGIA_ESOFAGEA=0;
+										console.log("PATOLOGIA_ESOFAGEA:\n"+PATOLOGIA_ESOFAGEA);
+
+
+										var GASTRO_DUODENITE;
+										var radio_checked = document.getElementById('Gastroduodenite').checked;
+										if(radio_checked) GASTRO_DUODENITE=1; else GASTRO_DUODENITE=0;
+										console.log("GASTRO_DUODENITE:\n"+GASTRO_DUODENITE);
+
+
+										var GASTRO_RESEZIONE;
+										var radio_checked = document.getElementById('Gastroresezione').checked;
+										if(radio_checked) GASTRO_RESEZIONE=1; else GASTRO_RESEZIONE=0;
+										console.log("GASTRO_RESEZIONE:\n"+GASTRO_RESEZIONE);
+
+
+										var RESEZIONE_INTESTINALE;
+										var radio_checked = document.getElementById('Resezioneintestinale').checked;
+										if(radio_checked) RESEZIONE_INTESTINALE=1; else RESEZIONE_INTESTINALE=0;
+										console.log("RESEZIONE_INTESTINALE:\n"+RESEZIONE_INTESTINALE);
+
+
+										var MICI;
+										var radio_checked = document.getElementById('mici').checked;
+										if(radio_checked) MICI=1; else MICI=0;
+										console.log("MICI:\n"+MICI);
+
+
+										var VITAMINA_D_CHECKBOX;
+										var radio_checked = document.getElementById('Ipovitaminosi').checked;
+										if(radio_checked) VITAMINA_D_CHECKBOX=1; else VITAMINA_D_CHECKBOX=0;
+										console.log("VITAMINA_D_CHECKBOX:\n"+VITAMINA_D_CHECKBOX);
+
+										var VITAMINA_D = document.getElementById('valore_ipovitaminosi').value;
+										console.log("VITAMINA_D:\n"+VITAMINA_D);
+
+
+
+										var ALTRE_PATOLOGIE;
+										var radio_altr_pat_checked = document.getElementById('AltroPatologie').checked;
+										if(radio_altr_pat_checked)
+										ALTRE_PATOLOGIE = document.getElementById('altro_patologie').value;
+										else
+										ALTRE_PATOLOGIE="NULL"
+										console.log("ALTRE_PATOLOGIE:\n"+ALTRE_PATOLOGIE);
+
+
+
+										var ALLERGIE_CHECKBOX;
+										var radio_allergie_checked = document.getElementById('Allergie').checked;
+										if(radio_allergie_checked) ALLERGIE_CHECKBOX=1; else ALLERGIE_CHECKBOX=0;
+										console.log("ALLERGIE_CHECKBOX:\n"+ALLERGIE_CHECKBOX);
+
+										var ALLERGIE;
+										if(radio_allergie_checked)
+										ALLERGIE = document.getElementById('allergie').value;
+										else
+										ALLERGIE="NULL"
+										console.log("ALLERGIE:\n"+ALLERGIE);
+
+
+
+
+										var INTOLLERANZE_CHECKBOX;
+										var radio_intolleranze_checked = document.getElementById('Intolleranza').checked;
+										if(radio_intolleranze_checked) INTOLLERANZE_CHECKBOX=1; else INTOLLERANZE_CHECKBOX=0;
+										console.log("INTOLLERANZE_CHECKBOX:\n"+INTOLLERANZE_CHECKBOX);
+
+										var INTOLLERANZE;
+										if(radio_intolleranze_checked)
+										INTOLLERANZE = document.getElementById('value_intolleranze').value;
+										else
+										INTOLLERANZE="NULL"
+										console.log("INTOLLERANZE:\n"+INTOLLERANZE);
+
+
+
+										var SITUAZIONE_COLONNA_CHECKBOX;
+										var radio_situaz_colonna_checked = document.getElementById('colonna_vertebrale').checked;
+										if(radio_situaz_colonna_checked) SITUAZIONE_COLONNA_CHECKBOX=1; else SITUAZIONE_COLONNA_CHECKBOX=0;
+										console.log("SITUAZIONE_COLONNA_CHECKBOX:\n"+SITUAZIONE_COLONNA_CHECKBOX);
+
+										var SITUAZIONE_COLONNA;
+										if(radio_situaz_colonna_checked)
+										SITUAZIONE_COLONNA = document.getElementById('situazione_colonna').value;
+										else
+										SITUAZIONE_COLONNA=""
+										console.log("SITUAZIONE_COLONNA:\n"+SITUAZIONE_COLONNA);
+
+
+
+										var SITUAZIONE_FEMORE_SN_CHECKBOX;
+										var radio_situaz_fem_sn_checked = document.getElementById('collo_femore_sn').checked;
+										if(radio_situaz_fem_sn_checked) SITUAZIONE_FEMORE_SN_CHECKBOX=1; else SITUAZIONE_FEMORE_SN_CHECKBOX=0;
+										console.log("SITUAZIONE_FEMORE_SN_CHECKBOX:\n"+SITUAZIONE_FEMORE_SN_CHECKBOX);
+
+										var SITUAZIONE_FEMORE_SN;
+										if(radio_situaz_fem_sn_checked)
+										SITUAZIONE_FEMORE_SN = document.getElementById('situazione_femore_sn').value;
+										else
+										SITUAZIONE_FEMORE_SN=""
+										console.log("SITUAZIONE_FEMORE_SN:\n"+SITUAZIONE_FEMORE_SN);
+
+
+
+										var SITUAZIONE_FEMORE_DX_CHECKBOX;
+										var radio_situaz_fem_dx_checked = document.getElementById('collo_femore_dx').checked;
+										if(radio_situaz_fem_dx_checked) SITUAZIONE_FEMORE_DX_CHECKBOX=1; else SITUAZIONE_FEMORE_DX_CHECKBOX=0;
+										console.log("SITUAZIONE_FEMORE_DX_CHECKBOX:\n"+SITUAZIONE_FEMORE_DX_CHECKBOX);
+
+										var SITUAZIONE_FEMORE_DX;
+										if(radio_situaz_fem_dx_checked)
+										SITUAZIONE_FEMORE_DX = document.getElementById('situazione_femore_dx').value;
+										else
+										SITUAZIONE_FEMORE_DX=""
+										console.log("SITUAZIONE_FEMORE_DX:\n"+SITUAZIONE_FEMORE_DX);
+
+
+
+										var OSTEOPOROSI_GRAVE;
+										var radio_checked = document.getElementById('OsteoporosiGrave').checked;
+										if(radio_checked) OSTEOPOROSI_GRAVE=1; else OSTEOPOROSI_GRAVE=0;
+										console.log("OSTEOPOROSI_GRAVE:\n"+OSTEOPOROSI_GRAVE);
+
+
+
+										var VERTEBRE_NON_ANALIZZATE_CHECKBOX;
+										var radio_checked = document.getElementById('ColonnaVertebraleParzialmenteNonAnalizzabile').checked;
+										if(radio_checked) VERTEBRE_NON_ANALIZZATE_CHECKBOX=1; else VERTEBRE_NON_ANALIZZATE_CHECKBOX=0;
+										console.log("VERTEBRE_NON_ANALIZZATE_CHECKBOX:\n"+VERTEBRE_NON_ANALIZZATE_CHECKBOX);
+
+										var VERTEBRE_NON_ANALIZZATE_L1;
+										var radio_checked = document.getElementById('Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L1').checked;
+										if(radio_checked) VERTEBRE_NON_ANALIZZATE_L1=1; else VERTEBRE_NON_ANALIZZATE_L1=0;
+										console.log("VERTEBRE_NON_ANALIZZATE_L1:\n"+VERTEBRE_NON_ANALIZZATE_L1);
+
+										var VERTEBRE_NON_ANALIZZATE_L2;
+										var radio_checked = document.getElementById('Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L2').checked;
+										if(radio_checked) VERTEBRE_NON_ANALIZZATE_L2=1; else VERTEBRE_NON_ANALIZZATE_L2=0;
+										console.log("VERTEBRE_NON_ANALIZZATE_L2:\n"+VERTEBRE_NON_ANALIZZATE_L2);
+										
+										var VERTEBRE_NON_ANALIZZATE_L3;
+										var radio_checked = document.getElementById('Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L3').checked;
+										if(radio_checked) VERTEBRE_NON_ANALIZZATE_L3=1; else VERTEBRE_NON_ANALIZZATE_L3=0;
+										console.log("VERTEBRE_NON_ANALIZZATE_L3:\n"+VERTEBRE_NON_ANALIZZATE_L3);
+										
+										var VERTEBRE_NON_ANALIZZATE_L4;
+										var radio_checked = document.getElementById('Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L4').checked;
+										if(radio_checked) VERTEBRE_NON_ANALIZZATE_L4=1; else VERTEBRE_NON_ANALIZZATE_L4=0;
+										console.log("VERTEBRE_NON_ANALIZZATE_L4:\n"+VERTEBRE_NON_ANALIZZATE_L4);
+
+
+
+										var COLONNA_NON_ANALIZZABILE;
+										var radio_checked = document.getElementById('colonnavertebralenonanalizzabile').checked;
+										if(radio_checked) COLONNA_NON_ANALIZZABILE=1; else COLONNA_NON_ANALIZZABILE=0;
+										console.log("COLONNA_NON_ANALIZZABILE:\n"+COLONNA_NON_ANALIZZABILE);
+
+
+
+										var COLONNA_VALORI_SUPERIORI;
+										var radio_checked = document.getElementById('radio_colonna_valori_sup').checked;
+										if(radio_checked) COLONNA_VALORI_SUPERIORI=1; else COLONNA_VALORI_SUPERIORI=0;
+										console.log("COLONNA_VALORI_SUPERIORI:\n"+COLONNA_VALORI_SUPERIORI);
+
+
+
+										var FEMORE_NON_ANALIZZABILE;
+										var radio_checked = document.getElementById('femore_non_analizzabile').checked;
+										if(radio_checked) FEMORE_NON_ANALIZZABILE=1; else FEMORE_NON_ANALIZZABILE=0;
+										console.log("FEMORE_NON_ANALIZZABILE:\n"+FEMORE_NON_ANALIZZABILE);
+
+
+
+										var FRAX_APPLICABILE;
+										var radio_frax_appl_checked = document.getElementById('Frax_applicabile').checked;
+										if(radio_frax_appl_checked) FRAX_APPLICABILE=1; else FRAX_APPLICABILE=0;
+										console.log("FRAX_APPLICABILE:\n"+FRAX_APPLICABILE);
+
+										var FRAX_FRATTURE_MAGGIORI_INTERO;
+										if(radio_frax_appl_checked)
+										FRAX_FRATTURE_MAGGIORI_INTERO = document.getElementById('frax').value;
+										else
+										FRAX_FRATTURE_MAGGIORI_INTERO=""
+										console.log("FRAX_FRATTURE_MAGGIORI_INTERO:\n"+FRAX_FRATTURE_MAGGIORI_INTERO);
+
+										var FRAX_COLLO_FEMORE_INTERO;
+										if(radio_frax_appl_checked)
+										FRAX_COLLO_FEMORE_INTERO = document.getElementById('frax_collo_femore').value;
+										else
+										FRAX_COLLO_FEMORE_INTERO="";
+										console.log("FRAX_COLLO_FEMORE_INTERO:\n"+FRAX_COLLO_FEMORE_INTERO);
+
+
+
+
+										var TBS_COLONNA_APPLICABILE;
+										var radio_frax_appl_checked = document.getElementById('tbs_colonna_applicabile').checked;
+										if(radio_frax_appl_checked) TBS_COLONNA_APPLICABILE=1; else TBS_COLONNA_APPLICABILE=0;
+										console.log("TBS_COLONNA_APPLICABILE:\n"+TBS_COLONNA_APPLICABILE);
+
+										var TBS_COLONNA_VALORE;
+										if(radio_frax_appl_checked)
+											TBS_COLONNA_VALORE = document.getElementById('tbs_colonna_valore').value;
+										else
+											TBS_COLONNA_VALORE="";
+										console.log("TBS_COLONNA_VALORE:\n"+TBS_COLONNA_VALORE);
+
+
+
+
+										var DEFRA_APPLICABILE;
+										var radio_frax_appl_checked = document.getElementById('defra_applicabile').checked;
+										if(radio_frax_appl_checked) DEFRA_APPLICABILE=1; else DEFRA_APPLICABILE=0;
+										console.log("DEFRA_APPLICABILE:\n"+DEFRA_APPLICABILE);
+										/*
+										bisogna capire cosa succede con questi defra=0
+										*/
+										var DEFRA_INTERO;
+										if(radio_frax_appl_checked)
+										{
+											DEFRA_INTERO = document.getElementById('defra_intero').value;
+											//perchè non ci sono "" nella colonna ma 0
+											if(DEFRA_INTERO.localeCompare("")==0)
+												DEFRA_INTERO=0;
+										}
+										else
+										DEFRA_INTERO="0";
+										console.log("DEFRA_INTERO:\n"+DEFRA_INTERO);
+
+
+
+
+										var ALTRO_CHECKBOX;
+										var radio_altro_checked = document.getElementById('Altro').checked;
+										if(radio_altro_checked) ALTRO_CHECKBOX=1; else ALTRO_CHECKBOX=0;
+										console.log("ALTRO_CHECKBOX:\n"+ALTRO_CHECKBOX);
+
+										var ALTRO;
+										if(radio_altro_checked)
+										{
+											ALTRO = document.getElementById('value_altro').value;
+											if(ALTRO.localeCompare("")==0)
+											//in teoria non dovrei mettere null ma lasciare "" (sistema dopo)
+												ALTRO="NULL";
+										}
+										else
+											ALTRO="NULL";
+										console.log("ALTRO:\n"+ALTRO);
+
+
+										var NORME_PREVENZIONE;
+										var radio_checked = document.getElementById('norme_prevenzione').checked;
+										if(radio_checked) NORME_PREVENZIONE=1; else NORME_PREVENZIONE=0;
+										console.log("NORME_PREVENZIONE:\n"+NORME_PREVENZIONE);
+
+
+										var NORME_COMPORTAMENTALI;
+										var radio_checked = document.getElementById('norme_comportamentali').checked;
+										if(radio_checked) NORME_COMPORTAMENTALI=1; else NORME_COMPORTAMENTALI=0;
+										console.log("NORME_COMPORTAMENTALI:\n"+NORME_COMPORTAMENTALI);
+
+
+										var ATTIVITA_FISICA;
+										var radio_checked = document.getElementById('attivita_fisica').checked;
+										if(radio_checked) ATTIVITA_FISICA=1; else ATTIVITA_FISICA=0;
+										console.log("ATTIVITA_FISICA:\n"+ATTIVITA_FISICA);
+
+
+
+
+										var SOSPENSIONE_TERAPIA_CHECKBOX;
+										var radio_altro_checked = document.getElementById('sospensione_terapia').checked;
+										if(radio_altro_checked) SOSPENSIONE_TERAPIA_CHECKBOX=1; else SOSPENSIONE_TERAPIA_CHECKBOX=0;
+										console.log("SOSPENSIONE_TERAPIA_CHECKBOX:\n"+SOSPENSIONE_TERAPIA_CHECKBOX);
+
+										var SOSPENSIONE_TERAPIA_FARMACO;
+										if(radio_altro_checked)
+										{
+											SOSPENSIONE_TERAPIA_FARMACO = document.getElementById('Farmaco').value;
+											if(SOSPENSIONE_TERAPIA_FARMACO.localeCompare("")==0)
+												SOSPENSIONE_TERAPIA_FARMACO="NULL";
+										}
+										else
+											SOSPENSIONE_TERAPIA_FARMACO="NULL";
+										console.log("SOSPENSIONE_TERAPIA_FARMACO:\n"+SOSPENSIONE_TERAPIA_FARMACO);
+
+
+
+										//from now on hardcoded
+
+										var INDAGINI_APPROFONDIMENTO_CHECKBOX = 0;
+										console.log("INDAGINI_APPROFONDIMENTO_CHECKBOX:\n"+INDAGINI_APPROFONDIMENTO_CHECKBOX);
+
+
+										var INDAGINI_APPROFONDIMENTO_LISTA = "NULL";
+										console.log("INDAGINI_APPROFONDIMENTO_LISTA:\n"+INDAGINI_APPROFONDIMENTO_LISTA);
+
+
+										var SOSPENSIONE_FUMO = 0;
+										console.log("SOSPENSIONE_FUMO:\n"+SOSPENSIONE_FUMO);
+
+
+										var CONTROLLO_DENSITOMETRICO_CHECKBOX = 0;
+										console.log("CONTROLLO_DENSITOMETRICO_CHECKBOX:\n"+CONTROLLO_DENSITOMETRICO_CHECKBOX);
+
+										var AGE = 62;
+										console.log("AGE:\n"+AGE);
+										
+										//until here
+
+										var TOT_Zscore =<?php echo $Zscore_Spine ?>;
+										console.log("TOT_Zscore:\n"+TOT_Zscore);
+
+										var TOT_Tscore =<?php echo $Tscore_Spine ?>;
+										console.log("TOT_Tscore:\n"+TOT_Tscore);
+
+										var s = AGE + "mmmm" +SEX + "mmmm" +STATO_MENOPAUSALE+ "mmmm" +ULTIMA_MESTRUAZIONE+ "mmmm" +TERAPIA_STATO+ "mmmm" +TERAPIA_OSTEOPROTETTIVA_ORMONALE+ "mmmm" +TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA+ "mmmm" +TERAPIA_OSTEOPROTETTIVA_SPECIFICA+ "mmmm" +TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA+ "mmmm"+ VITAMINA_D_TERAPIA_OSTEOPROTETTIVA+"mmmm"+ VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA+"mmmm"+TERAPIA_ALTRO_CHECKBOX+"mmmm"+TERAPIA_ALTRO+"mmmm"+TERAPIA_COMPLIANCE+"mmmm"+BMI+"mmmm"+FRATTURE+"mmmm"+FRATTURA_VERTEBRE+"mmmm"+FRATTURA_FEMORE+"mmmm"+FRATTURA_SITI_DIVERSI+"mmmm"+FRATTURA_FAMILIARITA+"mmmm"+ABUSO_FUMO_CHECKBOX+"mmmm"+ABUSO_FUMO+"mmmm"+USO_CORTISONE_CHECKBOX+"mmmm"+USO_CORTISONE+"mmmm"+MALATTIE_ATTUALI_CHECKBOX+"mmmm"+MALATTIE_ATTUALI_ARTRITE_REUM+"mmmm"+MALATTIE_ATTUALI_ARTRITE_PSOR+"mmmm"+MALATTIE_ATTUALI_LUPUS+"mmmm"+MALATTIE_ATTUALI_SCLERODERMIA+"mmmm"+MALATTIE_ATTUALI_ALTRE_CONNETTIVITI+"mmmm"+CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX+"mmmm"+CAUSE_OSTEOPOROSI_SECONDARIA+"mmmm"+PATOLOGIE_UTERINE_CHECKBOX+"mmmm"+PATOLOGIE_UTERINE_DIAGNOSI+"mmmm"+NEOPLASIA_CHECKBOX+"mmmm"+NEOPLASIA_MAMMARIA_TERAPIA+"mmmm"+SINTOMI_VASOMOTORI+"mmmm"+SINTOMI_DISTROFICI+"mmmm"+DISLIPIDEMIA_CHECKBOX+"mmmm"+DISLIPIDEMIA_TERAPIA+"mmmm"+IPERTENSIONE+"mmmm"+RISCHIO_TEV+"mmmm"+PATOLOGIA_CARDIACA+"mmmm"+PATOLOGIA_VASCOLARE+"mmmm"+INSUFFICIENZA_RENALE+"mmmm"+PATOLOGIA_RESPIRATORIA+"mmmm"+PATOLOGIA_CAVO_ORALE_CHECKBOX+"mmmm"+PATOLOGIA_EPATICA+"mmmm"+PATOLOGIA_ESOFAGEA+"mmmm"+GASTRO_DUODENITE+"mmmm"+GASTRO_RESEZIONE+"mmmm"+RESEZIONE_INTESTINALE+"mmmm"+MICI+"mmmm"+VITAMINA_D_CHECKBOX+"mmmm"+VITAMINA_D+"mmmm"+ALTRE_PATOLOGIE+"mmmm"+ALLERGIE_CHECKBOX+"mmmm"+ALLERGIE+"mmmm"+INTOLLERANZE_CHECKBOX+"mmmm"+INTOLLERANZE+"mmmm"+SITUAZIONE_COLONNA_CHECKBOX+"mmmm"+SITUAZIONE_COLONNA+"mmmm"+SITUAZIONE_FEMORE_SN_CHECKBOX+"mmmm"+SITUAZIONE_FEMORE_SN+"mmmm"+SITUAZIONE_FEMORE_DX_CHECKBOX+"mmmm"+SITUAZIONE_FEMORE_DX+"mmmm"+OSTEOPOROSI_GRAVE+"mmmm"+VERTEBRE_NON_ANALIZZATE_CHECKBOX+"mmmm"+VERTEBRE_NON_ANALIZZATE_L1+"mmmm"+VERTEBRE_NON_ANALIZZATE_L2+"mmmm"+VERTEBRE_NON_ANALIZZATE_L3+"mmmm"+VERTEBRE_NON_ANALIZZATE_L4+"mmmm"+COLONNA_NON_ANALIZZABILE+"mmmm"+COLONNA_VALORI_SUPERIORI+"mmmm"+FEMORE_NON_ANALIZZABILE+"mmmm"+FRAX_APPLICABILE+"mmmm"+FRAX_FRATTURE_MAGGIORI_INTERO+"mmmm"+FRAX_COLLO_FEMORE_INTERO+"mmmm"+TBS_COLONNA_APPLICABILE+"mmmm"+TBS_COLONNA_VALORE+"mmmm"+DEFRA_APPLICABILE+"mmmm"+DEFRA_INTERO+"mmmm"+NORME_PREVENZIONE+"mmmm"+ALTRO_CHECKBOX+"mmmm"+ALTRO+"mmmm"+NORME_COMPORTAMENTALI+"mmmm"+ATTIVITA_FISICA+"mmmm"+SOSPENSIONE_TERAPIA_CHECKBOX+"mmmm"+SOSPENSIONE_TERAPIA_FARMACO+"mmmm"+INDAGINI_APPROFONDIMENTO_CHECKBOX+"mmmm"+INDAGINI_APPROFONDIMENTO_LISTA+"mmmm"+SOSPENSIONE_FUMO+"mmmm"+CONTROLLO_DENSITOMETRICO_CHECKBOX+"mmmm"+TOT_Tscore+"mmmm"+TOT_Zscore;
+										console.log(s);
+
+
+
+
+
+										var xmlhttp = new XMLHttpRequest();
+										xmlhttp.open("POST", "gethint.php", true);
+										xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+										xmlhttp.onreadystatechange = function() {
+											if (this.readyState == 4 && this.status == 200) {
+												document.getElementById("txtHint").innerHTML = this.responseText;
+											}
+										};
+
+										xmlhttp.send("q=ff");
+
+
+										
+                                    }
+
+									function mettaf()
+									{
+										/*var datastring = $("#myForm2").serialize();
+										$.ajax({
+											type: "POST",
+											url: "gethint.php",
+											data: datastring,
+											dataType: "json",
+											success: function(data) {
+												//var obj = jQuery.parseJSON(data); if the dataType is not specified as json uncomment this
+												// do what ever you want with the server response
+												console.log(data);
+											},
+											error: function() {
+												alert('error handling here');
+											}
+										});*/
+
+										/*var xmlhttp = new XMLHttpRequest();
+										xmlhttp.open("POST", "filenon.php", true);
+										xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+										var datastring = $("#myForm2").serialize();
+
+										xmlhttp.onreadystatechange = function() {
+											if (this.readyState == 4 && this.status == 200) {
+												console.log( this.responseText);
+											}
+										};
+
+										xmlhttp.send("datastring");*/
+
+
+
+
+										/*var xmlhttp = new XMLHttpRequest();
+										var datastring = $("#myForm2").serialize();
+										//console.log(datastring);
+
+										xmlhttp.open("GET", "gethint.php?q="+datastring, true);
+										//xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+										xmlhttp.onreadystatechange = function() {
+											if (this.readyState == 4 && this.status == 200) {
+												document.getElementById("txtHint").innerHTML = this.responseText;
+											}
+										};
+
+										xmlhttp.send();*/
+
+
+										var xmlhttp = new XMLHttpRequest();
+										var datastring = $("#myForm2").serialize();
+										//console.log(datastring);
+
+										xmlhttp.open("POST", "backend_frontend/filenon.php", true);
+										xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+										xmlhttp.onreadystatechange = function() {
+											if (this.readyState == 4 && this.status == 200) {
+												document.getElementById("txtHint").innerHTML = this.responseText;
+											}
+										};
+
+										xmlhttp.send(datastring);
+
+
+
+									}
+
+
+
+                                    </script>
+
+									<form>
+									<input type="button" value = "get sugg." name="SubmitButton" onclick = "stickyheaddsadaer()"/>
+									<input type="button" value = "GOMETTA" name="MRTTA" onclick = "mettaf()"/>
+
+									</form>
+									<p>Suggestions: <span id="txtHint"></span></p>
+
+									---*
+									<?php
+									
+										/*$command = escapeshellcmd('java -jar /home/kkk/IdeaProjects/OsteoporosiJava/out/artifacts/OsteoporosiJava_jar/OsteoporosiJava.jar nnnn uiuiui');
+										$output = shell_exec($command);
+										echo ": ".$output;*/
+
+										/*ob_start();
+										passthru('.python2.7 main.py 2>&1');
+										$output = ob_get_clean();
+										echo ": ".$output;
+										
+										$command = 'python2.7 main.py 2>&1';
+
+										echo exec($command, $out, $status);
+										echo ": ".$out;
+
+										
+										$last_line = system('./main.py 2>&1', $retval);
+										echo "<br>";
+										echo $retval;
+										echo $last_line;
+
+										echo "<br>";
+										$command = escapeshellcmd('pwd');
+										$output = shell_exec($command);
+										echo ": ".$output;*/
+									?>
+
+
+
+									<br/>
 									<div class="row">
 										<div class="col-sm-3">
 				          					<div class="input-group">
@@ -4807,6 +5798,7 @@
 				            					<select class="form-control" name="TipoTerapiaOrmonale" id="TipoTerapiaOrmonale">
 				            						<option value="">Tipo</option>
 				            						<?php
+                                                    ///qui contiene solo la query
 				            						$ormonale = "SELECT NOME FROM GestioneInterna WHERE TIPO='Orm.Sost./C.O.'";
 				            						$res = mysqli_query($mysqli,$ormonale);
 				            						while($row = mysqli_fetch_assoc($res)){
@@ -5725,10 +6717,10 @@
 			          						<div style="width:95rem">
 				          						<div class="input-group">
 				          							<span class="input-group-addon">
-			            								<input type="checkbox" id="Altro" name="Altro" <?php if($altro_check == 1) echo "checked='checked'" ?>/>
+			            								<input type="checkbox" id="Altro" onchange="stickyheaddsadaer()" name="Altro" <?php if($altro_check == 1) echo "checked='checked'" ?>/>
 				            						</span>
 				            						<span class="input-group-addon">Altro</span>
-				            						<input type="text" class="form-control" id="value_altro" name="value_altro" placeholder="Altro" value="<?php if($altro != 'NULL') echo $altro ?>" disabled>
+				            						<input type="text" class="form-control" id="value_altro" onchange="stickyheaddsadaer()" name="value_altro" placeholder="Altro" value="<?php if($altro != 'NULL') echo $altro ?>" disabled>
 				            						
 				            					</div>
 				            				</div>
@@ -5742,7 +6734,7 @@
 			        						<div style="width:95rem">
 				        						<div class="input-group">
 			                  						<span class="input-group-addon">
-			                    						<input type="checkbox" id="norme_prevenzione" name="norme_prevenzione" <?php if($norme_prevenzione == 1) echo "checked='checked'" ?>/>
+			                    						<input type="checkbox" id="norme_prevenzione" onchange="stickyheaddsadaer()" name="norme_prevenzione" <?php if($norme_prevenzione == 1) echo "checked='checked'" ?>/>
 			                  						</span>
 			                  						<!--<input type="text" class="form-control" value="Norme comportamentali" readonly>-->
 			                  						<input type="text" class="form-control" value="Norme di prevenzione"  readonly>
@@ -5758,7 +6750,7 @@
 			        						<div style="width:95rem">
 				        						<div class="input-group">
 			                  						<span class="input-group-addon">
-			                    						<input type="checkbox" id="norme_comportamentali" name="norme_comportamentali" <?php if($norme_comportamentali == 1) echo "checked='checked'"; ?>/>
+			                    						<input type="checkbox" id="norme_comportamentali" onchange="stickyheaddsadaer()" name="norme_comportamentali" <?php if($norme_comportamentali == 1) echo "checked='checked'"; ?>/>
 			                  						</span>
 			                  						<!--<input type="text" class="form-control" value="Norme comportamentali" readonly>-->
 			                  						<span class="form-control" readonly>Norme comportamentali</span>
@@ -5772,7 +6764,7 @@
 		                					<div style="width:95rem">
 			                					<div class="input-group">
 			                  						<span class="input-group-addon">
-			                    						<input type="checkbox" id="attivita_fisica" name="attivita_fisica" <?php if($attivita_fisica == 1) echo "checked='checked'" ?>/>
+			                    						<input type="checkbox" id="attivita_fisica" onchange="stickyheaddsadaer()" name="attivita_fisica" <?php if($attivita_fisica == 1) echo "checked='checked'" ?>/>
 			                  						</span>
 			                  						<!--<input type="text" class="form-control" value="Norme comportamentali" readonly>-->
 			                  						<span class="form-control" readonly>Attività fisica</span>
@@ -5786,10 +6778,10 @@
 		                					<div style="width:95rem">
 		                					<div class="input-group">
 			            						<span class="input-group-addon">
-			            							<input type="checkbox" id="sospensione_terapia" name="sospensione_terapia" <?php if($sospensione_terapia_check == 1) echo "checked='checked'"  ?>/>
+			            							<input type="checkbox" id="sospensione_terapia" onchange="stickyheaddsadaer()" name="sospensione_terapia" <?php if($sospensione_terapia_check == 1) echo "checked='checked'"  ?>/>
 			            						</span>
 				            					<span class="input-group-addon">Sospensione temporanea della terapia in corso con</span>
-				            					<input type="text" class="form-control" id="Farmaco" name="Farmaco" placeholder="Farmaco" value="<?php if($sospensione_terapia_farmaco != 'NULL') echo $sospensione_terapia_farmaco  ?>"  disabled>
+				            					<input type="text" class="form-control" id="Farmaco" onchange="stickyheaddsadaer()" name="Farmaco" placeholder="Farmaco" value="<?php if($sospensione_terapia_farmaco != 'NULL') echo $sospensione_terapia_farmaco  ?>"  disabled>
 				            					<span class="input-group-addon">per</span>
 				            					<input type="text" class="form-control" id="Mesi" name="Mesi" placeholder="Mesi" value="<?php if($sospensione_terapia_mesi != 'NULL') echo $sospensione_terapia_mesi  ?>" disabled>
 				            				</div>
@@ -7417,6 +8409,29 @@
 		</div><!-- chiude il container-->
 
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
 
     
     		<!-- CODICE JAVASCRIPT PER IL CAMBIO DINAMICO DI PATOLOGIA DEL CAVO ORALE-->
