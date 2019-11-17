@@ -10,6 +10,7 @@ import weka.core.Instance;
 import weka.core.converters.ArffLoader;
 import weka.core.converters.ArffSaver;
 import weka.core.converters.CSVLoader;
+import weka.core.converters.CSVSaver;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.StratifiedRemoveFolds;
 import weka.filters.unsupervised.attribute.NumericToNominal;
@@ -52,12 +53,11 @@ public class Main {
     {
         //System.out.println(args[0]);
 
-        //String className = "1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX";
+        String className = "1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX";
         //String className= "1 TERAPIE_ORMONALI_CHECKBOX";
         //String className="1 VITAMINA_D_TERAPIA_CHECKBOX" ;
         //String className="1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX" ;
-        String className = "1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX";
-
+        //String className = "1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX";
 
         String[] tmp = {
                 "1 TERAPIA_OSTEOPROTETTIVA_ORMONALE",
@@ -130,7 +130,7 @@ public class Main {
         Collections.addAll(nomiColDaTrasInNominal,tmp);
 
         CSVLoader loader = new CSVLoader();
-        loader.setFile(new File("/home/kkk/PycharmProjects/OstPy/perwekacsv.csv"));
+        loader.setFile(new File("/home/dadawg/PycharmProjects/untitled1/perwekacsv.csv"));
         Instances data = loader.getDataSet();
         //System.out.println(data);
         data.setClassIndex(data.numAttributes()-1);
@@ -152,21 +152,21 @@ public class Main {
         filter.setInputFormat(data);
         data = Filter.useFilter(data,filter);
 
-
-
-
-
         filter = new StratifiedRemoveFolds();
         filter.setOptions(new String[]{"-S", "0", "-N", "4", "-F", "1"});
         filter.setInputFormat(data);
-        Instances test =  Filter.useFilter(data,filter);
+        Instances test =  Filter.useFilter(data, filter);
 
         filter.setOptions(new String[]{"-S", "0", "-V", "-N", "4", "-F", "1"});
         filter.setInputFormat(data);
-        Instances train =  Filter.useFilter(data,filter);
+        Instances train = Filter.useFilter(data, filter);
 
+        CSVSaver saver = new CSVSaver();
+        saver.setInstances(test);
+        saver.setFile(new File("/home/dadawg/PycharmProjects/untitled1/perpython.csv"));
+        saver.writeBatch();
 
-        ArffSaver saver = new ArffSaver();
+        /*ArffSaver saver = new ArffSaver();
         saver.setInstances(test);
         saver.setFile(new File("test.arff"));
         saver.writeBatch();
@@ -174,31 +174,36 @@ public class Main {
         saver = new ArffSaver();
         saver.setInstances(train);
         saver.setFile(new File("train.arff"));
-        saver.writeBatch();
+        saver.writeBatch();*/
 
         PART cls = new PART();
         cls.buildClassifier(train);
 
         Evaluation evl = new Evaluation(train);
         evl.evaluateModel(cls,test);
-        System.out.println(evl.toSummaryString());
+        //System.out.println(evl.toSummaryString());
 
         //System.out.println(cls);
 
         Rules rules = new Rules(cls);
         String not_refined = rules.toString();
-        //System.out.println(not_refined);
+        System.out.println(not_refined);
         System.out.println(rules.getAccuracy(test));
         rules.refineRules(train.numInstances(),0.8,0.1);
         System.out.println(rules.getAccuracy(test));
         String refined_rules = rules.toString();
+        //System.out.println(refined_rules);
 
 
-        String qry = String.format("update regole set regola_refined = '%s', regola_not_refined = '%s' where terapia = 'TERAPIE_OSTEOPROTETTIVE_CHECKBOX'",refined_rules,not_refined);
+        //String qry = String.format("update regole set regola_refined = '%s', regola_not_refined = '%s' where terapia = 'TERAPIE_OSTEOPROTETTIVE_CHECKBOX'",refined_rules,not_refined);
+        String qry = String.format("replace into regole values('%s','%s','%s')",className,refined_rules,not_refined);
         //System.out.println(qry);
+
 
         Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO","utente_web","CMOREL96T45");
         Statement myStmt = myConn.createStatement();
+        myStmt.executeUpdate( "create table if not exists regole(terapia VARCHAR(256) PRIMARY KEY, regola_refined VARCHAR(20000), regola_not_refined VARCHAR(20000))");
+
         myStmt.executeUpdate(qry);
 
 
