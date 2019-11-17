@@ -27,14 +27,13 @@ import mysql.connector
 
 def main():
 
-
-    class_name = '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX'
+    #class_name = '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX'
     #class_name = '1 TERAPIE_ORMONALI_CHECKBOX'
     #class_name ='1 VITAMINA_D_TERAPIA_CHECKBOX'
-    #class_name ='1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX'
+    class_name ='1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX'
     #class_name = '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX'
 
-    #preprocessa_per_java(class_name)
+    preprocessa_per_java(class_name)
 
     '''
     preprocessa_per_java()
@@ -64,8 +63,10 @@ def main():
     result = db_connection.execute(t).fetchone()
     reg = result['regola_refined']
 
-    rules = estrai_regole(reg)
+    rules = Regole(reg)
+    #print(rules)
 
+    # ATTENZIONE: this is not a random testset, it's a stratified one, base on a particular class
     test = pd.read_csv('perpython.csv')
     test.replace('?', np.nan, inplace=True)
 
@@ -77,15 +78,13 @@ def main():
 
 # altri main()
 def preprocessa_per_java(class_name):
-
-
     tabella_completa = pd.read_csv("osteo.csv")
 
     tabella_preprocessata = preprocessamento_nuovo(tabella_completa, class_name)
 
     # tabella_preprocessata.dropna(subset = [class_name], inplace = True)
 
-    tabella_preprocessata.to_csv('perwekacsv.csv', index=False)
+    tabella_preprocessata.to_csv('{}.csv'.format(class_name), index=False)
 def secondo_script():
     '''
     fare il preprocessing in base al dominio della colonna. cioè se è stringa lunga allora vettorizzo, se sono pochi valor
@@ -180,7 +179,7 @@ def estrai_regole(classifier):
         match_obj_operando1 = re.search(r'^.+(?=\s(=|<|>|<=|>=)\s)', line)
 
         # se match_obj_operando1 è None, ci sono due possibilità:
-        # 1) riga vuota (non c'è il nome della colonna)
+        # 1) riga vuota (non c'è il nome della colonna) (finita una regola)
         # 2) l'ultima regola della lista del tipo: ': 0 (2.0)' (non c'è il nome della colonna)
         if match_obj_operando1 is None:
             # caso 2) if vero solo 1 volta, all'ultima riga
@@ -258,6 +257,9 @@ def estrai_regole(classifier):
 
     regole = Regole(regole_list)
     return regole
+
+
+
 def preprocessamento_nuovo(tabella_completa, class_name):
     def one_hot_encode(frame, column_name, regex, prefix):
         '''
@@ -769,14 +771,16 @@ def accuracy_rules3(test_X, test_Y, regole):
         istance_X = test_X.iloc[row_index, :]
         true_Y = test_Y.values[row_index]
         predicted_Y = regole.predict(istance_X)
-        # qui perchè il dato mi viene salvato in byte
-        '''strtt = str(true_Y)
-        strtt = re.search(r'\d', strtt)
-        strtt = strtt.group(0)'''
-        if str(predicted_Y) == str(true_Y):
-            predicted_right += 1
 
-    return predicted_right / num_instances
+        if predicted_Y is None:
+            doesnt_know += 1
+
+        else:
+            does_know += 1
+            if str(predicted_Y) == str(true_Y):
+                predicted_right += 1
+
+    return predicted_right/does_know, doesnt_know/num_instances
 
 
 # classi
@@ -800,7 +804,6 @@ class Proposizione:
         self.nome_variabile_operando1 = nome_variabile_operando1
         self.valore_costante_operando2 = valore_costante_operando2
 
-
     def valuta(self, istanza):
         def is_number(s):
             try:
@@ -822,7 +825,7 @@ class Proposizione:
             a=istanza[self.nome_variabile_operando1]
 
         b = self.valore_costante_operando2
-
+        c = self.operatore
         if pd.isna(a):
             return False
 
@@ -838,10 +841,13 @@ class Proposizione:
             a = str(a)
             b = str(b)
 
+        if c == '=':
+            c = '=='
+
 
         # vado nella colonna con il nome 'nome_variabile_operando1' e controllo se la condizione vale
-        s = a+self.operatore+b
-        if eval(s)==True:
+        s = a+c+b
+        if eval(s) == True:
             return True
         else:
             return False
@@ -859,13 +865,17 @@ class Regola:
     Ogni regola ha anche una predizione (intero), cioè la predizione della classe se la regola è vera
     Ogni regola ha 'm' e 'n' che rappresenta la precisione di ogni regola ((m/n))
     '''
-    proposizioni = []
 
-    def __init__(self, predizione, proposizioni, m, n):
-        self.predizione = predizione
-        self.proposizioni = proposizioni
-        self.m = float(m)
-        self.n = float(n)
+    def __init__(self):
+        self.m = None
+        self.n = None
+        self.prediction = None
+        self.propositions = None
+
+    def add_proposision(self, prop):
+        if self.propositions == None:
+            self.propositions = []
+        self.propositions.append(prop)
 
     # todo fare i commetni
     def valuta(self, istanza):
@@ -874,38 +884,39 @@ class Regola:
         '''
         # TODO: non sembra molto chiaro
         # caso particore di una regola sempre vera
-        if isinstance(self.proposizioni, bool):
+        if self.propositions is None:
             return True
         # una regola per essere vera, deve avere tutte le sue proposizioni vere
-        for prop in self.proposizioni:
+        for prop in self.propositions:
             # se almeno una prop. è falsa, tutta la regola è falsa
             if prop.valuta(istanza) == False:
                 return False
         return True
 
     def __str__(self):
-        if isinstance(self.proposizioni, list):
+        if self.propositions is not None:
             output = ""
-            for prop in self.proposizioni:
-                if prop != self.proposizioni[-1]:
+            for prop in self.propositions:
+                if prop != self.propositions[-1]:
                     output += str(prop) + " AND\n"
                 else:
-                    output += str(prop) + ": " + self.predizione + " (" + str(self.m) + "/" + str(self.n) + ")"
+                    output += str(prop) + ": " + self.prediction + " (" + str(self.m) + "/" + str(self.n) + ")"
                     return output
         else:
-            return ": " + self.predizione + " (" + str(self.m) + "/" + str(self.n) + ")"
+            return ": " + self.prediction + " (" + str(self.m) + "/" + str(self.n) + ")"
 class Regole:
     '''
     Semplicemente una lista di 'Regola'
     Usato per prevedere una classe data un istanza
     '''
 
-    def __init__(self, regole):
+    def __init__(self, string_rules):
         '''
         ATTENZIONE: è importante l'ordine delle regole. La lista di decisione di PART va interpretata dall'altro
         verso il basso
         '''
-        self.regole = regole
+        list_rules = self.extract_rules(string_rules)
+        self.regole = list_rules
 
     def __str__(self):
         output = ''
@@ -938,11 +949,57 @@ class Regole:
         Se una regola è vera, ritorno la predizione di quella regola
         '''
         for r in self.regole:
-            # penso che non ci sia bisogno dell'else perchè ce l'ultima regola che è sempre vera
+            # non ce bisogno dell'else perchè ce l'ultima regola che è sempre vera (nel caso di not refined)
             if r.valuta(istanza) == True:
-                return r.predizione
+                return r.prediction
 
+        # questo è stato aggiunto in seguito perchè le regole nor refined potrebbero non avere un else...
+        # so then i return null which means 'i dont know'
         return None
+
+    def add_rule(self,rule):
+        self.regole.append(rule)
+
+    def extract_rules(self, string_rules):
+        '''
+        funziona con refined come non refined
+        :param string_rules:
+        :return:
+        '''
+        rules = []
+        for rule in string_rules.split('\n\n'):
+            r = Regola()
+            for prop in rule.split('\n'):
+
+                match_obj_operand1 = re.search(r'^.+(?=\s(=|<|>|<=|>=)\s)', prop)
+
+                # generic case
+                if match_obj_operand1 is not None:
+                    operand1 = match_obj_operand1.group(0)
+                    operator = re.search(r'(?<=\s)(<=|>=|=|<|>)(?=\s)', prop).group(0)
+                    operand2 = re.search(r'(?<=\s)[a-z\sA-Z0-9.,+-]+((?=\sAND$)|(?=:))', prop).group(0)
+                    p = Proposizione(operator,operand1,operand2)
+                    r.add_proposision(p)
+
+                match_obj_mn = re.search(r'(?<=\s)[(].*[)]$', prop)
+                if match_obj_mn is not None:
+                    # contiene solo la strunga di tipo (m/n) oppure (m)
+                    mn = match_obj_mn.group(0)
+                    # nell prima posizione m, e nella seconda n
+                    mn = re.findall(r'(?:\d+(?:[.]\d+)?)', mn)
+                    m = mn[0]
+                    n = mn[1]
+
+                    prediction = re.search(r'(?<=:\s)\d(?=\s\()', prop).group(0)
+                    r.prediction = prediction
+                    r.m = float(m)
+                    r.n = float(n)
+
+                    rules.append(r)
+        return rules
+
+
+
 
 # funzioni antiche
 def print_feature_importances(model, X):
