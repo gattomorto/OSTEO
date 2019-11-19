@@ -14,50 +14,37 @@ import weka.core.converters.CSVSaver;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.StratifiedRemoveFolds;
 import weka.filters.unsupervised.attribute.NumericToNominal;
+import weka.filters.unsupervised.attribute.Remove;
+
 import javax.swing.*;
 import javax.swing.text.html.HTMLDocument;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.sql.*;
-
+//todo le regole non devono avere apostrofi perchè non piace a mysql
 public class Main {
 
     public static void main(String[] args) throws Exception
     {
-        /*Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO","utente_web","CMOREL96T45");
-        Statement myStmt = myConn.createStatement();
-
-        ResultSet myRs = myStmt.executeQuery("select * from GestioneInterna");
-        while(myRs.next())
-        {
-            System.out.println(myRs.getString("TIPO"));//CMOREL96T45
-        }*/
-
-
-         //Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO","utente_web","CMOREL96T45");
-        // Statement myStmt = myConn.createStatement();
-
-         //myStmt.executeUpdate( "create table if not exists regole( id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, terapia VARCHAR(256) NOT NULL UNIQUE, regola_refined VARCHAR(1024), regola_not_refined VARCHAR(1024))");
-
-         //myStmt.executeUpdate("insert into regole (terapia,regola_refined, regola_not_refined) values ('TERAPIE_OSTEOPROTETTIVE_CHECKBOX','a','b' )");
-         //myStmt.executeUpdate("update regole set regola_refined = 'nnn', regola_not_refined = 'lll' where terapia = 'TERAPIE_OSTEOPROTETTIVE_CHECKBOX'");
-
         vecchiomain();
 
+
     }
+
+
+
 
     static private void vecchiomain() throws Exception
     {
         //System.out.println(args[0]);
 
-        String className = "1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX";
-        //String className= "1 TERAPIE_ORMONALI_CHECKBOX";
-        //String className="1 VITAMINA_D_TERAPIA_CHECKBOX" ;
-        //String className="1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX" ;
-        //String className = "1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX";
+        //String className = "1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX";
+        //String className = "1 TERAPIE_ORMONALI_CHECKBOX";
+        //String className = "1 VITAMINA_D_TERAPIA_CHECKBOX";
+        //String className = "1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX";
+        String className = "1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX";
 
         String[] tmp = {
                 "1 TERAPIA_OSTEOPROTETTIVA_ORMONALE",
@@ -130,7 +117,7 @@ public class Main {
         Collections.addAll(nomiColDaTrasInNominal,tmp);
 
         CSVLoader loader = new CSVLoader();
-        loader.setFile(new File("/home/dadawg/PycharmProjects/untitled1/perwekacsv.csv"));
+        loader.setFile(new File(String.format("/home/dadawg/PycharmProjects/untitled1/%s.csv",className)));
         Instances data = loader.getDataSet();
         //System.out.println(data);
         data.setClassIndex(data.numAttributes()-1);
@@ -166,6 +153,18 @@ public class Main {
         saver.setFile(new File("/home/dadawg/PycharmProjects/untitled1/perpython.csv"));
         saver.writeBatch();
 
+
+        //questa parte è per la storia che devo recuperare le colonne con il testo su python sul test set
+        //lo faccio usando pk.. allora salvo il test set e poi la rimuovo subito
+        filter = new Remove();
+        ((Remove)filter).setAttributeIndicesArray(new int[] {data.attribute("1 PATIENT_KEY").index()});
+        filter.setInputFormat(train);
+        train = Filter.useFilter(train,filter);
+        filter.setInputFormat(test);
+        test = Filter.useFilter(test,filter);
+
+
+
         /*ArffSaver saver = new ArffSaver();
         saver.setInstances(test);
         saver.setFile(new File("test.arff"));
@@ -187,26 +186,50 @@ public class Main {
 
         Rules rules = new Rules(cls);
         String not_refined = rules.toString();
-        System.out.println(not_refined);
-        System.out.println(rules.getAccuracy(test));
-        rules.refineRules(train.numInstances(),0.8,0.1);
-        System.out.println(rules.getAccuracy(test));
+        rules.generateUserReadableRules(getColNameToNgram());
+        String user_readable_rules = rules.toString();
+        //System.out.println(not_refined);
+        //System.out.println(rules.getAccuracy(test));
+        //rules.refineRules(train.numInstances(),0.8,0.1);
+        //System.out.println(rules.getAccuracy(test));
         String refined_rules = rules.toString();
         //System.out.println(refined_rules);
 
-
         //String qry = String.format("update regole set regola_refined = '%s', regola_not_refined = '%s' where terapia = 'TERAPIE_OSTEOPROTETTIVE_CHECKBOX'",refined_rules,not_refined);
-        String qry = String.format("replace into regole values('%s','%s','%s')",className,refined_rules,not_refined);
+        String qry = String.format("replace into regole values('%s','%s','%s', '%s')",className,refined_rules,not_refined,user_readable_rules);
         //System.out.println(qry);
 
 
         Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO","utente_web","CMOREL96T45");
         Statement myStmt = myConn.createStatement();
-        myStmt.executeUpdate( "create table if not exists regole(terapia VARCHAR(256) PRIMARY KEY, regola_refined VARCHAR(20000), regola_not_refined VARCHAR(20000))");
+        myStmt.executeUpdate( "create table if not exists regole (terapia VARCHAR(256) PRIMARY KEY, regola_refined VARCHAR(20000), regola_not_refined VARCHAR(20000), user_readable_not_ref VARCHAR(20000))");
 
         myStmt.executeUpdate(qry);
 
 
+    }
+
+    public static Map<String,String> getColNameToNgram() throws IOException
+    {
+        BufferedReader bf = new BufferedReader(new FileReader("/home/dadawg/PycharmProjects/untitled1/colnametongram.txt"));
+        String pyDic = bf.readLine();
+        String[] keyVals = pyDic.split(",");
+        //System.out.println(keyVals);
+        Map<String,String> colnameToNgram = new HashMap<>();
+        Pattern keyValueRegex = Pattern.compile("(?<=')[a-zA-Z0-9\\s_áéíóúàèìòùàèìòù]+(?=')");
+        Matcher matcher;
+        for (String keyVal : keyVals)
+        {
+            matcher = keyValueRegex.matcher(keyVal);
+            matcher.find();
+            String key = matcher.group();
+            matcher.find();
+            String value = matcher.group();
+            //System.out.println(key+": "+value);
+            colnameToNgram.put(key,value);
+
+        }
+        return colnameToNgram;
     }
 }
 
@@ -290,6 +313,30 @@ class Proposizione
     @Override
     public String toString() {
         return operando1+" "+this.operatore+" "+this.operando2;
+    }
+
+    public String getOperando1() {
+        return operando1;
+    }
+
+    public String getOperando2() {
+        return operando2;
+    }
+
+    public String getOperatore() {
+        return operatore;
+    }
+
+    public void setOperando2(String operando2) {
+        this.operando2 = operando2;
+    }
+
+    public void setOperatore(String operatore) {
+        this.operatore = operatore;
+    }
+
+    public void setOperando1(String operando1) {
+        this.operando1 = operando1;
     }
 }
 
@@ -382,6 +429,11 @@ class Regola
     public float getN() {
         return n;
     }
+
+    public List<Proposizione> getProposizioni()
+    {
+        return this.proposizioni;
+    }
 }
 
 class Rules implements Iterable<Regola>
@@ -443,6 +495,53 @@ class Rules implements Iterable<Regola>
         this.removeRules(rulesToBeRemoved);
     }
 
+    public void generateUserReadableRules(Map<String,String> colnameToNgram)
+    {
+        for(Regola r: this.rules)
+        {
+            //attenzione al caso della regola sempre vera in cui proposizioni = null
+            if(r.getProposizioni()!=null) {
+                for (Proposizione p : r.getProposizioni()) {
+                    if (colnameToNgram.get(p.getOperando1()) != null) {
+                        String newOperando1, newOperando2, newOperatore;
+                        String oldOperando1 = p.getOperando1();
+                        String oldOperatore = p.getOperatore();
+                        String oldOperando2 = p.getOperando2();
+
+                        String prefix = oldOperando1.replaceAll("[0-9]+$", "");
+                        // nome colonna corrispondente al prefisso
+                        String columnNamePrefix = colnameToNgram.get(prefix);
+
+                        newOperando1 = columnNamePrefix;
+
+                        // >= 0
+                        String secondaParte = oldOperatore + " " + oldOperando2;
+
+
+                        if (secondaParte.equals("<= 0"))
+                            newOperatore = "non contiene le parole";
+                        else if (secondaParte.equals("> 0"))
+                            newOperatore = "contiene le parole";
+                        else
+                            newOperatore = "errore in generateUserReadableRules";
+
+                        newOperando2 = colnameToNgram.get(oldOperando1);
+
+                        newOperando2 = "#"+newOperando2+"#";
+
+                        //System.out.println(newOperando1 + " " + newOperatore + " " + newOperando2);
+                        p.setOperando1(newOperando1);
+                        p.setOperatore(newOperatore);
+                        p.setOperando2(newOperando2);
+
+
+                    }
+                }
+            }
+        }
+
+    }
+
     public void addRule(Regola r)
     {
         this.rules.add(r);
@@ -465,7 +564,6 @@ class Rules implements Iterable<Regola>
 
         return null;
     }
-
 
     public List<Regola> extractRules(Classifier cls)
     {
@@ -566,7 +664,6 @@ class Rules implements Iterable<Regola>
 
         return output;
     }
-
 
     private void removeRules(List<Regola> rulesToRemove)
     {
