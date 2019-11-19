@@ -29,8 +29,6 @@ public class Main {
     public static void main(String[] args) throws Exception
     {
         vecchiomain();
-
-
     }
 
 
@@ -42,9 +40,9 @@ public class Main {
 
         //String className = "1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX";
         //String className = "1 TERAPIE_ORMONALI_CHECKBOX";
-        //String className = "1 VITAMINA_D_TERAPIA_CHECKBOX";
+        String className = "1 VITAMINA_D_TERAPIA_CHECKBOX";
         //String className = "1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX";
-        String className = "1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX";
+        //String className = "1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX";
 
         String[] tmp = {
                 "1 TERAPIA_OSTEOPROTETTIVA_ORMONALE",
@@ -123,7 +121,6 @@ public class Main {
         data.setClassIndex(data.numAttributes()-1);
 
 
-
         int[] indiciColDaTrasInNominal= new int[nomiColDaTrasInNominal.size()];
         int i=0;
         for (String colName: nomiColDaTrasInNominal)
@@ -186,23 +183,34 @@ public class Main {
 
         Rules rules = new Rules(cls);
         String not_refined = rules.toString();
-        rules.generateUserReadableRules(getColNameToNgram());
-        String user_readable_rules = rules.toString();
+
+        Rules rules2 = new Rules(cls);
+        rules2.refineRules(train.numInstances(),0.8,0.1);
+        String refined_rules = rules2.toString();
+
+        Rules rules3 = new Rules(cls);
+        rules3.generateUserReadableRules(getColNameToNgram());
+        String user_readable_rules_not_ref = rules3.toString();
+
+        Rules rules4 = new Rules(cls);
+        rules4.refineRules(train.numInstances(),0.8,0.1);
+        rules4.generateUserReadableRules(getColNameToNgram());
+        String user_readable_rules_ref = rules4.toString();
+
+        System.out.println(rules.getAccuracy(test));
+        System.out.println(rules2.getAccuracy(test));
+
         //System.out.println(not_refined);
-        //System.out.println(rules.getAccuracy(test));
-        //rules.refineRules(train.numInstances(),0.8,0.1);
-        //System.out.println(rules.getAccuracy(test));
-        String refined_rules = rules.toString();
-        //System.out.println(refined_rules);
 
         //String qry = String.format("update regole set regola_refined = '%s', regola_not_refined = '%s' where terapia = 'TERAPIE_OSTEOPROTETTIVE_CHECKBOX'",refined_rules,not_refined);
-        String qry = String.format("replace into regole values('%s','%s','%s', '%s')",className,refined_rules,not_refined,user_readable_rules);
+        String qry = String.format("replace into regole values('%s','%s','%s', '%s', '%s')",className,refined_rules,not_refined,user_readable_rules_not_ref,user_readable_rules_ref);
         //System.out.println(qry);
 
 
         Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO","utente_web","CMOREL96T45");
         Statement myStmt = myConn.createStatement();
-        myStmt.executeUpdate( "create table if not exists regole (terapia VARCHAR(256) PRIMARY KEY, regola_refined VARCHAR(20000), regola_not_refined VARCHAR(20000), user_readable_not_ref VARCHAR(20000))");
+        // todo attenzione se devi modificare questa, assicurati di cancellare la tabella dal terminale
+        myStmt.executeUpdate( "create table if not exists regole (terapia VARCHAR(256) PRIMARY KEY, regola_refined VARCHAR(10000), regola_not_refined VARCHAR(20000), user_readable_not_ref VARCHAR(20000), user_readable_ref VARCHAR(15000))");
 
         myStmt.executeUpdate(qry);
 
@@ -449,11 +457,14 @@ class Rules implements Iterable<Regola>
         int predictedRight = 0;
         int doesKnow = 0;
         int doesntKnow = 0;
-
+        int i =0;
         Enumeration instances = testset.enumerateInstances();
         while (instances.hasMoreElements())
         {
-
+            if (i==29)
+            {
+                int x = 9;
+            }
             Instance inst = (Instance) instances.nextElement();
             String predicted_y = this.predict(inst);
 
@@ -467,6 +478,9 @@ class Rules implements Iterable<Regola>
                 if(predicted_y.equals(right_y))
                     predictedRight++;
             }
+
+            //System.out.println(i+": "+predicted_y);
+            i++;
         }
 
         return (double)predictedRight/doesKnow+" "+(double)doesntKnow/testset.numInstances();

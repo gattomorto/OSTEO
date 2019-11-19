@@ -25,7 +25,6 @@ import sys
 import mysql.connector
 
 # todo controlla che tutti i regex che abbiano anche '_' e dove serve áéíóúàèìòùàèìòù
-
 def main():
 
     leggo_regole_dal_db_e_verifico_accuracy()
@@ -74,15 +73,16 @@ def main():
 def leggo_regole_dal_db_e_verifico_accuracy():
     #class_name = '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX'
     #class_name = '1 TERAPIE_ORMONALI_CHECKBOX'
-    #class_name ='1 VITAMINA_D_TERAPIA_CHECKBOX'
-    #class_name ='1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX'
-    class_name = '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX'
+    class_name = '1 VITAMINA_D_TERAPIA_CHECKBOX'
+    #class_name = '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX'
+    #class_name = '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX'
 
     preprocessa = False
     file = 'osteo.csv'
 
     if preprocessa:
         preprocessa_per_java(class_name, file)
+        print("preprocess concluso, metti false e vai su java")
     else:
         db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO'
         db_connection = create_engine(db_connection_str)
@@ -92,10 +92,12 @@ def leggo_regole_dal_db_e_verifico_accuracy():
         reg_ref= result['regola_refined']
         reg_not_ref= result['regola_not_refined']
         reg_user_read_not_ref = result['user_readable_not_ref']
+        reg_user_read_ref = result['user_readable_ref']
 
         rules_ref = Regole(reg_ref)
         rules_not_ref = Regole(reg_not_ref)
         rules_user_not_ref = Regole(reg_user_read_not_ref)
+        rules_user_ref = Regole(reg_user_read_ref)
 
         #print(rules_user_not_ref)
 
@@ -106,23 +108,19 @@ def leggo_regole_dal_db_e_verifico_accuracy():
         test = pd.read_csv('perpython.csv')
         test.replace('?', np.nan, inplace=True)
 
-
         test_x = test.iloc[:, :-1]
         test_y = test.iloc[:, -1]
 
         # aggiungo le colonne con il testo a test_x
-
         test_x_text = add_text_columns(file, test_x)
-
-
         test_x_text.fillna('', inplace = True)
 
 
         print(accuracy_rules3(test_x_text, test_y, rules_user_not_ref))
+        print(accuracy_rules3(test_x_text, test_y, rules_user_ref))
 
-
-        print(accuracy_rules3(test_x_text, test_y, rules_not_ref))
-
+        print(accuracy_rules3(test_x, test_y, rules_not_ref))
+        print(accuracy_rules3(test_x, test_y, rules_ref))
 
 def preprocessa_per_java(class_name,file):
     tabella_completa = pd.read_csv(file)
@@ -904,12 +902,12 @@ def accuracy_rules3(test_X, test_Y, regole):
     num_instances = test_X.shape[0]
     # per ogni riga
     for row_index in range(0, num_instances):
-        if row_index == 11:
+        if row_index == 29:
             x = 42
         istance_X = test_X.iloc[row_index, :]
         true_Y = test_Y.values[row_index]
         predicted_Y = regole.predict(istance_X)
-        #print("{}: {}".format(row_index, predicted_Y))
+        # print("{}: {}".format(row_index, predicted_Y))
 
         if predicted_Y is None:
             doesnt_know += 1
@@ -1147,7 +1145,7 @@ class Regole:
             r = Regola()
             for prop in rule.split('\n'):
 
-                match_obj_operand1 = re.search(r'(^.+(?=\s(=|<|>|<=|>=|non)\s))|(^.+(?=\s(=|<|>|<=|>=|contiene)\s))',
+                match_obj_operand1 = re.search(r'(^.+(?=\s(=|<|>|<=|>=|non contiene)\s))|(^.+(?=\s(=|<|>|<=|>=|contiene)\s))',
                                                prop)
 
                 # generic case
