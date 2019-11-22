@@ -59,9 +59,6 @@
 				height: 40px;
 				width: 80px;
 			}
-    
-   			
-	    	
 	    
 	    	.foo {
 	        	
@@ -124,6 +121,56 @@
 				margin: 0.5em 0 1em 0;
 			}
 
+			/********************************************************************************** */
+
+			/* Popup container */
+			.popup {
+			position: relative;
+			display: inline-block;
+			cursor: pointer;
+			/*visibility: hidden;*/
+			}
+
+			/* The actual popup (appears on top) */
+			.popup .popuptext {
+			visibility: hidden;
+			width: 450px;
+			/*height: 100px;*/
+			background-color: #555;
+			color: #fff;
+			text-align: center;
+			border-radius: 6px;
+			padding: 8px 0;
+			position: absolute;
+			z-index: 1000; /*prima 1 */
+			bottom: 125%;
+			left: 50%;
+			margin-left: -80px;
+			}
+
+			/* Popup arrow */
+			.popup .popuptext::after {
+			
+			}
+
+			/* Toggle this class when clicking on the popup container (hide and show the popup) */
+			.popup .show {
+			visibility: visible;
+			-webkit-animation: fadeIn 0.1s;
+			animation: fadeIn 0.1s
+			}
+
+			/* Add animation (fade in the popup) */
+			@-webkit-keyframes fadeIn {
+			from {opacity: 0;}
+			to {opacity: 1;}
+			}
+
+			@keyframes fadeIn {
+			from {opacity: 0;}
+			to {opacity:1 ;}
+			} 
+
 			
 	  	</style>
   	</head>
@@ -144,7 +191,13 @@
     	<div class="container-fluid"> <!--container-fluid -->
     		<?php
     			$pk = $_GET[pk];
-    			$datascan_mysql = $_GET[datascan];
+				$datascan_mysql = $_GET[datascan];
+
+
+				$args = '"'.$pk.'","'.$datascan_mysql.'"';
+				echo $args;
+				
+
 
     			$queryPatient = "SELECT FIRST_NAME, LAST_NAME, BIRTHDATE, SEX FROM PATIENT WHERE PATIENT_KEY = '$pk'";
     			$res = mysqli_query($mysqli, $queryPatient);
@@ -855,7 +908,7 @@
 		      	<br/>
 
 		      	<?php require './backend_frontend/recupero_anamnesi.php'; ?>
-				<form action="./backend_frontend/inserimento_anamnesi.php" method="POST" id="myForm">
+				<form action="./backend_frontend/inserimento_anamnesi.php" method="POST" id="myForm", name="myForm">
 					<input type="hidden" name="pk" value="<?php echo $pk; ?>">
 					<input type="hidden" name="datascan" value="<?php echo $datascan_mysql; ?>">
 			      	<div class="row">
@@ -3578,7 +3631,7 @@
 
 
           		<?php require './backend_frontend/recupero_diagnosi.php'; ?>
-          		<form method="POST" action="./backend_frontend/inserimento_diagnosi.php" id="myForm2" visible="true" style="display:none;">
+          		<form method="POST" action="./backend_frontend/inserimento_diagnosi.php" id="myForm2"  name="myForm2" visible="true" style="display:none;">
 	          		<div class="row">
 	          			<h3><b><p style="text-align:center;" id="RefertoC">CONSULENZA PER OSTEOPOROSI</p></b></h3>
 	          			<input type="hidden" name="pk" value="<?php echo $pk ?>">
@@ -4924,831 +4977,26 @@
 									?>
 									<br/><br/>
 									<!--TERAPIE ORMONALI-->
-                                    ---
+                                    
 									
 									<br>
 
 
-                                    <script type="text/javascript">
-                                    function stickyheaddsadaer()
-                                    {   console.clear();
-                                        var SEX="";
-                                        var is__radio_maschio__checked = document.getElementById('radio_maschio').checked
-                                        var is__radio_femmina__checked = document.getElementById('radio_femmina').checked
-                                        if(is__radio_maschio__checked == true)
-                                            SEX = "M";
-                                        if(is__radio_femmina__checked)
-                                            SEX = "F";
-
-                                        console.log("SEX:\n"+SEX);
-
-                                        var STATO_MENOPAUSALE="";
-
-                                        var is__radio_premenopausa__checked = document.getElementById('radio_premenopausa').checked
-                                        var is__radio_perimenopausa__checked = document.getElementById('radio_perimenopausa').checked
-                                        var is__radio_post_spontanea__checked = document.getElementById('radio_post_spontanea').checked
-                                        var is__radio_indotta__checked = document.getElementById('radio_indotta').checked
-                                        var is__radio_ister_ann_bil__checked = document.getElementById('radio_ister_ann_bil').checked
-                                        var is__radio_ister_ann_mono__checked = document.getElementById('radio_ister_ann_mono').checked
-                                        var is__solo_isterectomia__checked = document.getElementById('radio_solo_isterectomia').checked
-
-
-                                        if(is__radio_premenopausa__checked)
-                                            STATO_MENOPAUSALE = "Premenopausa";
-                                        else if(is__radio_perimenopausa__checked)
-                                            STATO_MENOPAUSALE = "Perimenopausa";
-                                        else if(is__radio_post_spontanea__checked)
-                                            STATO_MENOPAUSALE = "Postmenopausa spontanea";
-                                        else if (is__radio_indotta__checked)
-                                            STATO_MENOPAUSALE = "Indotta";
-                                        else if(is__radio_ister_ann_bil__checked)
-                                            STATO_MENOPAUSALE = "Ister-ann bil";
-                                        else if(is__radio_ister_ann_mono__checked)
-                                            STATO_MENOPAUSALE = "Ister-ann mono";
-                                        else if(is__solo_isterectomia__checked)
-                                            STATO_MENOPAUSALE = "Solo isterectomia";
-
-                                        console.log("STATO_MENOPAUSALE:\n"+STATO_MENOPAUSALE)
-
-
-
-                                        var ULTIMA_MESTRUAZIONE="";
-                                        var anno_ultima_mestruazione = document.getElementById('UltimaMestruazione').value;
-                                        ULTIMA_MESTRUAZIONE = anno_ultima_mestruazione;
-                                        console.log("ULTIMA_MESTRUAZIONE:\n"+ULTIMA_MESTRUAZIONE)
-
-
-                                        var TERAPIA_STATO = "";
-                                        var radio_stato_mai_checked = document.getElementById('stato_mai').checked;
-                                        var radio_stato_in_atto_checked = document.getElementById('stato_inatto').checked;
-                                        var radio_stato_sospesa_checked = document.getElementById('stato_sospesa').checked;
-
-                                        if(radio_stato_mai_checked)
-                                            TERAPIA_STATO="Mai";
-                                        if(radio_stato_sospesa_checked)
-                                            TERAPIA_STATO="Sospesa";
-                                        if(radio_stato_in_atto_checked)
-                                            TERAPIA_STATO="In atto";
-
-                                        console.log("TERAPIA_STATO:\n"+TERAPIA_STATO);
-
-										var TERAPIA_OSTEOPROTETTIVA_ORMONALE = "";
-                                        var radio_terapia_orm_sost_checked = document.getElementById('Ormonale').checked;
-										if(radio_terapia_orm_sost_checked)
-											TERAPIA_OSTEOPROTETTIVA_ORMONALE=1;
-										else
-											TERAPIA_OSTEOPROTETTIVA_ORMONALE=0;
-										console.log("TERAPIA_OSTEOPROTETTIVA_ORMONALE:\n"+TERAPIA_OSTEOPROTETTIVA_ORMONALE);
-										
-
-
-
-                                        var TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA = "";
-                                        var select_area_orm_sost = document.getElementById('text_area_orm_sost');
-                                        for (i = 0; i < select_area_orm_sost.options.length; i++) {
-                                            TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA +=  select_area_orm_sost.options[i].text+" ";
-                                        }
-                                        console.log("TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA:\n"+TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA);
-
-										
-										var TERAPIA_OSTEOPROTETTIVA_SPECIFICA = "";
-                                        var radio_terapia_osteo_spec_checked = document.getElementById('Osteoprotettiva').checked;
-										if(radio_terapia_osteo_spec_checked)
-											TERAPIA_OSTEOPROTETTIVA_SPECIFICA=1;
-										else
-											TERAPIA_OSTEOPROTETTIVA_SPECIFICA=0;
-										console.log("TERAPIA_OSTEOPROTETTIVA_SPECIFICA:\n"+TERAPIA_OSTEOPROTETTIVA_SPECIFICA);
-										var TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA = "";
-                                        var select_area_ter_ost_spec = document.getElementById('text_area_osteoprotettiva');
-                                        for (i = 0; i < select_area_ter_ost_spec.options.length; i++)
-                                            TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA +=  select_area_ter_ost_spec.options[i].text+" ";
-                                        console.log("TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA:\n"+TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA);
-
-
-
-										var VITAMINA_D_TERAPIA_OSTEOPROTETTIVA = "";
-                                        var radio_vitd_supp_checked = document.getElementById('VitaminaD').checked;
-										if(radio_vitd_supp_checked)
-											VITAMINA_D_TERAPIA_OSTEOPROTETTIVA=1;
-										else
-											VITAMINA_D_TERAPIA_OSTEOPROTETTIVA=0;
-										console.log("VITAMINA_D_TERAPIA_OSTEOPROTETTIVA:\n"+VITAMINA_D_TERAPIA_OSTEOPROTETTIVA);
-										var VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA = "";
-                                        var select_area_text_area_vitamina_d = document.getElementById('text_area_vitamina_d');
-                                        for (i = 0; i < select_area_text_area_vitamina_d.options.length; i++)
-                                            VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA +=  select_area_text_area_vitamina_d.options[i].text+" ";
-                                        console.log("VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA:\n"+VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA);
-
-
-										var TERAPIA_ALTRO_CHECKBOX = "";
-                                        var radio_terapie_altro = document.getElementById('AltroTerapie').checked;
-										// lascio di proposito "", se checkbox not selected. perchè nel d è registrato cosi
-										if(radio_terapie_altro)
-											TERAPIA_ALTRO_CHECKBOX=1;
-										console.log("TERAPIA_ALTRO_CHECKBOX:\n"+TERAPIA_ALTRO_CHECKBOX);
-
-                                        var TERAPIA_ALTRO = document.getElementById('ValueAltroTerapie').value;
-										console.log("TERAPIA_ALTRO:\n"+TERAPIA_ALTRO);
-
-
-										TERAPIA_COMPLIANCE = "";
-                                        var radio_terapia_compliance_checked = document.getElementById('ComplianceAllaTerapia').checked;
-										if(radio_terapia_compliance_checked)
-											TERAPIA_COMPLIANCE=1;
-										else
-											TERAPIA_COMPLIANCE=0;
-										console.log("TERAPIA_COMPLIANCE:\n"+TERAPIA_COMPLIANCE);
-
-
-										var BMI;
-										var peso = document.getElementById('Peso').value;
-										var altezza = document.getElementById('Altezza').value;
-										BMI = peso / Math.pow(altezza/100,2);
-										BMI = parseFloat(BMI).toFixed(3);
-										// TODO: tofixed arrotonda, quello sul sito tronca
-										console.log("BMI:\n"+BMI);
-
-										
-										var FRATTURE;
-										var radio_fratture_checked = document.getElementById('FratturaFragilitaVertebrosa').checked;
-										if(radio_fratture_checked)
-											FRATTURE=1;
-										else
-											FRATTURE=0;
-										console.log("FRATTURE:\n"+FRATTURE);
-
-										var FRATTURA_VERTEBRE="";
-										var radio_frattura_una_checked = document.getElementById('FratturaVertebreUna').checked;
-										var radio_frattura_piu_di_una_checked = document.getElementById('FratturaVertebrePiuDiUna').checked;
-										if(radio_frattura_una_checked)
-											FRATTURA_VERTEBRE=1;
-										else if(radio_frattura_piu_di_una_checked)
-											FRATTURA_VERTEBRE="piu di 1";
-										console.log("FRATTURA_VERTEBRE:\n"+FRATTURA_VERTEBRE);
-
-										var FRATTURA_FEMORE="";
-										var radio_frattura_una_checked = document.getElementById('FratturaFemoreUna').checked;
-										var radio_frattura_piu_di_una_checked = document.getElementById('FratturaFemorePiuDiUna').checked;
-										if(radio_frattura_una_checked)
-											FRATTURA_FEMORE=1;
-										else if(radio_frattura_piu_di_una_checked)
-											FRATTURA_FEMORE="piu di 1";
-										console.log("FRATTURA_FEMORE:\n"+FRATTURA_FEMORE);
-
-										var FRATTURA_SITI_DIVERSI;
-										var radio_fratture_siti_diversi_checked = document.getElementById('PregresseFratture1').checked;
-										if(radio_fratture_siti_diversi_checked)
-											FRATTURA_SITI_DIVERSI=1;
-										else
-											FRATTURA_SITI_DIVERSI=0;
-										console.log("FRATTURA_SITI_DIVERSI:\n"+FRATTURA_SITI_DIVERSI);
-
-
-										var FRATTURA_FAMILIARITA;
-										var radio_fratture_fam_checked = document.getElementById('FamiliaritaperFrattura').checked;
-										if(radio_fratture_fam_checked)
-										FRATTURA_FAMILIARITA=1;
-										else
-										FRATTURA_FAMILIARITA=0;
-										console.log("FRATTURA_FAMILIARITA:\n"+FRATTURA_FAMILIARITA);
-
-
-										var ABUSO_FUMO_CHECKBOX;
-										var radio_abuso_fumo_checked = document.getElementById('Abusofumo1').checked;
-										if(radio_abuso_fumo_checked)
-										ABUSO_FUMO_CHECKBOX=1;
-										else
-										ABUSO_FUMO_CHECKBOX=0;
-										console.log("ABUSO_FUMO_CHECKBOX:\n"+ABUSO_FUMO_CHECKBOX);
-
-										var ABUSO_FUMO="";
-										var radio_meno_di_10_checked = document.getElementById('menodi10').checked;
-										var radio_piu_di_10_checked = document.getElementById('piudi10').checked;
-										if(radio_meno_di_10_checked)
-											ABUSO_FUMO="<= 10 sigarette/di";
-										else if(radio_piu_di_10_checked)
-											ABUSO_FUMO="> 10 sigarette/di";
-										console.log("ABUSO_FUMO:\n"+ABUSO_FUMO);
-
-
-
-										var USO_CORTISONE_CHECKBOX;
-										var radio_uso_cortisone_checked = document.getElementById('Usocortisone1').checked;
-										if(radio_uso_cortisone_checked)
-											USO_CORTISONE_CHECKBOX=1;
-										else
-											USO_CORTISONE_CHECKBOX=0;
-										console.log("USO_CORTISONE_CHECKBOX:\n"+USO_CORTISONE_CHECKBOX);
-
-										var USO_CORTISONE="";
-										var radio_traduecinue_checked = document.getElementById('tradueecinque').checked;
-										var radio_piudicinque_checked = document.getElementById('piudicinque').checked;
-										if(radio_traduecinue_checked)
-											USO_CORTISONE="> 2.5 mg e < 5 mg";
-										else if(radio_piudicinque_checked)
-											USO_CORTISONE=">= 5 mg (Prednisone)";
-										console.log("USO_CORTISONE:\n"+USO_CORTISONE);
-
-
-
-										var MALATTIE_ATTUALI_CHECKBOX;
-										var radio_malatt_att_checked = document.getElementById('MalattieAttuali').checked;
-										if(radio_malatt_att_checked)
-											MALATTIE_ATTUALI_CHECKBOX=1;
-										else
-											MALATTIE_ATTUALI_CHECKBOX=0;
-										console.log("MALATTIE_ATTUALI_CHECKBOX:\n"+MALATTIE_ATTUALI_CHECKBOX);
-										
-										var MALATTIE_ATTUALI_ARTRITE_REUM;
-										var radio_artride_checked = document.getElementById('artritereumatoide').checked;
-										if(radio_artride_checked)
-										MALATTIE_ATTUALI_ARTRITE_REUM=1;
-										else
-										MALATTIE_ATTUALI_ARTRITE_REUM=0;
-										console.log("MALATTIE_ATTUALI_ARTRITE_REUM:\n"+MALATTIE_ATTUALI_ARTRITE_REUM);
-
-										var MALATTIE_ATTUALI_ARTRITE_PSOR;
-										var radio_artrite_pros_checked = document.getElementById('artritepsoriasica').checked;
-										if(radio_artrite_pros_checked)
-										MALATTIE_ATTUALI_ARTRITE_PSOR=1;
-										else
-										MALATTIE_ATTUALI_ARTRITE_PSOR=0;
-										console.log("MALATTIE_ATTUALI_ARTRITE_PSOR:\n"+MALATTIE_ATTUALI_ARTRITE_PSOR);
-
-										var MALATTIE_ATTUALI_LUPUS;
-										var radio_lupus_checked = document.getElementById('lupus').checked;
-										if(radio_lupus_checked)
-										MALATTIE_ATTUALI_LUPUS=1;
-										else
-										MALATTIE_ATTUALI_LUPUS=0;
-										console.log("MALATTIE_ATTUALI_LUPUS:\n"+MALATTIE_ATTUALI_LUPUS);
-
-										var MALATTIE_ATTUALI_SCLERODERMIA;
-										var radio_scleroderm_checked = document.getElementById('sclerodermia').checked;
-										if(radio_scleroderm_checked)
-										MALATTIE_ATTUALI_SCLERODERMIA=1;
-										else
-										MALATTIE_ATTUALI_SCLERODERMIA=0;
-										console.log("MALATTIE_ATTUALI_SCLERODERMIA:\n"+MALATTIE_ATTUALI_SCLERODERMIA);
-
-										var MALATTIE_ATTUALI_ALTRE_CONNETTIVITI;
-										var radio_altri_connet_checked = document.getElementById('altreconnettiviti').checked;
-										if(radio_altri_connet_checked)
-										MALATTIE_ATTUALI_ALTRE_CONNETTIVITI=1;
-										else
-										MALATTIE_ATTUALI_ALTRE_CONNETTIVITI=0;
-										console.log("MALATTIE_ATTUALI_ALTRE_CONNETTIVITI:\n"+MALATTIE_ATTUALI_ALTRE_CONNETTIVITI);
-
-										
-										
-										var CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX;
-										var radio_checked = document.getElementById('Osteoporosisecondaria').checked;
-										if(radio_checked)
-										CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX=1;
-										else
-										CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX=0;
-										console.log("CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX:\n"+CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX);
-
-										var CAUSE_OSTEOPOROSI_SECONDARIA = "";
-                                        var select_area_osteo_second = document.getElementById('text_area_causesecondarie');
-                                        for (i = 0; i < select_area_osteo_second.options.length; i++) 
-                                            CAUSE_OSTEOPOROSI_SECONDARIA +=  select_area_osteo_second.options[i].text+" ";
-                                        console.log("CAUSE_OSTEOPOROSI_SECONDARIA:\n"+CAUSE_OSTEOPOROSI_SECONDARIA);
-
-
-
-										var PATOLOGIE_UTERINE_CHECKBOX;
-										var radio_pat_uterine_checked = document.getElementById('PatologieUterine').checked;
-										if(radio_pat_uterine_checked)
-											PATOLOGIE_UTERINE_CHECKBOX=1; 
-										else 
-											PATOLOGIE_UTERINE_CHECKBOX=0;
-										console.log("PATOLOGIE_UTERINE_CHECKBOX:\n"+PATOLOGIE_UTERINE_CHECKBOX);
-
-										var PATOLOGIE_UTERINE_DIAGNOSI;
-										if(radio_pat_uterine_checked)
-											PATOLOGIE_UTERINE_DIAGNOSI = document.getElementById('diagnosi1').value;
-										else
-											PATOLOGIE_UTERINE_DIAGNOSI="NULL"
-										console.log("PATOLOGIE_UTERINE_DIAGNOSI:\n"+PATOLOGIE_UTERINE_DIAGNOSI);
-
-
-
-										var NEOPLASIA_CHECKBOX;
-										var radio_neoplasia_checked = document.getElementById('Neoplasia').checked;
-										if(radio_neoplasia_checked) NEOPLASIA_CHECKBOX=1; else NEOPLASIA_CHECKBOX=0;
-										console.log("NEOPLASIA_CHECKBOX:\n"+NEOPLASIA_CHECKBOX);
-
-										var NEOPLASIA_MAMMARIA_TERAPIA;
-										if(radio_neoplasia_checked)
-											NEOPLASIA_MAMMARIA_TERAPIA = document.getElementById('terapia_neoplasia').value;
-										else
-											NEOPLASIA_MAMMARIA_TERAPIA="NULL"
-										console.log("NEOPLASIA_MAMMARIA_TERAPIA:\n"+NEOPLASIA_MAMMARIA_TERAPIA);
-
-
-
-										var SINTOMI_VASOMOTORI;
-										var radio_checked = document.getElementById('SintomiVasomotori').checked;
-										if(radio_checked) SINTOMI_VASOMOTORI=1; else SINTOMI_VASOMOTORI=0;
-										console.log("SINTOMI_VASOMOTORI:\n"+SINTOMI_VASOMOTORI);
-
-
-
-										var SINTOMI_DISTROFICI;
-										var radio_checked = document.getElementById('SintomiDistrofici').checked;
-										if(radio_checked) SINTOMI_DISTROFICI=1; else SINTOMI_DISTROFICI=0;
-										console.log("SINTOMI_DISTROFICI:\n"+SINTOMI_DISTROFICI);
-
-
-
-										var DISLIPIDEMIA_CHECKBOX;
-										var radio_dislip_checked = document.getElementById('Dislipidemia').checked;
-										if(radio_dislip_checked) DISLIPIDEMIA_CHECKBOX=1; else DISLIPIDEMIA_CHECKBOX=0;
-										console.log("DISLIPIDEMIA_CHECKBOX:\n"+DISLIPIDEMIA_CHECKBOX);
-
-										var DISLIPIDEMIA_TERAPIA;
-										if(radio_dislip_checked)
-										DISLIPIDEMIA_TERAPIA = document.getElementById('dislipidemia_terapia').value;
-										else
-										DISLIPIDEMIA_TERAPIA="NULL"
-										console.log("DISLIPIDEMIA_TERAPIA:\n"+DISLIPIDEMIA_TERAPIA);
-
-
-
-										var IPERTENSIONE;
-										var radio_checked = document.getElementById('Ipertensione').checked;
-										if(radio_checked) IPERTENSIONE=1; else IPERTENSIONE=0;
-										console.log("IPERTENSIONE:\n"+IPERTENSIONE);
-
-
-										var RISCHIO_TEV;
-										var radio_checked = document.getElementById('RischioTev').checked;
-										if(radio_checked) RISCHIO_TEV=1; else RISCHIO_TEV=0;
-										console.log("RISCHIO_TEV:\n"+RISCHIO_TEV);
-
-
-										var PATOLOGIA_CARDIACA;
-										var radio_checked = document.getElementById('PatologiaCardiaca').checked;
-										if(radio_checked) PATOLOGIA_CARDIACA=1; else PATOLOGIA_CARDIACA=0;
-										console.log("PATOLOGIA_CARDIACA:\n"+PATOLOGIA_CARDIACA);
-										
-
-										var PATOLOGIA_VASCOLARE;
-										var radio_checked = document.getElementById('PatologiaVascolare').checked;
-										if(radio_checked) PATOLOGIA_VASCOLARE=1; else PATOLOGIA_VASCOLARE=0;
-										console.log("PATOLOGIA_VASCOLARE:\n"+PATOLOGIA_VASCOLARE);
-
-
-										var INSUFFICIENZA_RENALE;
-										var radio_checked = document.getElementById('InsufficienzaRenale').checked;
-										if(radio_checked) INSUFFICIENZA_RENALE=1; else INSUFFICIENZA_RENALE=0;
-										console.log("INSUFFICIENZA_RENALE:\n"+INSUFFICIENZA_RENALE);
-
-
-										var PATOLOGIA_RESPIRATORIA;
-										var radio_checked = document.getElementById('PatologiaRespiratoria').checked;
-										if(radio_checked) PATOLOGIA_RESPIRATORIA=1; else PATOLOGIA_RESPIRATORIA=0;
-										console.log("PATOLOGIA_RESPIRATORIA:\n"+PATOLOGIA_RESPIRATORIA);
-
-
-										var PATOLOGIA_CAVO_ORALE_CHECKBOX;
-										var radio_checked = document.getElementById('PatologiaDelCavoOrale').checked;
-										if(radio_checked) PATOLOGIA_CAVO_ORALE_CHECKBOX=1; else PATOLOGIA_CAVO_ORALE_CHECKBOX=0;
-										console.log("PATOLOGIA_CAVO_ORALE_CHECKBOX:\n"+PATOLOGIA_CAVO_ORALE_CHECKBOX);
-
-
-										var PATOLOGIA_EPATICA;
-										var radio_checked = document.getElementById('PatologiaEpatica').checked;
-										if(radio_checked) PATOLOGIA_EPATICA=1; else PATOLOGIA_EPATICA=0;
-										console.log("PATOLOGIA_EPATICA:\n"+PATOLOGIA_EPATICA);
-
-
-										var PATOLOGIA_ESOFAGEA;
-										var radio_checked = document.getElementById('PatologiaEsofagea').checked;
-										if(radio_checked) PATOLOGIA_ESOFAGEA=1; else PATOLOGIA_ESOFAGEA=0;
-										console.log("PATOLOGIA_ESOFAGEA:\n"+PATOLOGIA_ESOFAGEA);
-
-
-										var GASTRO_DUODENITE;
-										var radio_checked = document.getElementById('Gastroduodenite').checked;
-										if(radio_checked) GASTRO_DUODENITE=1; else GASTRO_DUODENITE=0;
-										console.log("GASTRO_DUODENITE:\n"+GASTRO_DUODENITE);
-
-
-										var GASTRO_RESEZIONE;
-										var radio_checked = document.getElementById('Gastroresezione').checked;
-										if(radio_checked) GASTRO_RESEZIONE=1; else GASTRO_RESEZIONE=0;
-										console.log("GASTRO_RESEZIONE:\n"+GASTRO_RESEZIONE);
-
-
-										var RESEZIONE_INTESTINALE;
-										var radio_checked = document.getElementById('Resezioneintestinale').checked;
-										if(radio_checked) RESEZIONE_INTESTINALE=1; else RESEZIONE_INTESTINALE=0;
-										console.log("RESEZIONE_INTESTINALE:\n"+RESEZIONE_INTESTINALE);
-
-
-										var MICI;
-										var radio_checked = document.getElementById('mici').checked;
-										if(radio_checked) MICI=1; else MICI=0;
-										console.log("MICI:\n"+MICI);
-
-
-										var VITAMINA_D_CHECKBOX;
-										var radio_checked = document.getElementById('Ipovitaminosi').checked;
-										if(radio_checked) VITAMINA_D_CHECKBOX=1; else VITAMINA_D_CHECKBOX=0;
-										console.log("VITAMINA_D_CHECKBOX:\n"+VITAMINA_D_CHECKBOX);
-
-										var VITAMINA_D = document.getElementById('valore_ipovitaminosi').value;
-										console.log("VITAMINA_D:\n"+VITAMINA_D);
-
-
-
-										var ALTRE_PATOLOGIE;
-										var radio_altr_pat_checked = document.getElementById('AltroPatologie').checked;
-										if(radio_altr_pat_checked)
-										ALTRE_PATOLOGIE = document.getElementById('altro_patologie').value;
-										else
-										ALTRE_PATOLOGIE="NULL"
-										console.log("ALTRE_PATOLOGIE:\n"+ALTRE_PATOLOGIE);
-
-
-
-										var ALLERGIE_CHECKBOX;
-										var radio_allergie_checked = document.getElementById('Allergie').checked;
-										if(radio_allergie_checked) ALLERGIE_CHECKBOX=1; else ALLERGIE_CHECKBOX=0;
-										console.log("ALLERGIE_CHECKBOX:\n"+ALLERGIE_CHECKBOX);
-
-										var ALLERGIE;
-										if(radio_allergie_checked)
-										ALLERGIE = document.getElementById('allergie').value;
-										else
-										ALLERGIE="NULL"
-										console.log("ALLERGIE:\n"+ALLERGIE);
-
-
-
-
-										var INTOLLERANZE_CHECKBOX;
-										var radio_intolleranze_checked = document.getElementById('Intolleranza').checked;
-										if(radio_intolleranze_checked) INTOLLERANZE_CHECKBOX=1; else INTOLLERANZE_CHECKBOX=0;
-										console.log("INTOLLERANZE_CHECKBOX:\n"+INTOLLERANZE_CHECKBOX);
-
-										var INTOLLERANZE;
-										if(radio_intolleranze_checked)
-										INTOLLERANZE = document.getElementById('value_intolleranze').value;
-										else
-										INTOLLERANZE="NULL"
-										console.log("INTOLLERANZE:\n"+INTOLLERANZE);
-
-
-
-										var SITUAZIONE_COLONNA_CHECKBOX;
-										var radio_situaz_colonna_checked = document.getElementById('colonna_vertebrale').checked;
-										if(radio_situaz_colonna_checked) SITUAZIONE_COLONNA_CHECKBOX=1; else SITUAZIONE_COLONNA_CHECKBOX=0;
-										console.log("SITUAZIONE_COLONNA_CHECKBOX:\n"+SITUAZIONE_COLONNA_CHECKBOX);
-
-										var SITUAZIONE_COLONNA;
-										if(radio_situaz_colonna_checked)
-										SITUAZIONE_COLONNA = document.getElementById('situazione_colonna').value;
-										else
-										SITUAZIONE_COLONNA=""
-										console.log("SITUAZIONE_COLONNA:\n"+SITUAZIONE_COLONNA);
-
-
-
-										var SITUAZIONE_FEMORE_SN_CHECKBOX;
-										var radio_situaz_fem_sn_checked = document.getElementById('collo_femore_sn').checked;
-										if(radio_situaz_fem_sn_checked) SITUAZIONE_FEMORE_SN_CHECKBOX=1; else SITUAZIONE_FEMORE_SN_CHECKBOX=0;
-										console.log("SITUAZIONE_FEMORE_SN_CHECKBOX:\n"+SITUAZIONE_FEMORE_SN_CHECKBOX);
-
-										var SITUAZIONE_FEMORE_SN;
-										if(radio_situaz_fem_sn_checked)
-										SITUAZIONE_FEMORE_SN = document.getElementById('situazione_femore_sn').value;
-										else
-										SITUAZIONE_FEMORE_SN=""
-										console.log("SITUAZIONE_FEMORE_SN:\n"+SITUAZIONE_FEMORE_SN);
-
-
-
-										var SITUAZIONE_FEMORE_DX_CHECKBOX;
-										var radio_situaz_fem_dx_checked = document.getElementById('collo_femore_dx').checked;
-										if(radio_situaz_fem_dx_checked) SITUAZIONE_FEMORE_DX_CHECKBOX=1; else SITUAZIONE_FEMORE_DX_CHECKBOX=0;
-										console.log("SITUAZIONE_FEMORE_DX_CHECKBOX:\n"+SITUAZIONE_FEMORE_DX_CHECKBOX);
-
-										var SITUAZIONE_FEMORE_DX;
-										if(radio_situaz_fem_dx_checked)
-										SITUAZIONE_FEMORE_DX = document.getElementById('situazione_femore_dx').value;
-										else
-										SITUAZIONE_FEMORE_DX=""
-										console.log("SITUAZIONE_FEMORE_DX:\n"+SITUAZIONE_FEMORE_DX);
-
-
-
-										var OSTEOPOROSI_GRAVE;
-										var radio_checked = document.getElementById('OsteoporosiGrave').checked;
-										if(radio_checked) OSTEOPOROSI_GRAVE=1; else OSTEOPOROSI_GRAVE=0;
-										console.log("OSTEOPOROSI_GRAVE:\n"+OSTEOPOROSI_GRAVE);
-
-
-
-										var VERTEBRE_NON_ANALIZZATE_CHECKBOX;
-										var radio_checked = document.getElementById('ColonnaVertebraleParzialmenteNonAnalizzabile').checked;
-										if(radio_checked) VERTEBRE_NON_ANALIZZATE_CHECKBOX=1; else VERTEBRE_NON_ANALIZZATE_CHECKBOX=0;
-										console.log("VERTEBRE_NON_ANALIZZATE_CHECKBOX:\n"+VERTEBRE_NON_ANALIZZATE_CHECKBOX);
-
-										var VERTEBRE_NON_ANALIZZATE_L1;
-										var radio_checked = document.getElementById('Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L1').checked;
-										if(radio_checked) VERTEBRE_NON_ANALIZZATE_L1=1; else VERTEBRE_NON_ANALIZZATE_L1=0;
-										console.log("VERTEBRE_NON_ANALIZZATE_L1:\n"+VERTEBRE_NON_ANALIZZATE_L1);
-
-										var VERTEBRE_NON_ANALIZZATE_L2;
-										var radio_checked = document.getElementById('Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L2').checked;
-										if(radio_checked) VERTEBRE_NON_ANALIZZATE_L2=1; else VERTEBRE_NON_ANALIZZATE_L2=0;
-										console.log("VERTEBRE_NON_ANALIZZATE_L2:\n"+VERTEBRE_NON_ANALIZZATE_L2);
-										
-										var VERTEBRE_NON_ANALIZZATE_L3;
-										var radio_checked = document.getElementById('Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L3').checked;
-										if(radio_checked) VERTEBRE_NON_ANALIZZATE_L3=1; else VERTEBRE_NON_ANALIZZATE_L3=0;
-										console.log("VERTEBRE_NON_ANALIZZATE_L3:\n"+VERTEBRE_NON_ANALIZZATE_L3);
-										
-										var VERTEBRE_NON_ANALIZZATE_L4;
-										var radio_checked = document.getElementById('Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L4').checked;
-										if(radio_checked) VERTEBRE_NON_ANALIZZATE_L4=1; else VERTEBRE_NON_ANALIZZATE_L4=0;
-										console.log("VERTEBRE_NON_ANALIZZATE_L4:\n"+VERTEBRE_NON_ANALIZZATE_L4);
-
-
-
-										var COLONNA_NON_ANALIZZABILE;
-										var radio_checked = document.getElementById('colonnavertebralenonanalizzabile').checked;
-										if(radio_checked) COLONNA_NON_ANALIZZABILE=1; else COLONNA_NON_ANALIZZABILE=0;
-										console.log("COLONNA_NON_ANALIZZABILE:\n"+COLONNA_NON_ANALIZZABILE);
-
-
-
-										var COLONNA_VALORI_SUPERIORI;
-										var radio_checked = document.getElementById('radio_colonna_valori_sup').checked;
-										if(radio_checked) COLONNA_VALORI_SUPERIORI=1; else COLONNA_VALORI_SUPERIORI=0;
-										console.log("COLONNA_VALORI_SUPERIORI:\n"+COLONNA_VALORI_SUPERIORI);
-
-
-
-										var FEMORE_NON_ANALIZZABILE;
-										var radio_checked = document.getElementById('femore_non_analizzabile').checked;
-										if(radio_checked) FEMORE_NON_ANALIZZABILE=1; else FEMORE_NON_ANALIZZABILE=0;
-										console.log("FEMORE_NON_ANALIZZABILE:\n"+FEMORE_NON_ANALIZZABILE);
-
-
-
-										var FRAX_APPLICABILE;
-										var radio_frax_appl_checked = document.getElementById('Frax_applicabile').checked;
-										if(radio_frax_appl_checked) FRAX_APPLICABILE=1; else FRAX_APPLICABILE=0;
-										console.log("FRAX_APPLICABILE:\n"+FRAX_APPLICABILE);
-
-										var FRAX_FRATTURE_MAGGIORI_INTERO;
-										if(radio_frax_appl_checked)
-										FRAX_FRATTURE_MAGGIORI_INTERO = document.getElementById('frax').value;
-										else
-										FRAX_FRATTURE_MAGGIORI_INTERO=""
-										console.log("FRAX_FRATTURE_MAGGIORI_INTERO:\n"+FRAX_FRATTURE_MAGGIORI_INTERO);
-
-										var FRAX_COLLO_FEMORE_INTERO;
-										if(radio_frax_appl_checked)
-										FRAX_COLLO_FEMORE_INTERO = document.getElementById('frax_collo_femore').value;
-										else
-										FRAX_COLLO_FEMORE_INTERO="";
-										console.log("FRAX_COLLO_FEMORE_INTERO:\n"+FRAX_COLLO_FEMORE_INTERO);
-
-
-
-
-										var TBS_COLONNA_APPLICABILE;
-										var radio_frax_appl_checked = document.getElementById('tbs_colonna_applicabile').checked;
-										if(radio_frax_appl_checked) TBS_COLONNA_APPLICABILE=1; else TBS_COLONNA_APPLICABILE=0;
-										console.log("TBS_COLONNA_APPLICABILE:\n"+TBS_COLONNA_APPLICABILE);
-
-										var TBS_COLONNA_VALORE;
-										if(radio_frax_appl_checked)
-											TBS_COLONNA_VALORE = document.getElementById('tbs_colonna_valore').value;
-										else
-											TBS_COLONNA_VALORE="";
-										console.log("TBS_COLONNA_VALORE:\n"+TBS_COLONNA_VALORE);
-
-
-
-
-										var DEFRA_APPLICABILE;
-										var radio_frax_appl_checked = document.getElementById('defra_applicabile').checked;
-										if(radio_frax_appl_checked) DEFRA_APPLICABILE=1; else DEFRA_APPLICABILE=0;
-										console.log("DEFRA_APPLICABILE:\n"+DEFRA_APPLICABILE);
-										/*
-										bisogna capire cosa succede con questi defra=0
-										*/
-										var DEFRA_INTERO;
-										if(radio_frax_appl_checked)
-										{
-											DEFRA_INTERO = document.getElementById('defra_intero').value;
-											//perchè non ci sono "" nella colonna ma 0
-											if(DEFRA_INTERO.localeCompare("")==0)
-												DEFRA_INTERO=0;
-										}
-										else
-										DEFRA_INTERO="0";
-										console.log("DEFRA_INTERO:\n"+DEFRA_INTERO);
-
-
-
-
-										var ALTRO_CHECKBOX;
-										var radio_altro_checked = document.getElementById('Altro').checked;
-										if(radio_altro_checked) ALTRO_CHECKBOX=1; else ALTRO_CHECKBOX=0;
-										console.log("ALTRO_CHECKBOX:\n"+ALTRO_CHECKBOX);
-
-										var ALTRO;
-										if(radio_altro_checked)
-										{
-											ALTRO = document.getElementById('value_altro').value;
-											if(ALTRO.localeCompare("")==0)
-											//in teoria non dovrei mettere null ma lasciare "" (sistema dopo)
-												ALTRO="NULL";
-										}
-										else
-											ALTRO="NULL";
-										console.log("ALTRO:\n"+ALTRO);
-
-
-										var NORME_PREVENZIONE;
-										var radio_checked = document.getElementById('norme_prevenzione').checked;
-										if(radio_checked) NORME_PREVENZIONE=1; else NORME_PREVENZIONE=0;
-										console.log("NORME_PREVENZIONE:\n"+NORME_PREVENZIONE);
-
-
-										var NORME_COMPORTAMENTALI;
-										var radio_checked = document.getElementById('norme_comportamentali').checked;
-										if(radio_checked) NORME_COMPORTAMENTALI=1; else NORME_COMPORTAMENTALI=0;
-										console.log("NORME_COMPORTAMENTALI:\n"+NORME_COMPORTAMENTALI);
-
-
-										var ATTIVITA_FISICA;
-										var radio_checked = document.getElementById('attivita_fisica').checked;
-										if(radio_checked) ATTIVITA_FISICA=1; else ATTIVITA_FISICA=0;
-										console.log("ATTIVITA_FISICA:\n"+ATTIVITA_FISICA);
-
-
-
-
-										var SOSPENSIONE_TERAPIA_CHECKBOX;
-										var radio_altro_checked = document.getElementById('sospensione_terapia').checked;
-										if(radio_altro_checked) SOSPENSIONE_TERAPIA_CHECKBOX=1; else SOSPENSIONE_TERAPIA_CHECKBOX=0;
-										console.log("SOSPENSIONE_TERAPIA_CHECKBOX:\n"+SOSPENSIONE_TERAPIA_CHECKBOX);
-
-										var SOSPENSIONE_TERAPIA_FARMACO;
-										if(radio_altro_checked)
-										{
-											SOSPENSIONE_TERAPIA_FARMACO = document.getElementById('Farmaco').value;
-											if(SOSPENSIONE_TERAPIA_FARMACO.localeCompare("")==0)
-												SOSPENSIONE_TERAPIA_FARMACO="NULL";
-										}
-										else
-											SOSPENSIONE_TERAPIA_FARMACO="NULL";
-										console.log("SOSPENSIONE_TERAPIA_FARMACO:\n"+SOSPENSIONE_TERAPIA_FARMACO);
-
-
-
-										//from now on hardcoded
-
-										var INDAGINI_APPROFONDIMENTO_CHECKBOX = 0;
-										console.log("INDAGINI_APPROFONDIMENTO_CHECKBOX:\n"+INDAGINI_APPROFONDIMENTO_CHECKBOX);
-
-
-										var INDAGINI_APPROFONDIMENTO_LISTA = "NULL";
-										console.log("INDAGINI_APPROFONDIMENTO_LISTA:\n"+INDAGINI_APPROFONDIMENTO_LISTA);
-
-
-										var SOSPENSIONE_FUMO = 0;
-										console.log("SOSPENSIONE_FUMO:\n"+SOSPENSIONE_FUMO);
-
-
-										var CONTROLLO_DENSITOMETRICO_CHECKBOX = 0;
-										console.log("CONTROLLO_DENSITOMETRICO_CHECKBOX:\n"+CONTROLLO_DENSITOMETRICO_CHECKBOX);
-
-										var AGE = 62;
-										console.log("AGE:\n"+AGE);
-										
-										//until here
-
-										var TOT_Zscore =<?php echo $Zscore_Spine ?>;
-										console.log("TOT_Zscore:\n"+TOT_Zscore);
-
-										var TOT_Tscore =<?php echo $Tscore_Spine ?>;
-										console.log("TOT_Tscore:\n"+TOT_Tscore);
-
-										var s = AGE + "mmmm" +SEX + "mmmm" +STATO_MENOPAUSALE+ "mmmm" +ULTIMA_MESTRUAZIONE+ "mmmm" +TERAPIA_STATO+ "mmmm" +TERAPIA_OSTEOPROTETTIVA_ORMONALE+ "mmmm" +TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA+ "mmmm" +TERAPIA_OSTEOPROTETTIVA_SPECIFICA+ "mmmm" +TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA+ "mmmm"+ VITAMINA_D_TERAPIA_OSTEOPROTETTIVA+"mmmm"+ VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA+"mmmm"+TERAPIA_ALTRO_CHECKBOX+"mmmm"+TERAPIA_ALTRO+"mmmm"+TERAPIA_COMPLIANCE+"mmmm"+BMI+"mmmm"+FRATTURE+"mmmm"+FRATTURA_VERTEBRE+"mmmm"+FRATTURA_FEMORE+"mmmm"+FRATTURA_SITI_DIVERSI+"mmmm"+FRATTURA_FAMILIARITA+"mmmm"+ABUSO_FUMO_CHECKBOX+"mmmm"+ABUSO_FUMO+"mmmm"+USO_CORTISONE_CHECKBOX+"mmmm"+USO_CORTISONE+"mmmm"+MALATTIE_ATTUALI_CHECKBOX+"mmmm"+MALATTIE_ATTUALI_ARTRITE_REUM+"mmmm"+MALATTIE_ATTUALI_ARTRITE_PSOR+"mmmm"+MALATTIE_ATTUALI_LUPUS+"mmmm"+MALATTIE_ATTUALI_SCLERODERMIA+"mmmm"+MALATTIE_ATTUALI_ALTRE_CONNETTIVITI+"mmmm"+CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX+"mmmm"+CAUSE_OSTEOPOROSI_SECONDARIA+"mmmm"+PATOLOGIE_UTERINE_CHECKBOX+"mmmm"+PATOLOGIE_UTERINE_DIAGNOSI+"mmmm"+NEOPLASIA_CHECKBOX+"mmmm"+NEOPLASIA_MAMMARIA_TERAPIA+"mmmm"+SINTOMI_VASOMOTORI+"mmmm"+SINTOMI_DISTROFICI+"mmmm"+DISLIPIDEMIA_CHECKBOX+"mmmm"+DISLIPIDEMIA_TERAPIA+"mmmm"+IPERTENSIONE+"mmmm"+RISCHIO_TEV+"mmmm"+PATOLOGIA_CARDIACA+"mmmm"+PATOLOGIA_VASCOLARE+"mmmm"+INSUFFICIENZA_RENALE+"mmmm"+PATOLOGIA_RESPIRATORIA+"mmmm"+PATOLOGIA_CAVO_ORALE_CHECKBOX+"mmmm"+PATOLOGIA_EPATICA+"mmmm"+PATOLOGIA_ESOFAGEA+"mmmm"+GASTRO_DUODENITE+"mmmm"+GASTRO_RESEZIONE+"mmmm"+RESEZIONE_INTESTINALE+"mmmm"+MICI+"mmmm"+VITAMINA_D_CHECKBOX+"mmmm"+VITAMINA_D+"mmmm"+ALTRE_PATOLOGIE+"mmmm"+ALLERGIE_CHECKBOX+"mmmm"+ALLERGIE+"mmmm"+INTOLLERANZE_CHECKBOX+"mmmm"+INTOLLERANZE+"mmmm"+SITUAZIONE_COLONNA_CHECKBOX+"mmmm"+SITUAZIONE_COLONNA+"mmmm"+SITUAZIONE_FEMORE_SN_CHECKBOX+"mmmm"+SITUAZIONE_FEMORE_SN+"mmmm"+SITUAZIONE_FEMORE_DX_CHECKBOX+"mmmm"+SITUAZIONE_FEMORE_DX+"mmmm"+OSTEOPOROSI_GRAVE+"mmmm"+VERTEBRE_NON_ANALIZZATE_CHECKBOX+"mmmm"+VERTEBRE_NON_ANALIZZATE_L1+"mmmm"+VERTEBRE_NON_ANALIZZATE_L2+"mmmm"+VERTEBRE_NON_ANALIZZATE_L3+"mmmm"+VERTEBRE_NON_ANALIZZATE_L4+"mmmm"+COLONNA_NON_ANALIZZABILE+"mmmm"+COLONNA_VALORI_SUPERIORI+"mmmm"+FEMORE_NON_ANALIZZABILE+"mmmm"+FRAX_APPLICABILE+"mmmm"+FRAX_FRATTURE_MAGGIORI_INTERO+"mmmm"+FRAX_COLLO_FEMORE_INTERO+"mmmm"+TBS_COLONNA_APPLICABILE+"mmmm"+TBS_COLONNA_VALORE+"mmmm"+DEFRA_APPLICABILE+"mmmm"+DEFRA_INTERO+"mmmm"+NORME_PREVENZIONE+"mmmm"+ALTRO_CHECKBOX+"mmmm"+ALTRO+"mmmm"+NORME_COMPORTAMENTALI+"mmmm"+ATTIVITA_FISICA+"mmmm"+SOSPENSIONE_TERAPIA_CHECKBOX+"mmmm"+SOSPENSIONE_TERAPIA_FARMACO+"mmmm"+INDAGINI_APPROFONDIMENTO_CHECKBOX+"mmmm"+INDAGINI_APPROFONDIMENTO_LISTA+"mmmm"+SOSPENSIONE_FUMO+"mmmm"+CONTROLLO_DENSITOMETRICO_CHECKBOX+"mmmm"+TOT_Tscore+"mmmm"+TOT_Zscore;
-										console.log(s);
-
-
-
-
-
-										var xmlhttp = new XMLHttpRequest();
-										xmlhttp.open("POST", "gethint.php", true);
-										xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-
-										xmlhttp.onreadystatechange = function() {
-											if (this.readyState == 4 && this.status == 200) {
-												document.getElementById("txtHint").innerHTML = this.responseText;
-											}
-										};
-
-										xmlhttp.send("q=ff");
-
-
-										
-                                    }
-
-									function mettaf()
-									{
-										/*var datastring = $("#myForm2").serialize();
-										$.ajax({
-											type: "POST",
-											url: "gethint.php",
-											data: datastring,
-											dataType: "json",
-											success: function(data) {
-												//var obj = jQuery.parseJSON(data); if the dataType is not specified as json uncomment this
-												// do what ever you want with the server response
-												console.log(data);
-											},
-											error: function() {
-												alert('error handling here');
-											}
-										});*/
-
-										/*var xmlhttp = new XMLHttpRequest();
-										xmlhttp.open("POST", "filenon.php", true);
-										xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-										var datastring = $("#myForm2").serialize();
-
-										xmlhttp.onreadystatechange = function() {
-											if (this.readyState == 4 && this.status == 200) {
-												console.log( this.responseText);
-											}
-										};
-
-										xmlhttp.send("datastring");*/
-
-
-
-
-										/*var xmlhttp = new XMLHttpRequest();
-										var datastring = $("#myForm2").serialize();
-										//console.log(datastring);
-
-										xmlhttp.open("GET", "gethint.php?q="+datastring, true);
-										//xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-
-										xmlhttp.onreadystatechange = function() {
-											if (this.readyState == 4 && this.status == 200) {
-												document.getElementById("txtHint").innerHTML = this.responseText;
-											}
-										};
-
-										xmlhttp.send();*/
-
-
-										var xmlhttp = new XMLHttpRequest();
-										var datastring = $("#myForm2").serialize();
-										//console.log(datastring);
-
-										xmlhttp.open("POST", "backend_frontend/filenon.php", true);
-										xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-
-										xmlhttp.onreadystatechange = function() {
-											if (this.readyState == 4 && this.status == 200) {
-												document.getElementById("txtHint").innerHTML = this.responseText;
-											}
-										};
-
-										xmlhttp.send(datastring);
-
-
-
-									}
-
-
-
-                                    </script>
+                                   
 
 									<form>
-									<input type="button" value = "get sugg." name="SubmitButton" onclick = "stickyheaddsadaer()"/>
-									<input type="button" value = "GOMETTA" name="MRTTA" onclick = "mettaf()"/>
+									<!--
+									<input class="btn btn-primary" type="button" value = "Suggerisci" name="SubmitButton" onclick = 'stickyheaddsadaer(<?php echo $args; ?>)'/>
+									<br/>
+									<br/>-->
 
 									</form>
-									<p>Suggestions: <span id="txtHint"></span></p>
-
-									---*
-									<?php
+								
 									
+									<?php
+
+										
+										//$s = '"'.$pk.'"'.$datascan_mysql;
 										/*$command = escapeshellcmd('java -jar /home/kkk/IdeaProjects/OsteoporosiJava/out/artifacts/OsteoporosiJava_jar/OsteoporosiJava.jar nnnn uiuiui');
 										$output = shell_exec($command);
 										echo ": ".$output;*/
@@ -5778,6 +5026,12 @@
 
 
 									<br/>
+									<span id = "1"> Suggerimento: </span> <b> <span id = "terapie_ormonali" >  </span> </b> 
+
+									<div id="a" class="popup"  onclick="myFunction()"> <u>  <font color="blue">?</font> </u>
+									<span class="popuptext" id="terapie_ormonali_popup">Popup text...</span>
+									</div>
+
 									<div class="row">
 										<div class="col-sm-3">
 				          					<div class="input-group">
@@ -5966,6 +5220,13 @@
 									?>
 
 									<!--TERAPIE OSTEOPROTETTIVE-->
+									<span id = "2"> Suggerimento: </span> <b>  <span id = "terapie_osteo_s" >  </span></b> 
+
+									<div id="b" class="popup"  onclick="myFunction2()"> <u>  <font color="blue">?</font> </u>
+									<span class="popuptext" id="terapie_osteo_popup">Popup text...</span>
+									</div>
+
+
 									<div class="row">
 										<div class="col-sm-3">
 											<div class="input-group">
@@ -9434,5 +8695,130 @@
       	});
   	</script>
 
+<script type="text/javascript">
+                                    function stickyheaddsadaer(pk,data_scan)
+                                    {   
+
+										//qui salvo anamnesi
+										var xmlhttp = new XMLHttpRequest();
+										var datastring = $("#myForm").serialize();
+										//console.log(datastring);
+										xmlhttp.open("POST", "backend_frontend/filenon2.php", true);
+										xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+										xmlhttp.send(datastring);
+
+										//salvo diagnosi
+										var xmlhttp = new XMLHttpRequest();
+										var datastring = $("#myForm2").serialize();
+										//console.log(datastring);
+										xmlhttp.open("POST", "backend_frontend/filenon.php", true);
+										xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+										xmlhttp.send(datastring);
+
+
+										var xmlhttp = new XMLHttpRequest();
+										xmlhttp.open("POST", "gethint.php", true);
+										xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+										xmlhttp.onreadystatechange = function() {
+											if (this.readyState == 4 && this.status == 200)
+											{
+												//document.getElementById("txtHint").innerHTML = this.responseText;
+												var splitted = this.responseText.split("\n\n\n");
+												console.log(this.responseText);
+												
+												
+												var TERAPIE_ORMONALI_CHECKBOX_prediction = splitted[0];
+												var TERAPIE_ORMONALI_CHECKBOX_rule = splitted[1];
+												var TERAPIE_ORMONALI_LISTA_prediction = splitted[2];
+												var TERAPIE_ORMONALI_LISTA_rule = splitted[3];
+
+												console.log(TERAPIE_ORMONALI_CHECKBOX_prediction);
+
+												if(TERAPIE_ORMONALI_CHECKBOX_prediction.localeCompare("None")==0)
+												{
+													document.getElementById("terapie_ormonali").innerHTML = "non disponibile";
+												}
+												else if(TERAPIE_ORMONALI_CHECKBOX_prediction.localeCompare("0")==0)
+												{
+													document.getElementById("terapie_ormonali").innerHTML = "no terapia ormonale";
+												}
+												else if(TERAPIE_ORMONALI_CHECKBOX_prediction.localeCompare("1")==0)
+												{
+													if(TERAPIE_ORMONALI_LISTA_prediction.localeCompare("None")==0)
+														document.getElementById("terapie_ormonali").innerHTML = "si terapia ormonale";
+													else
+														document.getElementById("terapie_ormonali").innerHTML = "terapia ormonale di tipo "+TERAPIE_ORMONALI_LISTA_prediction;
+												}
+												
+												var popup = document.getElementById("terapie_ormonali_popup");
+												popup.innerHTML=TERAPIE_ORMONALI_CHECKBOX_rule;
+												
+
+
+												////////////////////////////////////////////////////////////////////////////////////////
+
+												var TERAPIE_OSTEOPROTETTIVE_CHECKBOX_prediction = splitted[4];
+												var TERAPIE_OSTEOPROTETTIVE_CHECKBOX_rule = splitted[5];
+												var TERAPIE_OSTEOPROTETTIVE_LISTA_prediction = splitted[6];
+												var TERAPIE_OSTEOPROTETTIVE_LISTA_rule = splitted[7];
+
+												if(TERAPIE_OSTEOPROTETTIVE_CHECKBOX_prediction.localeCompare("None")==0)
+												{
+													document.getElementById("terapie_osteo_s").innerHTML = "non disponibile";
+												}
+												else if(TERAPIE_OSTEOPROTETTIVE_CHECKBOX_prediction.localeCompare("0")==0)
+												{
+													document.getElementById("terapie_osteo_s").innerHTML = "no terapia osteoprotettiva";
+												}
+												else if(TERAPIE_OSTEOPROTETTIVE_CHECKBOX_prediction.localeCompare("1")==0)
+												{
+													if(TERAPIE_OSTEOPROTETTIVE_LISTA_prediction.localeCompare("None")==0)
+														document.getElementById("terapie_osteo_s").innerHTML = "si terapia osteoprotettiva";
+													else
+														document.getElementById("terapie_osteo_s").innerHTML = "terapia osteoprotettiva di tipo "+TERAPIE_OSTEOPROTETTIVE_LISTA_prediction;
+												}
+
+												var popup = document.getElementById("terapie_osteo_popup");
+												popup.innerHTML=TERAPIE_OSTEOPROTETTIVE_CHECKBOX_rule;
+											
+												//document.querySelector('.popup').style.visibility = 'visible';
+												document.getElementById("a").style.visibility = "visible";
+												document.getElementById("b").style.visibility = "visible";
+												document.getElementById("1").style.visibility = "visible";
+												document.getElementById("2").style.visibility = "visible";
+
+
+
+											}
+										};
+									
+
+
+										xmlhttp.send("pk="+pk+"&datascan="+data_scan);
+                                    }
+
+									function myFunction() {
+									var popup = document.getElementById("terapie_ormonali_popup");
+									popup.classList.toggle("show");
+									}
+									function myFunction2() {
+									var popup = document.getElementById("terapie_osteo_popup");
+									popup.classList.toggle("show");
+									}
+
+									window.onload = function() {
+										stickyheaddsadaer(<?php echo $args; ?>);
+										document.getElementById("a").style.visibility = "hidden";
+										document.getElementById("b").style.visibility = "hidden";
+										document.getElementById("1").style.visibility = "hidden";
+										document.getElementById("2").style.visibility = "hidden";
+
+
+									};
+
+
+
+                                    </script>
 
 </html>

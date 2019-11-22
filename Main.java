@@ -7,14 +7,12 @@ import weka.classifiers.rules.Rule;
 import weka.core.Attribute;
 import weka.core.Instances;
 import weka.core.Instance;
-import weka.core.converters.ArffLoader;
-import weka.core.converters.ArffSaver;
-import weka.core.converters.CSVLoader;
-import weka.core.converters.CSVSaver;
+import weka.core.converters.*;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.StratifiedRemoveFolds;
 import weka.filters.unsupervised.attribute.NumericToNominal;
 import weka.filters.unsupervised.attribute.Remove;
+import weka.filters.unsupervised.attribute.RemoveType;
 
 import javax.swing.*;
 import javax.swing.text.html.HTMLDocument;
@@ -26,12 +24,11 @@ import java.sql.*;
 //todo le regole non devono avere apostrofi perchè non piace a mysql
 public class Main {
 
+    //attenzione se i tuoi valori differiscono dal classificatore, è perchè il classificatore si comporta diversamnte qnd vede null
     public static void main(String[] args) throws Exception
     {
         vecchiomain();
     }
-
-
 
 
     static private void vecchiomain() throws Exception
@@ -40,17 +37,24 @@ public class Main {
 
         //String className = "1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX";
         //String className = "1 TERAPIE_ORMONALI_CHECKBOX";
-        String className = "1 VITAMINA_D_TERAPIA_CHECKBOX";
-        //String className = "1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX";
-        //String className = "1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX";
+        //String className = "1 VITAMINA_D_TERAPIA_CHECKBOX";
+        //String className = "1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX";//non corrispondono con pyth
+        //String className = "1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX";//ris non corrispondono con pyth
 
-        String[] tmp = {
+        //String className = "1 TERAPIE_OSTEOPROTETTIVE_LISTA";
+        //String className ="1 TERAPIE_ORMONALI_LISTA";
+        String className ="1 VITAMINA_D_TERAPIA_LISTA";
+        //String className ="1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA";
+        //String className ="1 CALCIO_SUPPLEMENTAZIONE_LISTA";
+
+
+            String[] tmp = {
                 "1 TERAPIA_OSTEOPROTETTIVA_ORMONALE",
                 "1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA",
                 "1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA",
                 "1 TERAPIA_ALTRO_CHECKBOX",
                 "1 TERAPIA_COMPLIANCE",
-                "1 FRATTURE",
+                //"1 FRATTURE",
                 "1 FRATTURA_SITI_DIVERSI",
                 "1 FRATTURA_FAMILIARITA",
                 "1 ABUSO_FUMO_CHECKBOX",
@@ -131,10 +135,26 @@ public class Main {
             i++;
         }
 
-        Filter filter = new NumericToNominal();
+        Filter filter;
+        filter = new NumericToNominal();
         ((NumericToNominal)filter).setAttributeIndicesArray(indiciColDaTrasInNominal);
         filter.setInputFormat(data);
         data = Filter.useFilter(data,filter);
+
+        //This is because sometimes the training set is so small that an entire column has missing values, SITUAZIONE_FEMORE_DX,
+        //for example.
+        //If this happens, weka assigns string type to that column. The proplem is that JRip or PART can't operate with
+        //string type attributes.
+        //Therefore we use this filter to remove such type columns.
+        //What happens if we have string attributes which don't have all missing values? Doesn't the filter remove those
+        //as well?
+        //We do not have string attributes, so no problem
+        filter = new RemoveType();
+        filter.setOptions(new String[]{"-T","string"});
+        filter.setInputFormat(data);
+        data = Filter.useFilter(data,filter);
+
+
 
         filter = new StratifiedRemoveFolds();
         filter.setOptions(new String[]{"-S", "0", "-N", "4", "-F", "1"});
@@ -145,10 +165,20 @@ public class Main {
         filter.setInputFormat(data);
         Instances train = Filter.useFilter(data, filter);
 
-        CSVSaver saver = new CSVSaver();
+
+
+
+
+        //test set per python, percè vogliamo verificare che il classificatore fittizio fatto solo di regole s python
+        //si comporta come uelllo vero
+        Saver saver = new CSVSaver();
         saver.setInstances(test);
         saver.setFile(new File("/home/dadawg/PycharmProjects/untitled1/perpython.csv"));
         saver.writeBatch();
+
+
+
+        //System.out.println(test);
 
 
         //questa parte è per la storia che devo recuperare le colonne con il testo su python sul test set
@@ -161,25 +191,23 @@ public class Main {
         test = Filter.useFilter(test,filter);
 
 
-
-        /*ArffSaver saver = new ArffSaver();
+        //this is not very useful, unless you want to see what weka GUI says
+        saver = new ArffSaver();
         saver.setInstances(test);
         saver.setFile(new File("test.arff"));
         saver.writeBatch();
-
         saver = new ArffSaver();
         saver.setInstances(train);
         saver.setFile(new File("train.arff"));
-        saver.writeBatch();*/
+        saver.writeBatch();
 
         PART cls = new PART();
         cls.buildClassifier(train);
 
         Evaluation evl = new Evaluation(train);
         evl.evaluateModel(cls,test);
-        //System.out.println(evl.toSummaryString());
+        System.out.println(evl.toSummaryString());
 
-        //System.out.println(cls);
 
         Rules rules = new Rules(cls);
         String not_refined = rules.toString();
@@ -461,12 +489,21 @@ class Rules implements Iterable<Regola>
         Enumeration instances = testset.enumerateInstances();
         while (instances.hasMoreElements())
         {
-            if (i==29)
+            if (i==337)
             {
                 int x = 9;
             }
             Instance inst = (Instance) instances.nextElement();
+            //System.out.println(inst);
             String predicted_y = this.predict(inst);
+
+            /*Double predictedByCls = cls.classifyInstance(inst);
+            if(Double.parseDouble(predicted_y) != predictedByCls) {
+                int r = 5;
+            }*/
+
+            //System.out.println(predicted_y+" "+predictedByCls);
+
 
             String right_y = inst.stringValue(testset.classIndex());
 
@@ -588,7 +625,8 @@ class Rules implements Iterable<Regola>
         List<Regola> output = new ArrayList<>();
 
         String[] stringArray_rules = rulesInStringFormat.split("\n\n");
-        Pattern predictionPattern = Pattern.compile("(?<=:\\s)\\d(?=\\s\\()");
+        //todo approfindire il regex per gestire tutti i carattreri strani
+        Pattern predictionPattern = Pattern.compile("(?<=:\\s)[\\d\\w.,\\s-+/]+(?=\\s\\()");
         Pattern mnPattern = Pattern.compile("(?<=\\s)[(].*[)]$");
         Pattern mnPattern2 = Pattern.compile("(?:\\d+(?:[.]\\d+)?)");
         Matcher matcher;
@@ -603,7 +641,7 @@ class Rules implements Iterable<Regola>
                 String[] stringArray_props = string_rule.split("\n");
                 Pattern colNamePattern = Pattern.compile("^.+(?=\\s(=|<|>|<=|>=)\\s)");
                 Pattern operatorPattern = Pattern.compile("(?<=\\s)(<=|>=|=|<|>)(?=\\s)");
-                Pattern operand2Pattern = Pattern.compile("(?<=\\s)[\\w\\d\\s.,+-]+((?=\\sAND$)|(?=:))");
+                Pattern operand2Pattern = Pattern.compile("(?<=(<|<=|>|>=|=)\\s)[\\w\\d\\s.,+-]+((?=\\sAND$)|(?=:))");
 
 
                 for (String string_prop : stringArray_props) {
