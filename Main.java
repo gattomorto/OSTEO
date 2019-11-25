@@ -2,6 +2,7 @@ package com.company;
 
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
+import weka.classifiers.rules.JRip;
 import weka.classifiers.rules.PART;
 import weka.classifiers.rules.Rule;
 import weka.core.Attribute;
@@ -35,82 +36,85 @@ public class Main {
     {
         //System.out.println(args[0]);
 
-        //String className = "1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX";
-        //String className = "1 TERAPIE_ORMONALI_CHECKBOX";
-        //String className = "1 VITAMINA_D_TERAPIA_CHECKBOX";
-        //String className = "1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX";//non corrispondono con pyth
-        //String className = "1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX";//ris non corrispondono con pyth
-
-        //String className = "1 TERAPIE_OSTEOPROTETTIVE_LISTA";
-        //String className ="1 TERAPIE_ORMONALI_LISTA";
-        String className ="1 VITAMINA_D_TERAPIA_LISTA";
-        //String className ="1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA";
-        //String className ="1 CALCIO_SUPPLEMENTAZIONE_LISTA";
+        String[] classNames = {
+                "TERAPIE_ORMONALI_CHECKBOX",
+                "TERAPIE_ORMONALI_LISTA",
+                "TERAPIE_OSTEOPROTETTIVE_CHECKBOX",
+                "TERAPIE_OSTEOPROTETTIVE_LISTA",
+                "VITAMINA_D_TERAPIA_CHECKBOX",
+                "VITAMINA_D_TERAPIA_LISTA",
+                "VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX",
+                "VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
+                "CALCIO_SUPPLEMENTAZIONE_CHECKBOX",
+                "CALCIO_SUPPLEMENTAZIONE_LISTA"
+        };
+        String className = classNames[4];
 
 
             String[] tmp = {
-                "1 TERAPIA_OSTEOPROTETTIVA_ORMONALE",
-                "1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA",
-                "1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA",
-                "1 TERAPIA_ALTRO_CHECKBOX",
-                "1 TERAPIA_COMPLIANCE",
-                //"1 FRATTURE",
-                "1 FRATTURA_SITI_DIVERSI",
-                "1 FRATTURA_FAMILIARITA",
-                "1 ABUSO_FUMO_CHECKBOX",
-                "1 USO_CORTISONE_CHECKBOX",
-                "1 MALATTIE_ATTUALI_CHECKBOX",
-                "1 MALATTIE_ATTUALI_ARTRITE_REUM",
-                "1 MALATTIE_ATTUALI_ARTRITE_PSOR",
-                "1 MALATTIE_ATTUALI_LUPUS",
-                "1 MALATTIE_ATTUALI_SCLERODERMIA",
-                "1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI",
-                "1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX",
-                "1 PATOLOGIE_UTERINE_CHECKBOX",
-                "1 NEOPLASIA_CHECKBOX",
-                "1 SINTOMI_VASOMOTORI",
-                "1 SINTOMI_DISTROFICI",
-                "1 DISLIPIDEMIA_CHECKBOX",
-                "1 IPERTENSIONE",
-                "1 RISCHIO_TEV",
-                "1 PATOLOGIA_CARDIACA",
-                "1 PATOLOGIA_VASCOLARE",
-                "1 INSUFFICIENZA_RENALE",
-                "1 PATOLOGIA_RESPIRATORIA",
-                "1 PATOLOGIA_CAVO_ORALE_CHECKBOX",
-                "1 PATOLOGIA_EPATICA",
-                "1 PATOLOGIA_ESOFAGEA",
-                "1 GASTRO_DUODENITE",
-                "1 GASTRO_RESEZIONE",
-                "1 RESEZIONE_INTESTINALE",
-                "1 MICI",
-                "1 VITAMINA_D_CHECKBOX",
-                "1 ALLERGIE_CHECKBOX",
-                "1 INTOLLERANZE_CHECKBOX",
-                "1 SITUAZIONE_COLONNA_CHECKBOX",
-                "1 SITUAZIONE_FEMORE_SN_CHECKBOX",
-                "1 SITUAZIONE_FEMORE_DX_CHECKBOX",
-                "1 SITUAZIONE_FEMORE_DX",
-                "1 OSTEOPOROSI_GRAVE",
-                "1 VERTEBRE_NON_ANALIZZATE_CHECKBOX",
-                "1 VERTEBRE_NON_ANALIZZATE_L1",
-                "1 VERTEBRE_NON_ANALIZZATE_L2",
-                "1 VERTEBRE_NON_ANALIZZATE_L3",
-                "1 VERTEBRE_NON_ANALIZZATE_L4",
-                "1 COLONNA_NON_ANALIZZABILE",
-                "1 COLONNA_VALORI_SUPERIORI",
-                "1 FEMORE_NON_ANALIZZABILE",
-                "1 FRAX_APPLICABILE",
-                "1 TBS_COLONNA_APPLICABILE",
-                "1 DEFRA_APPLICABILE",
-                "1 NORME_PREVENZIONE",
-                "1 ALTRO_CHECKBOX",
-                "1 NORME_COMPORTAMENTALI",
-                "1 ATTIVITA_FISICA",
-                "1 SOSPENSIONE_TERAPIA_CHECKBOX",
-                "1 INDAGINI_APPROFONDIMENTO_CHECKBOX",
-                "1 SOSPENSIONE_FUMO",
-                "1 CONTROLLO_DENSITOMETRICO_CHECKBOX"
+                "TERAPIA_OSTEOPROTETTIVA_ORMONALE",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA",
+                "TERAPIA_ALTRO_CHECKBOX",
+                "TERAPIA_COMPLIANCE",
+                //"FRATTURE",
+                "FRATTURA_VERTEBRE_CHECKBOX",
+                "FRATTURA_SITI_DIVERSI",
+                "FRATTURA_FAMILIARITA",
+                "ABUSO_FUMO_CHECKBOX",
+                "USO_CORTISONE_CHECKBOX",
+                "MALATTIE_ATTUALI_CHECKBOX",
+                "MALATTIE_ATTUALI_ARTRITE_REUM",
+                "MALATTIE_ATTUALI_ARTRITE_PSOR",
+                "MALATTIE_ATTUALI_LUPUS",
+                "MALATTIE_ATTUALI_SCLERODERMIA",
+                "MALATTIE_ATTUALI_ALTRE_CONNETTIVITI",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX",
+                "PATOLOGIE_UTERINE_CHECKBOX",
+                "NEOPLASIA_CHECKBOX",
+                "SINTOMI_VASOMOTORI",
+                "SINTOMI_DISTROFICI",
+                "DISLIPIDEMIA_CHECKBOX",
+                "IPERTENSIONE",
+                "RISCHIO_TEV",
+                "PATOLOGIA_CARDIACA",
+                "PATOLOGIA_VASCOLARE",
+                "INSUFFICIENZA_RENALE",
+                "PATOLOGIA_RESPIRATORIA",
+                "PATOLOGIA_CAVO_ORALE_CHECKBOX",
+                "PATOLOGIA_EPATICA",
+                "PATOLOGIA_ESOFAGEA",
+                "GASTRO_DUODENITE",
+                "GASTRO_RESEZIONE",
+                "RESEZIONE_INTESTINALE",
+                "MICI",
+                "VITAMINA_D_CHECKBOX",
+                "ALLERGIE_CHECKBOX",
+                "INTOLLERANZE_CHECKBOX",
+                "SITUAZIONE_COLONNA_CHECKBOX",
+                "SITUAZIONE_FEMORE_SN_CHECKBOX",
+                "SITUAZIONE_FEMORE_DX_CHECKBOX",
+                "SITUAZIONE_FEMORE_DX",
+                "OSTEOPOROSI_GRAVE",
+                "VERTEBRE_NON_ANALIZZATE_CHECKBOX",
+                "VERTEBRE_NON_ANALIZZATE_L1",
+                "VERTEBRE_NON_ANALIZZATE_L2",
+                "VERTEBRE_NON_ANALIZZATE_L3",
+                "VERTEBRE_NON_ANALIZZATE_L4",
+                "COLONNA_NON_ANALIZZABILE",
+                "COLONNA_VALORI_SUPERIORI",
+                "FEMORE_NON_ANALIZZABILE",
+                "FRAX_APPLICABILE",
+                "TBS_COLONNA_APPLICABILE",
+                "DEFRA_APPLICABILE",
+                "NORME_PREVENZIONE",
+                "ALTRO_CHECKBOX",
+                "NORME_COMPORTAMENTALI",
+                "ATTIVITA_FISICA",
+                "SOSPENSIONE_TERAPIA_CHECKBOX",
+                "INDAGINI_APPROFONDIMENTO_CHECKBOX",
+                "SOSPENSIONE_FUMO",
+                "CONTROLLO_DENSITOMETRICO_CHECKBOX"
         };
 
         List<String> nomiColDaTrasInNominal = new ArrayList<String>();
@@ -129,7 +133,7 @@ public class Main {
         int i=0;
         for (String colName: nomiColDaTrasInNominal)
         {
-            //System.out.println(colName);
+            System.out.println(colName);
             //System.out.println(data.attribute(colName));
             indiciColDaTrasInNominal[i]=data.attribute(colName).index();
             i++;
@@ -184,7 +188,7 @@ public class Main {
         //questa parte è per la storia che devo recuperare le colonne con il testo su python sul test set
         //lo faccio usando pk.. allora salvo il test set e poi la rimuovo subito
         filter = new Remove();
-        ((Remove)filter).setAttributeIndicesArray(new int[] {data.attribute("1 PATIENT_KEY").index()});
+        ((Remove)filter).setAttributeIndicesArray(new int[] {data.attribute("PATIENT_KEY").index()});
         filter.setInputFormat(train);
         train = Filter.useFilter(train,filter);
         filter.setInputFormat(test);
@@ -202,6 +206,8 @@ public class Main {
         saver.writeBatch();
 
         PART cls = new PART();
+        //JRip cls = new JRip();
+
         cls.buildClassifier(train);
 
         Evaluation evl = new Evaluation(train);
@@ -221,6 +227,7 @@ public class Main {
         String user_readable_rules_not_ref = rules3.toString();
 
         Rules rules4 = new Rules(cls);
+        //0.8 0.1
         rules4.refineRules(train.numInstances(),0.8,0.1);
         rules4.generateUserReadableRules(getColNameToNgram());
         String user_readable_rules_ref = rules4.toString();
@@ -235,7 +242,7 @@ public class Main {
         //System.out.println(qry);
 
 
-        Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO","utente_web","CMOREL96T45");
+        Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO2","utente_web","CMOREL96T45");
         Statement myStmt = myConn.createStatement();
         // todo attenzione se devi modificare questa, assicurati di cancellare la tabella dal terminale
         myStmt.executeUpdate( "create table if not exists regole (terapia VARCHAR(256) PRIMARY KEY, regola_refined VARCHAR(10000), regola_not_refined VARCHAR(20000), user_readable_not_ref VARCHAR(20000), user_readable_ref VARCHAR(15000))");
@@ -298,7 +305,7 @@ class Proposizione
         if(attOfoperando1.isNumeric())
         {
             double operando1 = inst.value(attOfoperando1);
-            double operando2 = Float.parseFloat(this.operando2);
+            double operando2 = Double.parseDouble(this.operando2);
 
             if(this.operatore.equals("="))
             {
@@ -489,7 +496,7 @@ class Rules implements Iterable<Regola>
         Enumeration instances = testset.enumerateInstances();
         while (instances.hasMoreElements())
         {
-            if (i==337)
+            if (i==13)
             {
                 int x = 9;
             }
@@ -503,6 +510,8 @@ class Rules implements Iterable<Regola>
             }*/
 
             //System.out.println(predicted_y+" "+predictedByCls);
+
+            //System.out.println(i+": "+predicted_y);
 
 
             String right_y = inst.stringValue(testset.classIndex());
@@ -600,6 +609,7 @@ class Rules implements Iterable<Regola>
     public String toString()
     {
         String output = "";
+
         for(Regola r: this.rules)
             output+=r.toString() + "\n\n";
 

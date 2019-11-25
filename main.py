@@ -23,17 +23,24 @@ from sqlalchemy import text
 import sys
 import mysql.connector
 import json
+import datetime
 
 
 # todo controlla che tutti i regex che abbiano anche '_' e dove serve áéíóúàèìòùàèìòù
+# todo sost. vitamina con vit
+# todo fare quando per esempio sostituisci con il principio fai il controllo che se non lo trovi.. percè potrebbere aver aggiunto uno nuovo
+# convertire in int le colonne tipo AGE
+
 def main():
-    #leggo_regole_dal_db_e_verifico_accuracy()
-    singola_istanza()
+
+    leggo_regole_dal_db_e_verifico_accuracy()
+    #singola_istanza()
+
 
 
 # altri main()
 def preprocessamento_singolo(instance, class_name):
-    db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO'
+    db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
     db_connection = create_engine(db_connection_str)
 
     # region categorizzo ULTIMA_MESTRUAZIONE
@@ -152,6 +159,7 @@ def preprocessamento_singolo(instance, class_name):
     if instance['1 USO_CORTISONE'] == '':
         instance['1 USO_CORTISONE'] = 'non usa cortisone'
 
+    # todo nel db si salva come null no come stringa vuota
     if instance['1 TERAPIA_ALTRO_CHECKBOX'] == '':
         instance['1 TERAPIA_ALTRO_CHECKBOX'] = 0
 
@@ -190,7 +198,7 @@ def singola_istanza():
     # print(pk)
     # print(datascan)
 
-    db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO'
+    db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
     db_connection = create_engine(db_connection_str)
     df = pd.read_sql(
         'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE where Anamnesi.PATIENT_KEY = "{}" and Anamnesi.SCAN_DATE= "{}"'.format(
@@ -243,26 +251,27 @@ def singola_istanza():
 
 
 def leggo_regole_dal_db_e_verifico_accuracy():
-    class_name = '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX' #pp
-    #class_name = '1 TERAPIE_ORMONALI_CHECKBOX'#pp
-    #class_name = '1 VITAMINA_D_TERAPIA_CHECKBOX' #pp
-    #class_name = '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX'#pp
-    #class_name = '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX' #pp
+    class_names = [
+        'TERAPIE_ORMONALI_CHECKBOX',#[0]
+        'TERAPIE_ORMONALI_LISTA',#[1]
+        'TERAPIE_OSTEOPROTETTIVE_CHECKBOX',#[2] refined piu basso di not refined
+        'TERAPIE_OSTEOPROTETTIVE_LISTA',#[3]
+        'VITAMINA_D_TERAPIA_CHECKBOX',#[4]
+        'VITAMINA_D_TERAPIA_LISTA',#[5]
+        'VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',#[6]
+        'VITAMINA_D_SUPPLEMENTAZIONE_LISTA',#[7]
+        'CALCIO_SUPPLEMENTAZIONE_CHECKBOX',#[8]
+        'CALCIO_SUPPLEMENTAZIONE_LISTA']  #[9]
 
-    #class_name = "1 TERAPIE_OSTEOPROTETTIVE_LISTA"  #pp
-    #class_name = "1 TERAPIE_ORMONALI_LISTA" #pp
-    #class_name = "1 VITAMINA_D_TERAPIA_LISTA"  pp
-    #class_name = "1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA" #accuracy diversa per user_not_ref pp
-    #class_name = "1 CALCIO_SUPPLEMENTAZIONE_LISTA" #pp
-
+    class_name = class_names[6]
     preprocessa = True
-    file = 'osteo.csv'
+
 
     if preprocessa:
-        preprocessa_per_java(class_name, file)
+        preprocessa_per_java2(class_name)
         print("preprocess concluso, metti false e vai su java")
     else:
-        db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO'
+        db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
         db_connection = create_engine(db_connection_str)
 
         t = text("SELECT * FROM regole where terapia = '{}'".format(class_name))
@@ -285,30 +294,50 @@ def leggo_regole_dal_db_e_verifico_accuracy():
         # it is produced by java, so first run java
         #todo capire perchè qui mi da errore se cella contiene testo con virgola
         # e perchè nel preprocessamento no... forse pechè npn cerecano virgole
-        test = pd.read_csv('perpython.csv',quotechar="'")
+        test = pd.read_csv('perpython.csv', quotechar="'")
         test.replace('?', np.nan, inplace=True)
 
         test_x = test.iloc[:, :-1]
         test_y = test.iloc[:, -1]
 
         # aggiungo le colonne con il testo a test_x
-        test_x_text = add_text_columns(file, test_x)
+        test_x_text = add_text_columns(test_x)
 
-        print(accuracy_rules3(test_x_text, test_y, rules_user_not_ref))
-        print(accuracy_rules3(test_x_text, test_y, rules_user_ref))
+        print(accuracy_rules3(test_x_text, test_y, rules_user_not_ref, class_name))
+        print(accuracy_rules3(test_x_text, test_y, rules_user_ref, class_name))
 
-        print(accuracy_rules3(test_x, test_y, rules_not_ref))
-        print(accuracy_rules3(test_x, test_y, rules_ref))
+        print(accuracy_rules3(test_x, test_y, rules_not_ref, class_name))
+        print(accuracy_rules3(test_x, test_y, rules_ref, class_name))
 
 
-def preprocessa_per_java(class_name, file):
-    tabella_completa = pd.read_csv(file)
-    tabella_preprocessata, colname_to_ngram, stemmed_to_original = preprocessamento_nuovo2(tabella_completa, class_name)
-    print("ok18")
+
+
+def df_column_uniquify(df):
+    df_columns = df.columns
+    new_columns = []
+    for item in df_columns:
+        counter = 0
+        newitem = item
+        while newitem in new_columns:
+            counter += 1
+            newitem = "{}_{}".format(item, counter)
+        new_columns.append(newitem)
+    df.columns = new_columns
+    return df
+
+def preprocessa_per_java2(class_name):
+    db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
+    db_connection = create_engine(db_connection_str)
+    # I read everything except scananalisys cause it has the BMI attribute which is already present in anamnesi
+    tabella_completa = pd.read_sql(
+        'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE',
+        con=db_connection)
+
+    tabella_preprocessata, colname_to_ngram, stemmed_to_original = preprocessamento_nuovo3(tabella_completa, class_name)
 
     # we don't keep instances where class is missing
     tabella_preprocessata.dropna(subset=[class_name], inplace=True)
-    print("ok19")
+
 
     file = open('colnametongram.txt', 'wt')
     file.write(str(colname_to_ngram))
@@ -316,8 +345,8 @@ def preprocessa_per_java(class_name, file):
     file = open('/var/www/sto/stemmed_to_original_{}.txt'.format(class_name), 'wt')
     json.dump(stemmed_to_original, file)
     file.close()
-    tabella_preprocessata.to_csv('{}.csv'.format(class_name), index=False)
 
+    tabella_preprocessata.to_csv('{}.csv'.format(class_name), index=False)
 
 def primo_script():
     '''
@@ -346,38 +375,54 @@ def primo_script():
 
 
 # funzioni moderne
-def add_text_columns(data_file_name, test):
-    tabella_completa = pd.read_csv(data_file_name)
+def add_text_columns(test):
 
+    db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
+    db_connection = create_engine(db_connection_str)
+    # I read everything except scananalisys cause it has the BMI attribute which is already present in anamnesi
+    tabella_completa = pd.read_sql(
+        'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE',
+        con=db_connection)
+
+    tabella_completa = df_column_uniquify(tabella_completa)
+
+  
     # le colonne testo vuota la trattiamo come stringa vuota non null.. perchè se è null siammo costretti a ddire nonso
     # se è vuota "non contiene: " sara vera
     # penso che il primo gruppo non serva perchè ogni cella nuova sarà sovrascritta dai valori in tabella completa
-    test['1 TERAPIA_ALTRO'] = ''
-    test['1 ALTRE_PATOLOGIE'] = ''
-    test['1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = ''
-    test['1 PATOLOGIE_UTERINE_DIAGNOSI'] = ''
-    test['1 NEOPLASIA_MAMMARIA_TERAPIA'] = ''
-    test['1 DISLIPIDEMIA_TERAPIA'] = ''
-    test['1 ALLERGIE'] = ''
-    test['1 INTOLLERANZE'] = ''
-    test['1 ALTRO'] = ''
-    test['1 SOSPENSIONE_TERAPIA_FARMACO'] = ''
-    test['1 INDAGINI_APPROFONDIMENTO_LISTA'] = ''
-    test['1 CAUSE_OSTEOPOROSI_SECONDARIA'] = ''
-    tabella_completa['1 TERAPIA_ALTRO'].fillna('', inplace=True)
-    tabella_completa['1 ALTRE_PATOLOGIE'].fillna('', inplace=True)
-    tabella_completa['1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'].fillna('', inplace=True)
-    tabella_completa['1 PATOLOGIE_UTERINE_DIAGNOSI'].fillna('', inplace=True)
-    tabella_completa['1 NEOPLASIA_MAMMARIA_TERAPIA'].fillna('', inplace=True)
-    tabella_completa['1 DISLIPIDEMIA_TERAPIA'].fillna('', inplace=True)
-    tabella_completa['1 ALLERGIE'].fillna('', inplace=True)
-    tabella_completa['1 INTOLLERANZE'].fillna('', inplace=True)
-    tabella_completa['1 ALTRO'].fillna('', inplace=True)
-    tabella_completa['1 SOSPENSIONE_TERAPIA_FARMACO'].fillna('', inplace=True)
-    tabella_completa['1 INDAGINI_APPROFONDIMENTO_LISTA'].fillna('', inplace=True)
-    tabella_completa['1 CAUSE_OSTEOPOROSI_SECONDARIA'].fillna('', inplace=True)
+    test['TERAPIA_ALTRO'] = ''
+    test['ALTRE_PATOLOGIE'] = ''
+    test['VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = ''
+    test['PATOLOGIE_UTERINE_DIAGNOSI'] = ''
+    test['NEOPLASIA_MAMMARIA_TERAPIA'] = ''
+    test['DISLIPIDEMIA_TERAPIA'] = ''
+    test['ALLERGIE'] = ''
+    test['INTOLLERANZE'] = ''
+    test['ALTRO'] = ''
+    test['SOSPENSIONE_TERAPIA_FARMACO'] = ''
+    test['INDAGINI_APPROFONDIMENTO_LISTA'] = ''
+    test['CAUSE_OSTEOPOROSI_SECONDARIA'] = ''
+    test['TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = ''
+    test['TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = ''
+
+    
+    tabella_completa['TERAPIA_ALTRO'].fillna('', inplace=True)
+    tabella_completa['ALTRE_PATOLOGIE'].fillna('', inplace=True)
+    tabella_completa['VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'].fillna('', inplace=True)
+    tabella_completa['PATOLOGIE_UTERINE_DIAGNOSI'].fillna('', inplace=True)
+    tabella_completa['NEOPLASIA_MAMMARIA_TERAPIA'].fillna('', inplace=True)
+    tabella_completa['DISLIPIDEMIA_TERAPIA'].fillna('', inplace=True)
+    tabella_completa['ALLERGIE'].fillna('', inplace=True)
+    tabella_completa['INTOLLERANZE'].fillna('', inplace=True)
+    tabella_completa['ALTRO'].fillna('', inplace=True)
+    tabella_completa['SOSPENSIONE_TERAPIA_FARMACO'].fillna('', inplace=True)
+    tabella_completa['INDAGINI_APPROFONDIMENTO_LISTA'].fillna('', inplace=True)
+    tabella_completa['CAUSE_OSTEOPOROSI_SECONDARIA'].fillna('', inplace=True)
+    tabella_completa['TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'].fillna('', inplace=True)
+    tabella_completa['TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'].fillna('', inplace=True)
 
     m = 0
+    previously_matched = []
 
     for index_test in range(0, test.shape[0]):
         # contiene la stringa '1 PATIENT_KEY' (con le virgolette) perchè quando leggo il csv prodotto da weka, ce le mette
@@ -389,7 +434,7 @@ def add_text_columns(data_file_name, test):
         for index_completa in range(0, tabella_completa.shape[0]):
             # print(index_completa)
 
-            pk_completa = tabella_completa.loc[index_completa, '1 PATIENT_KEY']
+            pk_completa = tabella_completa.loc[index_completa, 'PATIENT_KEY']
 
             # if pk_test == '1960419447BORINI PA' or pk_completa == '1960419447BORINI PA' or pk_test=='1960419447BORINI PA\n' or  pk_completa == '1960419447BORINI PA\n':
             # x = 5
@@ -400,32 +445,46 @@ def add_text_columns(data_file_name, test):
             pk_completa = pk_completa.replace("'", '')
 
             if pk_test == pk_completa:
+
+                # per i pazienti che sono tornati
+                #if pk_test in previously_matched:
+                   # continue
+
+                #previously_matched.append(pk_test)
+
                 m += 1
                 pk_matched = True
-                x = tabella_completa.loc[index_completa, '1 TERAPIA_ALTRO']
-                y = tabella_completa.loc[index_completa, '1 ALTRE_PATOLOGIE']
+                x = tabella_completa.loc[index_completa, 'TERAPIA_ALTRO']
+                y = tabella_completa.loc[index_completa, 'ALTRE_PATOLOGIE']
                 # print(x)
                 # print(y)
-                test.loc[index_test, '1 TERAPIA_ALTRO'] = x
-                test.loc[index_test, '1 ALTRE_PATOLOGIE'] = y
+                test.loc[index_test, 'TERAPIA_ALTRO'] = x
+                test.loc[index_test, 'ALTRE_PATOLOGIE'] = y
 
-                test.loc[index_test, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = tabella_completa.loc[
-                    index_completa, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA']
-                test.loc[index_test, '1 PATOLOGIE_UTERINE_DIAGNOSI'] = tabella_completa.loc[
-                    index_completa, '1 PATOLOGIE_UTERINE_DIAGNOSI']
-                test.loc[index_test, '1 NEOPLASIA_MAMMARIA_TERAPIA'] = tabella_completa.loc[
-                    index_completa, '1 NEOPLASIA_MAMMARIA_TERAPIA']
-                test.loc[index_test, '1 DISLIPIDEMIA_TERAPIA'] = tabella_completa.loc[
-                    index_completa, '1 DISLIPIDEMIA_TERAPIA']
-                test.loc[index_test, '1 ALLERGIE'] = tabella_completa.loc[index_completa, '1 ALLERGIE']
-                test.loc[index_test, '1 INTOLLERANZE'] = tabella_completa.loc[index_completa, '1 INTOLLERANZE']
-                test.loc[index_test, '1 ALTRO'] = tabella_completa.loc[index_completa, '1 ALTRO']
-                test.loc[index_test, '1 SOSPENSIONE_TERAPIA_FARMACO'] = tabella_completa.loc[
-                    index_completa, '1 SOSPENSIONE_TERAPIA_FARMACO']
-                test.loc[index_test, '1 INDAGINI_APPROFONDIMENTO_LISTA'] = tabella_completa.loc[
-                    index_completa, '1 INDAGINI_APPROFONDIMENTO_LISTA']
-                test.loc[index_test, '1 CAUSE_OSTEOPOROSI_SECONDARIA'] = tabella_completa.loc[
-                    index_completa, '1 CAUSE_OSTEOPOROSI_SECONDARIA']
+                test.loc[index_test, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = tabella_completa.loc[
+                    index_completa, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA']
+                test.loc[index_test, 'PATOLOGIE_UTERINE_DIAGNOSI'] = tabella_completa.loc[
+                    index_completa, 'PATOLOGIE_UTERINE_DIAGNOSI']
+                test.loc[index_test, 'NEOPLASIA_MAMMARIA_TERAPIA'] = tabella_completa.loc[
+                    index_completa, 'NEOPLASIA_MAMMARIA_TERAPIA']
+                test.loc[index_test, 'DISLIPIDEMIA_TERAPIA'] = tabella_completa.loc[
+                    index_completa, 'DISLIPIDEMIA_TERAPIA']
+                test.loc[index_test, 'ALLERGIE'] = tabella_completa.loc[index_completa, 'ALLERGIE']
+                test.loc[index_test, 'INTOLLERANZE'] = tabella_completa.loc[index_completa, 'INTOLLERANZE']
+                test.loc[index_test, 'ALTRO'] = tabella_completa.loc[index_completa, 'ALTRO']
+                test.loc[index_test, 'SOSPENSIONE_TERAPIA_FARMACO'] = tabella_completa.loc[
+                    index_completa, 'SOSPENSIONE_TERAPIA_FARMACO']
+                test.loc[index_test, 'INDAGINI_APPROFONDIMENTO_LISTA'] = tabella_completa.loc[
+                    index_completa, 'INDAGINI_APPROFONDIMENTO_LISTA']
+                test.loc[index_test, 'CAUSE_OSTEOPOROSI_SECONDARIA'] = tabella_completa.loc[
+                    index_completa, 'CAUSE_OSTEOPOROSI_SECONDARIA']
+
+                test.loc[index_test, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = tabella_completa.loc[
+                    index_completa, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
+                
+                test.loc[index_test, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = tabella_completa.loc[
+                    index_completa, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
+                
 
         if pk_matched is False:
             print("pk not matched for: " + pk_test)
@@ -482,61 +541,17 @@ def remove_stopwords_and_stem(sentence, regex):
     return output
 
 
-def preprocessamento_nuovo2(tabella_completa, class_name):
+
+def preprocessamento_nuovo3(tabella_completa, class_name):
+    # todo controlla che tutte le vettorizzazioni si facciano correttamente
+    # per il doppio bmi
+    tabella_completa = df_column_uniquify(tabella_completa)
+    tabella_completa.rename(columns={'PAROLOGIA_ESOFAGEA': 'PATOLOGIA_ESOFAGEA'}, inplace=True)
+    tabella_completa.replace('NULL', value='', inplace=True)
+    tabella_completa.replace(r"'", value='', inplace=True, regex=True)
+
+
     # attenzione ho tolto FRATTURE perchè nel dump che mi hanno dato non ce
-    def one_hot_encode(frame, column_name, regex, prefix):
-        '''
-        frame:
-        A               B
-        cane bau        a
-        gatto miao      b
-        pesce blob      c
-
-        column_name: A
-        regex: "solo la prima parola"
-        prefix: x
-
-        output:
-        A               B    xcane  xgatto xpesce
-        cane bau        a     1      0      0
-        gatto miao      b     0      1      0
-        pesce blob      c     0      0      1
-        gatto miao      e     0      1      0
-
-        e la lista delle colonne aggiunte [xcane, xgatto, xpesce] (serve perchè dopo dovrò selezionare queste colonne)
-
-        regex serve nel caso in cui si desiderasse considerare una sottostringa della riga (cioe al posto di 'cane bau'
-        è come se fosse 'cane')
-
-        il prefisso serve per evitare che ci siano colonne con lo stesso nome: questa funzione può essere chiamata
-        due volte con due colonne che hanno 'na' e allora si formerà una colonna comune
-        '''
-        # conterrà cane, gatto, pesce
-        # questa conterrà tutti i valori con cui fare one-hot-encoding
-        valori_nominali = []
-        for row_index in range(0, frame.shape[0]):
-            # iesima riga del frame, sarà 'cane bau', 'gatto miao', 'pesce blob'
-            row = frame.loc[row_index, column_name]
-            # la sottostringa di interesse. sarà 'cane', 'gatto', 'pesce'
-            value_of_interest = re.search(regex, row)
-            valori_nominali.append(value_of_interest[0])
-        # trasformo la lista in DataFrame
-        valori_nominali = pd.Series(valori_nominali)
-        valori_nominali = valori_nominali.to_frame()
-        one_hot_encoder = OneHotEncoder()
-        one_hot_encoder.fit(valori_nominali)
-        # valori one-hot-encoded, però è una matrice, bisogna trasformare in DataFrame
-        valori_nominali_encoded_ndarray = one_hot_encoder.transform(valori_nominali).toarray()
-        # servono per la creazione del DataFrame
-        nomi_colonne_nuove = one_hot_encoder.get_feature_names()
-        # aggiungo il prefisso
-        nomi_colonne_nuove = [prefix + col_name for col_name in nomi_colonne_nuove]
-        # DataFrame creato, ora lo aggiungere al DataFrame passato
-        valori_nominali_encoded_dataframe = pd.DataFrame(valori_nominali_encoded_ndarray, columns=nomi_colonne_nuove)
-        frame = pd.concat([frame, valori_nominali_encoded_dataframe], axis=1)
-        # ritorno i nomi perchè poi bisogna selezionarli per il modello
-        return frame, nomi_colonne_nuove
-
     global stemmed_to_original
     stemmed_to_original = {}
 
@@ -623,7 +638,7 @@ def preprocessamento_nuovo2(tabella_completa, class_name):
         # lista di frasi
         column_list = frame[column_name].tolist()
         # lista di frasi tutte in minuscolo
-        column_list = [cell.lower() for cell in column_list]
+        column_list = [str(cell).lower() for cell in column_list]
         for i in range(0, len(column_list)):
             column_list[i] = remove_stopwords_and_stem(column_list[i], regex)
         # non idf = false perchè voglio un output binario.
@@ -652,104 +667,95 @@ def preprocessamento_nuovo2(tabella_completa, class_name):
 
     # commento per il momento perchè devo fare riferimento a valori vecchi
     '''# Tengo solo quelli che sono venuti prima di ottobre
-    tabella_completa = tabella_completa.loc[tabella_completa['1 SCAN_DATE'] <= '2019-10-01', :].copy()
+    tabella_completa = tabella_completa.loc[tabella_completa['SCAN_DATE'] <= '2019-10-01', :].copy()
     tabella_completa.reset_index(drop=True, inplace=True)'''
 
-    # todo cambiare il nome della colonna ultima mestr.
-    # region categorizzo ULTIMA_MESTRUAZIONE
-    # come prima cosa sostituisco l'anno dell'ultima mestruazione con quanti anni non ha mestruazioni
-    # divido in range [-inf,mean-std]=poco, [mean-std,mean+std]=medio, [mean+std,+inf]=tanto, e per gli uomini e/o per
-    # le donne che hanno ancora il ciclo lascio null
-    birthdate_col = tabella_completa['1 BIRTHDATE']
-    # dalla data di nascita mi serve solo l'anno
-    birthdate_year_col = [data[0:4] for data in birthdate_col]
-    # nel ciclo viene fatta la differenza
-    for row_index in range(0, tabella_completa.shape[0]):
-        # qui sostituisco alla data dell'ultima mest. con gli anni che non ha mest.
-        # la differenza lascia nan per chi ha ULTIMA_MESTRUAZIONE nan
-        tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = \
-            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] - int(birthdate_year_col[row_index])
-    std = tabella_completa['1 ULTIMA_MESTRUAZIONE'].std()
-    mean = tabella_completa['1 ULTIMA_MESTRUAZIONE'].mean()
-    # in questa parte sostituisco gli anni in cui non ha il ciclo con una tra le categorie
-    for row_index in range(0, tabella_completa.shape[0]):
-        anni_senza_ciclo = tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE']
-        if mean - std <= anni_senza_ciclo <= mean + std:
-            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'medio'
-        elif anni_senza_ciclo > mean + std:
-            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'tanto'
-        elif anni_senza_ciclo < mean - std:
-            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'poco'
-    # endregion
+
+    # todo registrare questo cambiamento
+    # creates a new column with the difference between the current year and last period year
+    # all nans in ULTIMA_MESTRUAZIONE transfer to ANNI_SENZA_MESTRUAZIONI
+    #todo no l'anno di adesso, ma l'anno di scandate perchè
+    tabella_completa['ANNI_DALLA_MENOPAUSA'] = datetime.datetime.now().year - tabella_completa['ULTIMA_MESTRUAZIONE']
+
+    # todo ricordati di aggiungere la nuova colonna
+    # todo sistema stato menopausale per le donne che hanno ancora mest o per i maschi
+    # todo guarda la colonna alcool se è sitemata + quella collonna nuova
+
+    # NULL shows up only in string type columns
+    # replacing with '' instead of nan makes vectorization easier
+
+
+
+
 
     # vettorizato INDAGINI_APPROFONDIMENTO_LISTA
-    tabella_completa['1 INDAGINI_APPROFONDIMENTO_LISTA'].fillna('', inplace=True)
+    #tabella_completa['INDAGINI_APPROFONDIMENTO_LISTA'].fillna('', inplace=True)
     tabella_completa, nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA = \
-        vectorize('1 INDAGINI_APPROFONDIMENTO_LISTA', tabella_completa, prefix='ial')
+        vectorize('INDAGINI_APPROFONDIMENTO_LISTA', tabella_completa, prefix='ial')
 
     print("ok1")
 
     # vettorizato SOSPENSIONE_TERAPIA_FARMACO
-    tabella_completa['1 SOSPENSIONE_TERAPIA_FARMACO'].fillna('', inplace=True)
+    #tabella_completa['SOSPENSIONE_TERAPIA_FARMACO'].fillna('', inplace=True)
     tabella_completa, nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO \
-        = vectorize('1 SOSPENSIONE_TERAPIA_FARMACO', tabella_completa, prefix='stf', n_gram_range=(1, 1))
+        = vectorize('SOSPENSIONE_TERAPIA_FARMACO', tabella_completa, prefix='stf', n_gram_range=(1, 1))
     print("ok2")
 
     # vettorizato ALTRO
-    tabella_completa['1 ALTRO'].fillna('', inplace=True)
-    tabella_completa, nomi_nuove_colonne_vectorized_ALTRO = vectorize('1 ALTRO', tabella_completa, prefix='altr')
+    #tabella_completa['ALTRO'].fillna('', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_ALTRO = vectorize('ALTRO', tabella_completa, prefix='altr')
     print("ok3")
 
     # vettorizato INTOLLERANZE
-    tabella_completa['1 INTOLLERANZE'].fillna('', inplace=True)
+    #tabella_completa['INTOLLERANZE'].fillna('', inplace=True)
     tabella_completa, nomi_nuove_colonne_vectorized_INTOLLERANZE = \
-        vectorize('1 INTOLLERANZE', tabella_completa, prefix='i', n_gram_range=(1, 1))
+        vectorize('INTOLLERANZE', tabella_completa, prefix='i', n_gram_range=(1, 1))
     print("ok4")
 
     # vettorizato ALLERGIE
-    tabella_completa['1 ALLERGIE'].fillna('', inplace=True)
+    #tabella_completa['ALLERGIE'].fillna('', inplace=True)
     tabella_completa, nomi_nuove_colonne_vectorized_ALLERGIE = \
-        vectorize('1 ALLERGIE', tabella_completa, prefix='a', n_gram_range=(2, 2))
+        vectorize('ALLERGIE', tabella_completa, prefix='a', n_gram_range=(2, 2))
     print("ok5")
 
     # vettorizato DISLIPIDEMIA_TERAPIA
-    tabella_completa['1 DISLIPIDEMIA_TERAPIA'].fillna('', inplace=True)
+    #tabella_completa['DISLIPIDEMIA_TERAPIA'].fillna('', inplace=True)
     # (1,1) perchè sono quasi tutte parole singole
     tabella_completa, nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA = \
-        vectorize('1 DISLIPIDEMIA_TERAPIA', tabella_completa, prefix='dt', n_gram_range=(1, 1))
+        vectorize('DISLIPIDEMIA_TERAPIA', tabella_completa, prefix='dt', n_gram_range=(1, 1))
     print("ok6")
 
     # vettorizato NEOPLASIA_MAMMARIA_TERAPIA
-    tabella_completa['1 NEOPLASIA_MAMMARIA_TERAPIA'].fillna('', inplace=True)
+    #tabella_completa['NEOPLASIA_MAMMARIA_TERAPIA'].fillna('', inplace=True)
     tabella_completa, nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA = \
-        vectorize('1 NEOPLASIA_MAMMARIA_TERAPIA', tabella_completa, prefix='nmt', n_gram_range=(2, 2))
+        vectorize('NEOPLASIA_MAMMARIA_TERAPIA', tabella_completa, prefix='nmt', n_gram_range=(2, 2))
     print("ok7")
 
     # vettorizato PATOLOGIE_UTERINE_DIAGNOSI
-    tabella_completa['1 PATOLOGIE_UTERINE_DIAGNOSI'].fillna('', inplace=True)
+    #tabella_completa['PATOLOGIE_UTERINE_DIAGNOSI'].fillna('', inplace=True)
     tabella_completa, nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI = \
-        vectorize('1 PATOLOGIE_UTERINE_DIAGNOSI', tabella_completa, prefix='pud', n_gram_range=(1, 2))
+        vectorize('PATOLOGIE_UTERINE_DIAGNOSI', tabella_completa, prefix='pud', n_gram_range=(1, 2))
     print("ok8")
 
     # region vettorizzato VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA (quella all'inizio)
     ''''# sostituisco a 10000UI 10.000UI e 25000 UI con 25.000UI in VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
     for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA']
+        row = tabella_completa.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA']
         if not pd.isnull(row):
             # TODO: regex sul secodo parametro???
-            tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = re.sub(r'10000UI',
+            tabella_completa.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = re.sub(r'10000UI',
                                                                                                    r'10.000UI', row)
-            tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] \
+            tabella_completa.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] \
                 = re.sub(r'25000\sUI', r'25.000UI',
-                         tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])'''
+                         tabella_completa.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])'''
 
     # vettorizato VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
-    tabella_completa['1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'].fillna('', inplace=True)
+    #tabella_completa['VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'].fillna('', inplace=True)
     # regex: principio + per alcuni pricipi, anche la quantità
     # TODO: puoi semplificare il regex perchè abbiamo fatto delle sost. nel paragrago prec.
     # MODIFICATO REGEX
     tabella_completa, nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA = \
-        vectorize('1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA',
+        vectorize('VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA',
                   tabella_completa,
                   prefix='vidtol',
                   n_gram_range=(1, 2))
@@ -762,61 +768,78 @@ def preprocessamento_nuovo2(tabella_completa, class_name):
     # region vettorizato TERAPIA_ALTRO
     # questo paragrafo perchè voglio che 10000UI sia trattato come 10.000UI
     '''for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, '1 TERAPIA_ALTRO']
+        row = tabella_completa.loc[row_index, 'TERAPIA_ALTRO']
         if not pd.isnull(row):
-            tabella_completa.loc[row_index, '1 TERAPIA_ALTRO'] = re.sub(r'10000', r'10.000', row)
+            tabella_completa.loc[row_index, 'TERAPIA_ALTRO'] = re.sub(r'10000', r'10.000', row)
     for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, '1 TERAPIA_ALTRO']
+        row = tabella_completa.loc[row_index, 'TERAPIA_ALTRO']
         if not pd.isnull(row):
-            tabella_completa.loc[row_index, '1 TERAPIA_ALTRO'] = re.sub(r'100000', r'100.000', row)
+            tabella_completa.loc[row_index, 'TERAPIA_ALTRO'] = re.sub(r'100000', r'100.000', row)
     for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, '1 TERAPIA_ALTRO']
+        row = tabella_completa.loc[row_index, 'TERAPIA_ALTRO']
         if not pd.isnull(row):
-            tabella_completa.loc[row_index, '1 TERAPIA_ALTRO'] = re.sub(r'2000', r'2.000', row)
+            tabella_completa.loc[row_index, 'TERAPIA_ALTRO'] = re.sub(r'2000', r'2.000', row)
     for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, '1 TERAPIA_ALTRO']
+        row = tabella_completa.loc[row_index, 'TERAPIA_ALTRO']
         if not pd.isnull(row):
-            tabella_completa.loc[row_index, '1 TERAPIA_ALTRO'] = re.sub(r'25000', r'25.000', row)'''
+            tabella_completa.loc[row_index, 'TERAPIA_ALTRO'] = re.sub(r'25000', r'25.000', row)'''
 
-    tabella_completa['1 TERAPIA_ALTRO'].fillna('', inplace=True)
+    #tabella_completa['TERAPIA_ALTRO'].fillna('', inplace=True)
     tabella_completa, \
     nomi_nuove_colonne_vectorized_TERAPIA_ALTRO \
-        = vectorize('1 TERAPIA_ALTRO',
+        = vectorize('TERAPIA_ALTRO',
                     tabella_completa,
                     'ta')
     # endregion
 
     # vettorizzato ALTRE_PATOLOGIE
-    tabella_completa['1 ALTRE_PATOLOGIE'].fillna('', inplace=True)
-    tabella_completa, nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE = vectorize('1 ALTRE_PATOLOGIE', tabella_completa,
+    #tabella_completa['ALTRE_PATOLOGIE'].fillna('', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE = vectorize('ALTRE_PATOLOGIE', tabella_completa,
                                                                                 'ap')
 
     # vettorizzato CAUSE_OSTEOPOROSI_SECONDARIA
-    tabella_completa['1 CAUSE_OSTEOPOROSI_SECONDARIA'].fillna('', inplace=True)
+    #tabella_completa['CAUSE_OSTEOPOROSI_SECONDARIA'].fillna('', inplace=True)
     # questo regex ha il punto solo per la parola M.I.C.I .. in genere non vogliamo il punto perchè sembra abbassare l'acc.
     # MODIFICATO REGEX
     tabella_completa, nomi_nuove_colonne_vectorized_CAUSE_OSTEOPOROSI_SECONDARIA = \
-        vectorize('1 CAUSE_OSTEOPOROSI_SECONDARIA', tabella_completa, 'cos', n_gram_range=(1, 2))
+        vectorize('CAUSE_OSTEOPOROSI_SECONDARIA', tabella_completa, 'cos', n_gram_range=(1, 2))
 
     print("ok10")
 
     # alcuni hanno -1
-    tabella_completa['1 BMI'].replace(-1, tabella_completa['1 BMI'].mean(), inplace=True)
+    tabella_completa['BMI'].replace(-1, tabella_completa['BMI'].mean(), inplace=True)
+
+
+
+    # tolgo tutti \t\t\t\\t\n\n\
+    for row_index in range(0, tabella_completa.shape[0]):
+        tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'])
+        tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'])
+        tabella_completa.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA'])
+        tabella_completa.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'])
+        tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
+        tabella_completa.loc[row_index, 'TERAPIE_ORMONALI_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIE_ORMONALI_LISTA'])
+        tabella_completa.loc[row_index, 'VITAMINA_D_TERAPIA_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIE_ORMONALI_LISTA'])
+
 
     # region creazione di XXX_TERAPIA_OST_ORM_ANNI_XXX da TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA separando gli anni
     # attenzione questo paragrafo deve stare prima di sostituizione della colonna con il principio
+
     # la lista da trasformare poi in colonna del DataFrame
     terapia_osteoprotettiva_ormon_anni_col = []
     for row_index in range(0, tabella_completa.shape[0]):
-        terapia_osteoprotettiva_orm = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
-        if not pd.isna(terapia_osteoprotettiva_orm):
+        terapia_osteoprotettiva_orm = tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
+        if terapia_osteoprotettiva_orm != '':
+            #print(terapia_osteoprotettiva_orm)
             # isolo la parte di testo con il numero di anni
-            anni = re.search(r'[a-z\s],[0-9]+(?:[,.][0-9]+)*\sanni$', terapia_osteoprotettiva_orm)
-            # ottengo il numero senza altri caratteri
-            anni = re.search('[0-9]+(?:[.,][0-9]*)*', anni.group(0))
-            # se il numero ha una virgola, si sostituisce con il punto
-            anni = re.sub(",", ".", anni.group(0))
-        # i valori null li lascio, ci pensa weka
+            anni_match_obj = re.search(r'(?<=,)[0-9]+([,.][0-9]+)?(?=\sanni)', terapia_osteoprotettiva_orm)
+            if anni_match_obj is not None:
+                anni = anni_match_obj.group(0)
+                anni = re.sub(',','.',anni)
+                # print(anni)
+            # if there's some propblem with the input format for example: 'TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg,3 mesi anni'
+            else:
+                anni = np.nan
         else:
             anni = np.nan
         terapia_osteoprotettiva_ormon_anni_col.append(anni)
@@ -825,171 +848,169 @@ def preprocessamento_nuovo2(tabella_completa, class_name):
     # endregion
     print("ok11")
 
-    # region sostituisco TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA solo con il principio
-    # se in origine era: "TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg,1 anni" diventa "TSEC"
-    # lascio i null, ci pensa weka
-    '''
-    valori: unici: saranno nominali
-    estradiolo + drospirenone
-    TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg
-    tibolone 2.5mg/die
-    Terapia ormonale sostitutiva per via transdermica
-    '''
-    for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
-        if not pd.isna(row):
-            # estraggo solo il principio
-            principio_MatchObject = re.search(
-                r'(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-zA-Z]*))|(\s[+][a-zA-Z]*)){0,1})', row)
-            tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = principio_MatchObject.group(0)
-    # endregion
-    print("ok12")
-
     # region creazione di XXX_TERAPIA_OST_SPEC_ANNI_XXX da TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA separando gli anni
     # attenzione questo paragrafo deve stare prima di sostituizione della colonna con il principio
     # la lista da trasformare poi in colonna del DataFrame
     terapia_osteoprotettiva_spec_anni_col = []
     for row_index in range(0, tabella_completa.shape[0]):
-        terapia_osteoprotettiva_spec = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
-        if not pd.isna(terapia_osteoprotettiva_spec):
+        terapia_osteoprotettiva_spec = tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
+        if terapia_osteoprotettiva_spec!='':
             # isolo la parte di testo con il numero di anni
-            anni = re.search(r'[a-z\s],[0-9]+(?:[,.][0-9]+)*\sanni$', terapia_osteoprotettiva_spec)
-            # ottengo il numero senza altri caratteri
-            anni = re.search('[0-9]+(?:[.,][0-9]*)*', anni.group(0))
-            # se il numero ha una virgola, si sostituisce con il punto
-            anni = re.sub(",", ".", anni.group(0))
-        # i valori null li lascio, ci pensa weka
+            anni_match_obj = re.search(r'(?<=,)[0-9]+([,.][0-9]+)?(?=\sanni)', terapia_osteoprotettiva_spec)
+            # 'clodronato fiale 200 mg im,1 fl ogni 15 giorni,6  anni' per esempio
+            if anni_match_obj is not None:
+                anni = anni_match_obj.group(0)
+                anni = re.sub(',','.',anni)
+
+            else:
+                anni = np.nan
         else:
             anni = np.nan
         terapia_osteoprotettiva_spec_anni_col.append(anni)
     # aggiungo la nuova colonna con un nome che suggerisce l'artificialità
     tabella_completa['XXX_TERAPIA_OST_SPEC_ANNI_XXX'] = terapia_osteoprotettiva_spec_anni_col
     # endregion
+
+
+
+    # tolgo le informazioni sugli anni da TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA, TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA
+    # perche sono gia state salvate in un altra colonna
+    for row_index in range(0, tabella_completa.shape[0]):
+        tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = re.sub(r',[0-9]+([,.][0-9]+)?\sanni$', '', tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'])
+        tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = re.sub(r',[0-9]+([,.][0-9]+)?\sanni$', '', tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'])
+
+    # vettorizzo TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA
+    tabella_completa, nomi_nuove_colonne_vectorized_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA = vectorize('TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA', tabella_completa, 'tool')
+
+    # vettorizzo TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA
+    tabella_completa, nomi_nuove_colonne_vectorized_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA= vectorize('TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA', tabella_completa, 'tosl')
+
+    print("ok12")
+
     print("ok13")
 
-    # region sostituisco TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA solo con il principio
-    # se in origine era: "TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg,1 anni" diventa TSEC
-    # lascio i null, ci pensa weka
-    for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
-        if not pd.isna(row):
-            # estraggo solo il principio
-            principio_MatchObject = re.search(
-                r'(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-zA-Z]*))|(\s[+][a-zA-Z]*)){0,1})', row)
-            tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = principio_MatchObject.group(
-                0)
-    # endregion
+
     print("ok14")
 
     # region fillna
-    tabella_completa['1 FRATTURA_VERTEBRE'].fillna('no fratture', inplace=True)
-    tabella_completa['1 FRATTURA_FEMORE'].fillna('no fratture', inplace=True)
-    tabella_completa['1 ABUSO_FUMO'].fillna('non fuma', inplace=True)
-    tabella_completa['1 USO_CORTISONE'].fillna('non usa cortisone', inplace=True)
-    tabella_completa['1 TERAPIA_ALTRO_CHECKBOX'].fillna(0, inplace=True)
+    tabella_completa['FRATTURA_VERTEBRE'].replace('', 'no fratture', inplace=True)
+    tabella_completa['FRATTURA_FEMORE'].replace('','no fratture', inplace=True)
+    tabella_completa['ABUSO_FUMO'].replace('','non fuma', inplace=True)
+    tabella_completa['USO_CORTISONE'].replace('','non usa cortisone', inplace=True)
+    tabella_completa['TERAPIA_ALTRO_CHECKBOX'].fillna(0, inplace=True)
+    tabella_completa['STATO_MENOPAUSALE'].replace('', np.nan, inplace=True)
+    tabella_completa['TERAPIA_STATO'].replace('', np.nan, inplace=True)
+    tabella_completa['TERAPIE_ORMONALI_LISTA'].replace('', np.nan, inplace=True)
+    tabella_completa['VITAMINA_D_TERAPIA_LISTA'].replace('', np.nan, inplace=True)
+
+
     # endregion
 
     # region sostituisco solo con il principio TERAPIE_OSTEOPROTETTIVE_LISTA (da prevedere)
     for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, '1 TERAPIE_OSTEOPROTETTIVE_LISTA']
-        if not pd.isnull(row):
+        row = tabella_completa.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA']
+        if row!='':
             # esempio: se row = 'alendronato 70 mg, 1cpr/settimana', poi diventa 'alendronato'
             x = re.sub(r'^([a-zA-Z]+).*', r'\1', row)
-            tabella_completa.loc[row_index, '1 TERAPIE_OSTEOPROTETTIVE_LISTA'] = x
+            tabella_completa.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA'] = x
+        else:
+            tabella_completa.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA']=np.nan
     # endregion
     print("ok15")
 
     # region sostituisco solo con il principio CALCIO_SUPPLEMENTAZIONE_LISTA (da prevedere)
     for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, '1 CALCIO_SUPPLEMENTAZIONE_LISTA']
-        if not pd.isnull(row):
+        row = tabella_completa.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA']
+        if row != '':
             # perchè ce 'calcio carbonato' e 'Calcio carbonato' e vogliamo trattarla come la stessa stringa
             row = row.lower()
-            # esempio: 'calcio carbonato 600 mg per 2 / die' diventa 'calcio caronato'
+            # esempio: 'calcio carbonato 600 mg per 2 / die' diventa 'calcio carbonato'
             x = re.sub(r'^([a-zA-Z]*\s[a-zA-Z]*).*', r'\1', row)
-            tabella_completa.loc[row_index, '1 CALCIO_SUPPLEMENTAZIONE_LISTA'] = x
+            tabella_completa.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'] = x
+        else:
+            tabella_completa.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'] = np.nan
     # endregion
     print("ok16")
 
     # region sitemo VITAMINA_D_SUPPLEMENTAZIONE_LISTA (quella da prevedere)
     # sostituisco a 10000UI 10.000UI e 25000 UI con 25.000UI in VITAMINA_D_SUPPLEMENTAZIONE_LISTA
     for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA']
-        if not pd.isnull(row):
-            tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = re.sub(r'10000UI', r'10.000UI',
-                                                                                            row)
-            tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] \
-                = re.sub(r'25000\sUI', r'25.000UI',
-                         tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
+        tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] =re.sub(r'10000UI', r'10.000UI', tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
+        tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = re.sub(r'25000\sUI', r'25.000UI', tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
+
 
     # sostituisco alla cura solo il principio e la quantità
     # esempio: 'colecalciferolo 25.000UI, 1 flacone monodose 1 volta al mese' va sostituita con 'calciferolo 25.000UI'
     for row_index in range(0, tabella_completa.shape[0]):
-        row = tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA']
-        if not pd.isnull(row):
+        row = tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA']
+        if row != '':
             # faccio regex piu semplice dato che ho gia fatto delle sostituzioni nel paragrafo prec.
             x = re.sub(r'^(colecalciferolo\s[0-9]*[.][0-9]*UI).*|^(Calcifediolo\scpr\smolli).*|'
                        r'^(Calcifediolo\sgocce).*|^(Supplementazione\sgiornaliera\sdi\sVit\sD3).*', r'\1\2\3\4',
                        row)
-            tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = x
+            tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = x
+        else:
+            tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = np.nan
+
+
     # endregion
     print("ok17")
 
     l = [
-            '1 PATIENT_KEY',
-            '1 AGE',  # OK
-            '1 SEX',  # OK weka trasforma in nominal
-            '1 STATO_MENOPAUSALE',  # OK weka trasforma in nominal
-            '1 ULTIMA_MESTRUAZIONE',  # OK weka trasforma in nominal
-            '1 TERAPIA_STATO',  # OK
-            '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',  # NON lo riconosce come nominal**
-            '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA',  # OK weka riconosce nominal
+            'PATIENT_KEY',
+            'AGE',  # OK
+            'SEX',  # OK weka trasforma in nominal
+            'STATO_MENOPAUSALE',  # OK weka trasforma in nominal
+            'ETA_MENOPAUSA',
+            'ANNI_DALLA_MENOPAUSA',
+            'TERAPIA_STATO',  # OK
+            'TERAPIA_OSTEOPROTETTIVA_ORMONALE',#checkbox
+            'TERAPIA_OSTEOPROTETTIVA_SPECIFICA',#ceckbox
             'XXX_TERAPIA_OST_ORM_ANNI_XXX',  # OK numeric
-            '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',  # NON lo riconosce come nominal**
-            '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA',  # OK nominal
             'XXX_TERAPIA_OST_SPEC_ANNI_XXX',  # OK numeric
-            '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',  # NON lo riconosce come nominal**
-            '1 TERAPIA_ALTRO_CHECKBOX',  # NON lo riconosce come nominal attenzione ci sono dei null**
-            '1 TERAPIA_COMPLIANCE',  # NON lo riconosce come nominal**
-            '1 BMI',  # OK
-           # '1 FRATTURE',  # NON lo riconosce come nominal**
-            '1 FRATTURA_VERTEBRE',  # ok trasformato in nominal {no fratture, 1, piu di 1}
-            '1 FRATTURA_FEMORE',  # ok trasformato in nominal {no fratture, 1, piu di 1}
-            '1 FRATTURA_SITI_DIVERSI',  # NON lo riconosce come nominal**
-            '1 FRATTURA_FAMILIARITA',  # NON lo riconosce come nominal**
-            '1 ABUSO_FUMO_CHECKBOX',  # NON lo riconosce come nominal**
-            '1 ABUSO_FUMO',  # ok  tengo cosi com'è .. al posto di null metto 'non fuma'
-            '1 USO_CORTISONE_CHECKBOX',  # NON**
-            '1 USO_CORTISONE',  # ok trasformato in nominal
-            '1 MALATTIE_ATTUALI_CHECKBOX',  # NON**
-            '1 MALATTIE_ATTUALI_ARTRITE_REUM',  # NON**
-            '1 MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
-            '1 MALATTIE_ATTUALI_LUPUS',  # NON**
-            '1 MALATTIE_ATTUALI_SCLERODERMIA',  # NON**
-            '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON**
-            '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',  # NON***
-            '1 PATOLOGIE_UTERINE_CHECKBOX',  # NON
-            '1 NEOPLASIA_CHECKBOX',  # NON
-            '1 SINTOMI_VASOMOTORI',  # NON
-            '1 SINTOMI_DISTROFICI',  # NON
-            '1 DISLIPIDEMIA_CHECKBOX',  # NON
-            '1 IPERTENSIONE',  # NON
-            '1 RISCHIO_TEV',  # NON
-            '1 PATOLOGIA_CARDIACA',  # NON
-            '1 PATOLOGIA_VASCOLARE',  # NON
-            '1 INSUFFICIENZA_RENALE',  # NON
-            '1 PATOLOGIA_RESPIRATORIA',  # NON
-            '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
-            '1 PATOLOGIA_EPATICA',  # NON
-            '1 PATOLOGIA_ESOFAGEA',  # NON
-            '1 GASTRO_DUODENITE',  # NON
-            '1 GASTRO_RESEZIONE',  # NON
-            '1 RESEZIONE_INTESTINALE',  # NON
-            '1 MICI',  # NON
-            '1 VITAMINA_D_CHECKBOX',  # NON
-            '1 VITAMINA_D',  # ok
-            '1 ALLERGIE_CHECKBOX',  # NON + quella sotto
-            '1 INTOLLERANZE_CHECKBOX'] + \
+            'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',  # NON lo riconosce come nominal**
+            'TERAPIA_ALTRO_CHECKBOX',  # NON lo riconosce come nominal attenzione ci sono dei null**
+            'TERAPIA_COMPLIANCE',  # NON lo riconosce come nominal**
+            'BMI',  # OK
+           # 'FRATTURE',  # NON lo riconosce come nominal**
+            'FRATTURA_VERTEBRE_CHECKBOX',
+            'FRATTURA_VERTEBRE',  # ok trasformato in nominal {no fratture, 1, piu di 1}
+            'FRATTURA_FEMORE',  # ok trasformato in nominal {no fratture, 1, piu di 1}
+            'FRATTURA_SITI_DIVERSI',  # NON lo riconosce come nominal**
+            'FRATTURA_FAMILIARITA',  # NON lo riconosce come nominal**
+            'ABUSO_FUMO_CHECKBOX',  # NON lo riconosce come nominal**
+            'ABUSO_FUMO',  # ok  tengo cosi com'è .. al posto di null metto 'non fuma'
+            'USO_CORTISONE_CHECKBOX',  # NON**
+            'USO_CORTISONE',  # ok trasformato in nominal
+            'MALATTIE_ATTUALI_CHECKBOX',  # NON**
+            'MALATTIE_ATTUALI_ARTRITE_REUM',  # NON**
+            'MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
+            'MALATTIE_ATTUALI_LUPUS',  # NON**
+            'MALATTIE_ATTUALI_SCLERODERMIA',  # NON**
+            'MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON**
+            'CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',  # NON***
+            'PATOLOGIE_UTERINE_CHECKBOX',  # NON
+            'NEOPLASIA_CHECKBOX',  # NON
+            'SINTOMI_VASOMOTORI',  # NON
+            'SINTOMI_DISTROFICI',  # NON
+            'DISLIPIDEMIA_CHECKBOX',  # NON
+            'IPERTENSIONE',  # NON
+            'RISCHIO_TEV',  # NON
+            'PATOLOGIA_CARDIACA',  # NON
+            'PATOLOGIA_VASCOLARE',  # NON
+            'INSUFFICIENZA_RENALE',  # NON
+            'PATOLOGIA_RESPIRATORIA',  # NON
+            'PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
+            'PATOLOGIA_EPATICA',  # NON
+            'PATOLOGIA_ESOFAGEA',  # NON
+            'GASTRO_DUODENITE',  # NON
+            'GASTRO_RESEZIONE',  # NON
+            'RESEZIONE_INTESTINALE',  # NON
+            'MICI',  # NON
+            'VITAMINA_D_CHECKBOX',  # NON
+            'VITAMINA_D',  # ok
+            'ALLERGIE_CHECKBOX',  # NON + quella sotto
+            'INTOLLERANZE_CHECKBOX'] + \
         nomi_nuove_colonne_vectorized_TERAPIA_ALTRO + \
         nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE + \
         nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA + \
@@ -1001,65 +1022,67 @@ def preprocessamento_nuovo2(tabella_completa, class_name):
         nomi_nuove_colonne_vectorized_ALTRO + \
         nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO + \
         nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA + \
-        nomi_nuove_colonne_vectorized_CAUSE_OSTEOPOROSI_SECONDARIA \
+        nomi_nuove_colonne_vectorized_CAUSE_OSTEOPOROSI_SECONDARIA + \
+        nomi_nuove_colonne_vectorized_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA + \
+        nomi_nuove_colonne_vectorized_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA \
         + [
 
-            '1 SITUAZIONE_COLONNA_CHECKBOX',  # NON**
-            '1 SITUAZIONE_COLONNA',  # ok
-            '1 SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
-            '1 SITUAZIONE_FEMORE_SN',  # ok
-            '1 SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
-            '1 SITUAZIONE_FEMORE_DX',
-            '1 OSTEOPOROSI_GRAVE',  # NON
-            '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
-            '1 VERTEBRE_NON_ANALIZZATE_L1',  # NON
-            '1 VERTEBRE_NON_ANALIZZATE_L2',  # NON
-            '1 VERTEBRE_NON_ANALIZZATE_L3',  # NON
-            '1 VERTEBRE_NON_ANALIZZATE_L4',  # NON
-            '1 COLONNA_NON_ANALIZZABILE',  # NON
-            '1 COLONNA_VALORI_SUPERIORI',  # NON
-            '1 FEMORE_NON_ANALIZZABILE',  # NON
-            '1 FRAX_APPLICABILE',  # NON**
-            '1 FRAX_FRATTURE_MAGGIORI_INTERO',
-            '1 FRAX_COLLO_FEMORE_INTERO',
-            '1 TBS_COLONNA_APPLICABILE',  # NON**
-            '1 TBS_COLONNA_VALORE',
-            '1 DEFRA_APPLICABILE',  # NON
-            '1 DEFRA_INTERO',
-            '1 NORME_PREVENZIONE',  # NON
-            '1 ALTRO_CHECKBOX',  # NON
-            '1 NORME_COMPORTAMENTALI',  # NON
-            '1 ATTIVITA_FISICA',  # NON
-            '1 SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
-            '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
-            '1 SOSPENSIONE_FUMO',  # NON
-            '1 CONTROLLO_DENSITOMETRICO_CHECKBOX',  # NON**
-            '1 TOT_Tscore',
-            '1 TOT_Zscore',
+            'SITUAZIONE_COLONNA_CHECKBOX',  # NON**
+            'SITUAZIONE_COLONNA',  # ok
+            'SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
+            'SITUAZIONE_FEMORE_SN',  # ok
+            'SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
+            'SITUAZIONE_FEMORE_DX',
+            'OSTEOPOROSI_GRAVE',  # NON
+            'VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
+            'VERTEBRE_NON_ANALIZZATE_L1',  # NON
+            'VERTEBRE_NON_ANALIZZATE_L2',  # NON
+            'VERTEBRE_NON_ANALIZZATE_L3',  # NON
+            'VERTEBRE_NON_ANALIZZATE_L4',  # NON
+            'COLONNA_NON_ANALIZZABILE',  # NON
+            'COLONNA_VALORI_SUPERIORI',  # NON
+            'FEMORE_NON_ANALIZZABILE',  # NON
+            'FRAX_APPLICABILE',  # NON**
+            'FRAX_FRATTURE_MAGGIORI_INTERO',
+            'FRAX_COLLO_FEMORE_INTERO',
+            'TBS_COLONNA_APPLICABILE',  # NON**
+            'TBS_COLONNA_VALORE',
+            'DEFRA_APPLICABILE',  # NON
+            'DEFRA_INTERO',
+            'NORME_PREVENZIONE',  # NON
+            'ALTRO_CHECKBOX',  # NON
+            'NORME_COMPORTAMENTALI',  # NON
+            'ATTIVITA_FISICA',  # NON
+            'SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
+            'INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
+            'SOSPENSIONE_FUMO',  # NON
+            'CONTROLLO_DENSITOMETRICO_CHECKBOX',  # NON**
+            'TOT_Tscore',
+            'TOT_Zscore',
         ]
 
     l.append(class_name)
+
     return tabella_completa[l], col_name_to_ngram, stemmed_to_original
 
-
-def accuracy_rules3(test_X, test_Y, regole):
+def accuracy_rules3(test_X, test_Y, regole,class_name):
     does_know = 0
     predicted_right = 0
     doesnt_know = 0
 
-    stemmed_to_original = json.load(open("stemmed_to_original.txt"))
+    stemmed_to_original = json.load(open("/var/www/sto/stemmed_to_original_{}.txt".format(class_name)))
 
     # andava bene anche test_Y.shape[0]
     num_instances = test_X.shape[0]
     # per ogni riga
     for row_index in range(0, num_instances):
         # print(row_index)
-        if row_index == 3:
+        if row_index == 13:
             h = 0
         istance_X = test_X.iloc[row_index, :]
         true_Y = test_Y.values[row_index]
         predicted_Y, golden_rule = regole.predict(istance_X)
-        # print("{}: {}".format(row_index, predicted_Y))
+        #print("{}: {}".format(row_index, predicted_Y))
         # attenzione che golden rule puo esser null se non sa
         # print(golden_rule.get_medic_readable_version(istance_X,stemmed_to_original))
         if predicted_Y is None:
@@ -2615,6 +2638,580 @@ def secondo_script():
     :return:
     '''
 
+def preprocessamento_nuovo2(tabella_completa, class_name):
+    # attenzione ho tolto FRATTURE perchè nel dump che mi hanno dato non ce
+    def one_hot_encode(frame, column_name, regex, prefix):
+        '''
+        frame:
+        A               B
+        cane bau        a
+        gatto miao      b
+        pesce blob      c
 
+        column_name: A
+        regex: "solo la prima parola"
+        prefix: x
+
+        output:
+        A               B    xcane  xgatto xpesce
+        cane bau        a     1      0      0
+        gatto miao      b     0      1      0
+        pesce blob      c     0      0      1
+        gatto miao      e     0      1      0
+
+        e la lista delle colonne aggiunte [xcane, xgatto, xpesce] (serve perchè dopo dovrò selezionare queste colonne)
+
+        regex serve nel caso in cui si desiderasse considerare una sottostringa della riga (cioe al posto di 'cane bau'
+        è come se fosse 'cane')
+
+        il prefisso serve per evitare che ci siano colonne con lo stesso nome: questa funzione può essere chiamata
+        due volte con due colonne che hanno 'na' e allora si formerà una colonna comune
+        '''
+        # conterrà cane, gatto, pesce
+        # questa conterrà tutti i valori con cui fare one-hot-encoding
+        valori_nominali = []
+        for row_index in range(0, frame.shape[0]):
+            # iesima riga del frame, sarà 'cane bau', 'gatto miao', 'pesce blob'
+            row = frame.loc[row_index, column_name]
+            # la sottostringa di interesse. sarà 'cane', 'gatto', 'pesce'
+            value_of_interest = re.search(regex, row)
+            valori_nominali.append(value_of_interest[0])
+        # trasformo la lista in DataFrame
+        valori_nominali = pd.Series(valori_nominali)
+        valori_nominali = valori_nominali.to_frame()
+        one_hot_encoder = OneHotEncoder()
+        one_hot_encoder.fit(valori_nominali)
+        # valori one-hot-encoded, però è una matrice, bisogna trasformare in DataFrame
+        valori_nominali_encoded_ndarray = one_hot_encoder.transform(valori_nominali).toarray()
+        # servono per la creazione del DataFrame
+        nomi_colonne_nuove = one_hot_encoder.get_feature_names()
+        # aggiungo il prefisso
+        nomi_colonne_nuove = [prefix + col_name for col_name in nomi_colonne_nuove]
+        # DataFrame creato, ora lo aggiungere al DataFrame passato
+        valori_nominali_encoded_dataframe = pd.DataFrame(valori_nominali_encoded_ndarray, columns=nomi_colonne_nuove)
+        frame = pd.concat([frame, valori_nominali_encoded_dataframe], axis=1)
+        # ritorno i nomi perchè poi bisogna selezionarli per il modello
+        return frame, nomi_colonne_nuove
+
+    global stemmed_to_original
+    stemmed_to_original = {}
+
+    # uguale all'altro solo che aggiorna un dizionario
+    def remove_stopwords_and_stem(sentence, regex):
+        # TODO: 10.000ui li trasforma in 10.000u
+        '''
+        Data una stringa contenete una frase ritorna una stringa con parole in forma radicale e senza rumore
+        es:
+        sentence: ha assunto alendronato per 2 anni
+        regex: voglio solo parole
+        returns: assunt alendronato
+        '''
+
+        tokenizer = RegexpTokenizer(regex)
+        # crea una lista di tutti i match del regex
+        tokens = tokenizer.tokenize(sentence)
+        # tokens = [x.lower() for x in tokens]
+
+        # libreria nltk
+        stop_words = stopwords.words('italian')
+        # 'non' è molto importante
+        stop_words.remove('non')
+        stop_words += ['.', ',', 'm', 't', 'gg', 'die', 'fa', 'im', 'fino', 'uno', 'due', 'tre', 'quattro', 'cinque',
+                       'sei', 'ogni',
+                       'alcuni', 'giorni', 'giorno', 'mesi', 'mese', 'settimana', 'settimane', 'circa', 'aa', 'gtt',
+                       'poi', 'gennaio', 'febbraio', 'marzo', 'maggio', 'aprile', 'giugno', 'luglio', 'agosto',
+                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett', 'pu', 'u', 'dx', 'sn',
+                       'l', 'nel']
+
+        # trovo tutti i token da eliminare dalla frase
+        to_be_removed = []
+        for token in tokens:
+            if token in stop_words:
+                to_be_removed.append(token)
+
+        # rimuovo i token dalla frase
+        for elem in to_be_removed:
+            if elem in tokens:
+                tokens.remove(elem)
+
+        # print(tokens)
+        # la parte di stemming
+        stemmer = SnowballStemmer("italian")
+
+        # solo questa è la parte che è diversa
+        for t in tokens:
+            stemmed_to_original[stemmer.stem(t)] = t
+
+        tokens = [stemmer.stem(tok) for tok in tokens]
+
+        # converto da lista di token in striga
+        output = ' '.join(tokens)
+        # print(output)
+        return output
+
+    global col_name_to_ngram
+    col_name_to_ngram = {}
+
+    # MODIFICATO REGEX
+    def vectorize(column_name, frame, prefix,
+                  regex=r'(?:[a-záéíóúàèìòùàèìòù]+)',
+                  n_gram_range=(2, 2)):
+
+        # TODO: ha detto all'inizio di rimuovere gli grammi che compaiono poco
+        '''
+        ATTENZIONE: se scegli solo bigrammi il vettore delle frasi diverse di una sola parola sarà nullo
+                    mi sono accorto perche 'na' e 'calciferolo' trattato uguale
+
+        dato il nome di una colonna contenente testo, per ogni riga crea una rappresentazione
+        vettoriale senza stopwords e stemmed (vedi remove_stopwords_and_stem())
+        dopo aver visto tutte le righe, avremo un vettore per ogni riga, cioè una matrice
+        questa verrà integrato al dataframe in input.
+
+        :param column_name: nome colonna da vettorizzare
+        :param frame: dataframe
+        :param prefix: per differenziare i nomi delle colonne in output
+        :param regex: come dividere i token (cosa sarà un gramma) (il regex di default prende solo parole+numeri
+        importanti di 10.000UI). Di default trova solo parole. C'è il punto per la parola 'M.I.C.I'
+        no 2000 perchè ci confondiamo con l'anno
+        :param n_gram_range: (2,2) se voglio solo bigrammi, (1,2) se voglio bigrammi e monogrammi...
+        :return: la tabella con le nuove colonne e i nomi delle nuove colonne
+        '''
+        # lista di frasi
+        column_list = frame[column_name].tolist()
+        # lista di frasi tutte in minuscolo
+        column_list = [cell.lower() for cell in column_list]
+        for i in range(0, len(column_list)):
+            column_list[i] = remove_stopwords_and_stem(column_list[i], regex)
+        # non idf = false perchè voglio un output binario.
+        # binario perchè voglio poter dire: consiglio TERAPIE_ORMONALI perchè è presente (non è presente) la parola 'p'
+        vectorizer = TfidfVectorizer(ngram_range=n_gram_range, norm=None, use_idf=False)
+
+        # in vectorized_matrix ogni riga è un vettore corrispondente ad una frase
+        vectorized_matrix = vectorizer.fit_transform(column_list).toarray()
+        # servono per filtrare tabella_completa. il suffisso serve perchè cosi se viene chiamata la funzione piu volte,
+        # non si confonde i nomi delle colonne... perchè vectorized ha le colonne numerate da 0 a n
+        # nomi_nuove_colonne_vectorized sarà = [prefix0, prefix1, ... , prefixn]
+        nomi_nuove_colonne_vectorized = [prefix + str(i) for i in range(0, vectorized_matrix.shape[1])]
+        # converto in DataFrame perchè devo accostarlo alla tabella_completa
+        vectorized_frame = pd.DataFrame(vectorized_matrix, columns=nomi_nuove_colonne_vectorized)
+        frame = pd.concat([frame, vectorized_frame], axis=1)
+
+        # todo: commenti
+        global col_name_to_ngram
+        ngrams = vectorizer.get_feature_names()
+        # da nome colonna a ngramma
+        col_name_to_ngram = {**col_name_to_ngram, **dict(zip(nomi_nuove_colonne_vectorized, ngrams))}
+        # da tag a nome della colonna ogriginale
+        col_name_to_ngram[prefix] = column_name
+
+        return frame, nomi_nuove_colonne_vectorized
+
+    # commento per il momento perchè devo fare riferimento a valori vecchi
+    '''# Tengo solo quelli che sono venuti prima di ottobre
+    tabella_completa = tabella_completa.loc[tabella_completa['1 SCAN_DATE'] <= '2019-10-01', :].copy()
+    tabella_completa.reset_index(drop=True, inplace=True)'''
+
+    # todo cambiare il nome della colonna ultima mestr.
+    # region categorizzo ULTIMA_MESTRUAZIONE
+    # come prima cosa sostituisco l'anno dell'ultima mestruazione con quanti anni non ha mestruazioni
+    # divido in range [-inf,mean-std]=poco, [mean-std,mean+std]=medio, [mean+std,+inf]=tanto, e per gli uomini e/o per
+    # le donne che hanno ancora il ciclo lascio null
+    birthdate_col = tabella_completa['1 BIRTHDATE']
+    # dalla data di nascita mi serve solo l'anno
+    birthdate_year_col = [data[0:4] for data in birthdate_col]
+    # nel ciclo viene fatta la differenza
+    for row_index in range(0, tabella_completa.shape[0]):
+        # qui sostituisco alla data dell'ultima mest. con gli anni che non ha mest.
+        # la differenza lascia nan per chi ha ULTIMA_MESTRUAZIONE nan
+        tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = \
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] - int(birthdate_year_col[row_index])
+    std = tabella_completa['1 ULTIMA_MESTRUAZIONE'].std()
+    mean = tabella_completa['1 ULTIMA_MESTRUAZIONE'].mean()
+    # in questa parte sostituisco gli anni in cui non ha il ciclo con una tra le categorie
+    for row_index in range(0, tabella_completa.shape[0]):
+        anni_senza_ciclo = tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE']
+        if mean - std <= anni_senza_ciclo <= mean + std:
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'medio'
+        elif anni_senza_ciclo > mean + std:
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'tanto'
+        elif anni_senza_ciclo < mean - std:
+            tabella_completa.loc[row_index, '1 ULTIMA_MESTRUAZIONE'] = 'poco'
+    # endregion
+
+    # vettorizato INDAGINI_APPROFONDIMENTO_LISTA
+    tabella_completa['1 INDAGINI_APPROFONDIMENTO_LISTA'].fillna('', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA = \
+        vectorize('1 INDAGINI_APPROFONDIMENTO_LISTA', tabella_completa, prefix='ial')
+
+    print("ok1")
+
+    # vettorizato SOSPENSIONE_TERAPIA_FARMACO
+    tabella_completa['1 SOSPENSIONE_TERAPIA_FARMACO'].fillna('', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO \
+        = vectorize('1 SOSPENSIONE_TERAPIA_FARMACO', tabella_completa, prefix='stf', n_gram_range=(1, 1))
+    print("ok2")
+
+    # vettorizato ALTRO
+    tabella_completa['1 ALTRO'].fillna('', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_ALTRO = vectorize('1 ALTRO', tabella_completa, prefix='altr')
+    print("ok3")
+
+    # vettorizato INTOLLERANZE
+    tabella_completa['1 INTOLLERANZE'].fillna('', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_INTOLLERANZE = \
+        vectorize('1 INTOLLERANZE', tabella_completa, prefix='i', n_gram_range=(1, 1))
+    print("ok4")
+
+    # vettorizato ALLERGIE
+    tabella_completa['1 ALLERGIE'].fillna('', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_ALLERGIE = \
+        vectorize('1 ALLERGIE', tabella_completa, prefix='a', n_gram_range=(2, 2))
+    print("ok5")
+
+    # vettorizato DISLIPIDEMIA_TERAPIA
+    tabella_completa['1 DISLIPIDEMIA_TERAPIA'].fillna('', inplace=True)
+    # (1,1) perchè sono quasi tutte parole singole
+    tabella_completa, nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA = \
+        vectorize('1 DISLIPIDEMIA_TERAPIA', tabella_completa, prefix='dt', n_gram_range=(1, 1))
+    print("ok6")
+
+    # vettorizato NEOPLASIA_MAMMARIA_TERAPIA
+    tabella_completa['1 NEOPLASIA_MAMMARIA_TERAPIA'].fillna('', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA = \
+        vectorize('1 NEOPLASIA_MAMMARIA_TERAPIA', tabella_completa, prefix='nmt', n_gram_range=(2, 2))
+    print("ok7")
+
+    # vettorizato PATOLOGIE_UTERINE_DIAGNOSI
+    tabella_completa['1 PATOLOGIE_UTERINE_DIAGNOSI'].fillna('', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI = \
+        vectorize('1 PATOLOGIE_UTERINE_DIAGNOSI', tabella_completa, prefix='pud', n_gram_range=(1, 2))
+    print("ok8")
+
+    # region vettorizzato VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA (quella all'inizio)
+    ''''# sostituisco a 10000UI 10.000UI e 25000 UI con 25.000UI in VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA']
+        if not pd.isnull(row):
+            # TODO: regex sul secodo parametro???
+            tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = re.sub(r'10000UI',
+                                                                                                   r'10.000UI', row)
+            tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] \
+                = re.sub(r'25000\sUI', r'25.000UI',
+                         tabella_completa.loc[row_index, '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])'''
+
+    # vettorizato VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
+    tabella_completa['1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'].fillna('', inplace=True)
+    # regex: principio + per alcuni pricipi, anche la quantità
+    # TODO: puoi semplificare il regex perchè abbiamo fatto delle sost. nel paragrago prec.
+    # MODIFICATO REGEX
+    tabella_completa, nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA = \
+        vectorize('1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA',
+                  tabella_completa,
+                  prefix='vidtol',
+                  n_gram_range=(1, 2))
+    # regex=r'(?:(?:calcifediolo|colecalciferolo)\s[0-9]+[.]{0,1}[0-9]*(?:ui|\sui))|'
+    # r'(?:Supplementazione giornaliera di vit D3|calcifediolo|^na$)')
+    # endregion
+
+    print("ok9")
+
+    # region vettorizato TERAPIA_ALTRO
+    # questo paragrafo perchè voglio che 10000UI sia trattato come 10.000UI
+    '''for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIA_ALTRO']
+        if not pd.isnull(row):
+            tabella_completa.loc[row_index, '1 TERAPIA_ALTRO'] = re.sub(r'10000', r'10.000', row)
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIA_ALTRO']
+        if not pd.isnull(row):
+            tabella_completa.loc[row_index, '1 TERAPIA_ALTRO'] = re.sub(r'100000', r'100.000', row)
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIA_ALTRO']
+        if not pd.isnull(row):
+            tabella_completa.loc[row_index, '1 TERAPIA_ALTRO'] = re.sub(r'2000', r'2.000', row)
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIA_ALTRO']
+        if not pd.isnull(row):
+            tabella_completa.loc[row_index, '1 TERAPIA_ALTRO'] = re.sub(r'25000', r'25.000', row)'''
+
+    tabella_completa['1 TERAPIA_ALTRO'].fillna('', inplace=True)
+    tabella_completa, \
+    nomi_nuove_colonne_vectorized_TERAPIA_ALTRO \
+        = vectorize('1 TERAPIA_ALTRO',
+                    tabella_completa,
+                    'ta')
+    # endregion
+
+    # vettorizzato ALTRE_PATOLOGIE
+    tabella_completa['1 ALTRE_PATOLOGIE'].fillna('', inplace=True)
+    tabella_completa, nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE = vectorize('1 ALTRE_PATOLOGIE', tabella_completa,
+                                                                                'ap')
+
+    # vettorizzato CAUSE_OSTEOPOROSI_SECONDARIA
+    tabella_completa['1 CAUSE_OSTEOPOROSI_SECONDARIA'].fillna('', inplace=True)
+    # questo regex ha il punto solo per la parola M.I.C.I .. in genere non vogliamo il punto perchè sembra abbassare l'acc.
+    # MODIFICATO REGEX
+    tabella_completa, nomi_nuove_colonne_vectorized_CAUSE_OSTEOPOROSI_SECONDARIA = \
+        vectorize('1 CAUSE_OSTEOPOROSI_SECONDARIA', tabella_completa, 'cos', n_gram_range=(1, 2))
+
+    print("ok10")
+
+    # alcuni hanno -1
+    tabella_completa['1 BMI'].replace(-1, tabella_completa['1 BMI'].mean(), inplace=True)
+
+    # region creazione di XXX_TERAPIA_OST_ORM_ANNI_XXX da TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA separando gli anni
+    # attenzione questo paragrafo deve stare prima di sostituizione della colonna con il principio
+    # la lista da trasformare poi in colonna del DataFrame
+    terapia_osteoprotettiva_ormon_anni_col = []
+    for row_index in range(0, tabella_completa.shape[0]):
+        terapia_osteoprotettiva_orm = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
+        if not pd.isna(terapia_osteoprotettiva_orm):
+            # isolo la parte di testo con il numero di anni
+            anni = re.search(r'[a-z\s],[0-9]+(?:[,.][0-9]+)*\sanni$', terapia_osteoprotettiva_orm)
+            # ottengo il numero senza altri caratteri
+            anni = re.search('[0-9]+(?:[.,][0-9]*)*', anni.group(0))
+            # se il numero ha una virgola, si sostituisce con il punto
+            anni = re.sub(",", ".", anni.group(0))
+        # i valori null li lascio, ci pensa weka
+        else:
+            anni = np.nan
+        terapia_osteoprotettiva_ormon_anni_col.append(anni)
+    # aggiungo la nuova colonna con un nome che suggerisce l'artificialità
+    tabella_completa['XXX_TERAPIA_OST_ORM_ANNI_XXX'] = terapia_osteoprotettiva_ormon_anni_col
+    # endregion
+    print("ok11")
+
+    # region sostituisco TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA solo con il principio
+    # se in origine era: "TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg,1 anni" diventa "TSEC"
+    # lascio i null, ci pensa weka
+    '''
+    valori: unici: saranno nominali
+    estradiolo + drospirenone
+    TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg
+    tibolone 2.5mg/die
+    Terapia ormonale sostitutiva per via transdermica
+    '''
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
+        if not pd.isna(row):
+            # estraggo solo il principio
+            principio_MatchObject = re.search(
+                r'(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-zA-Z]*))|(\s[+][a-zA-Z]*)){0,1})', row)
+            tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = principio_MatchObject.group(0)
+    # endregion
+    print("ok12")
+
+    # region creazione di XXX_TERAPIA_OST_SPEC_ANNI_XXX da TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA separando gli anni
+    # attenzione questo paragrafo deve stare prima di sostituizione della colonna con il principio
+    # la lista da trasformare poi in colonna del DataFrame
+    terapia_osteoprotettiva_spec_anni_col = []
+    for row_index in range(0, tabella_completa.shape[0]):
+        terapia_osteoprotettiva_spec = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
+        if not pd.isna(terapia_osteoprotettiva_spec):
+            # isolo la parte di testo con il numero di anni
+            anni = re.search(r'[a-z\s],[0-9]+(?:[,.][0-9]+)*\sanni$', terapia_osteoprotettiva_spec)
+            # ottengo il numero senza altri caratteri
+            anni = re.search('[0-9]+(?:[.,][0-9]*)*', anni.group(0))
+            # se il numero ha una virgola, si sostituisce con il punto
+            anni = re.sub(",", ".", anni.group(0))
+        # i valori null li lascio, ci pensa weka
+        else:
+            anni = np.nan
+        terapia_osteoprotettiva_spec_anni_col.append(anni)
+    # aggiungo la nuova colonna con un nome che suggerisce l'artificialità
+    tabella_completa['XXX_TERAPIA_OST_SPEC_ANNI_XXX'] = terapia_osteoprotettiva_spec_anni_col
+    # endregion
+    print("ok13")
+
+    # region sostituisco TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA solo con il principio
+    # se in origine era: "TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg,1 anni" diventa TSEC
+    # lascio i null, ci pensa weka
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
+        if not pd.isna(row):
+            # estraggo solo il principio
+            principio_MatchObject = re.search(
+                r'(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-zA-Z]*))|(\s[+][a-zA-Z]*)){0,1})', row)
+            tabella_completa.loc[row_index, '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = principio_MatchObject.group(
+                0)
+    # endregion
+    print("ok14")
+
+    # region fillna
+    tabella_completa['1 FRATTURA_VERTEBRE'].fillna('no fratture', inplace=True)
+    tabella_completa['1 FRATTURA_FEMORE'].fillna('no fratture', inplace=True)
+    tabella_completa['1 ABUSO_FUMO'].fillna('non fuma', inplace=True)
+    tabella_completa['1 USO_CORTISONE'].fillna('non usa cortisone', inplace=True)
+    tabella_completa['1 TERAPIA_ALTRO_CHECKBOX'].fillna(0, inplace=True)
+    # endregion
+
+    # region sostituisco solo con il principio TERAPIE_OSTEOPROTETTIVE_LISTA (da prevedere)
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 TERAPIE_OSTEOPROTETTIVE_LISTA']
+        if not pd.isnull(row):
+            # esempio: se row = 'alendronato 70 mg, 1cpr/settimana', poi diventa 'alendronato'
+            x = re.sub(r'^([a-zA-Z]+).*', r'\1', row)
+            tabella_completa.loc[row_index, '1 TERAPIE_OSTEOPROTETTIVE_LISTA'] = x
+    # endregion
+    print("ok15")
+
+    # region sostituisco solo con il principio CALCIO_SUPPLEMENTAZIONE_LISTA (da prevedere)
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 CALCIO_SUPPLEMENTAZIONE_LISTA']
+        if not pd.isnull(row):
+            # perchè ce 'calcio carbonato' e 'Calcio carbonato' e vogliamo trattarla come la stessa stringa
+            row = row.lower()
+            # esempio: 'calcio carbonato 600 mg per 2 / die' diventa 'calcio caronato'
+            x = re.sub(r'^([a-zA-Z]*\s[a-zA-Z]*).*', r'\1', row)
+            tabella_completa.loc[row_index, '1 CALCIO_SUPPLEMENTAZIONE_LISTA'] = x
+    # endregion
+    print("ok16")
+
+    # region sitemo VITAMINA_D_SUPPLEMENTAZIONE_LISTA (quella da prevedere)
+    # sostituisco a 10000UI 10.000UI e 25000 UI con 25.000UI in VITAMINA_D_SUPPLEMENTAZIONE_LISTA
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA']
+        if not pd.isnull(row):
+            tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = re.sub(r'10000UI', r'10.000UI',
+                                                                                            row)
+            tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] \
+                = re.sub(r'25000\sUI', r'25.000UI',
+                         tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
+
+    # sostituisco alla cura solo il principio e la quantità
+    # esempio: 'colecalciferolo 25.000UI, 1 flacone monodose 1 volta al mese' va sostituita con 'calciferolo 25.000UI'
+    for row_index in range(0, tabella_completa.shape[0]):
+        row = tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA']
+        if not pd.isnull(row):
+            # faccio regex piu semplice dato che ho gia fatto delle sostituzioni nel paragrafo prec.
+            x = re.sub(r'^(colecalciferolo\s[0-9]*[.][0-9]*UI).*|^(Calcifediolo\scpr\smolli).*|'
+                       r'^(Calcifediolo\sgocce).*|^(Supplementazione\sgiornaliera\sdi\sVit\sD3).*', r'\1\2\3\4',
+                       row)
+            tabella_completa.loc[row_index, '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = x
+    # endregion
+    print("ok17")
+
+    l = [
+            '1 PATIENT_KEY',
+            '1 AGE',  # OK
+            '1 SEX',  # OK weka trasforma in nominal
+            '1 STATO_MENOPAUSALE',  # OK weka trasforma in nominal
+            '1 ULTIMA_MESTRUAZIONE',  # OK weka trasforma in nominal
+            '1 TERAPIA_STATO',  # OK
+            '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE',  # NON lo riconosce come nominal**
+            '1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA',  # OK weka riconosce nominal
+            'XXX_TERAPIA_OST_ORM_ANNI_XXX',  # OK numeric
+            '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA',  # NON lo riconosce come nominal**
+            '1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA',  # OK nominal
+            'XXX_TERAPIA_OST_SPEC_ANNI_XXX',  # OK numeric
+            '1 VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',  # NON lo riconosce come nominal**
+            '1 TERAPIA_ALTRO_CHECKBOX',  # NON lo riconosce come nominal attenzione ci sono dei null**
+            '1 TERAPIA_COMPLIANCE',  # NON lo riconosce come nominal**
+            '1 BMI',  # OK
+           # '1 FRATTURE',  # NON lo riconosce come nominal**
+            '1 FRATTURA_VERTEBRE',  # ok trasformato in nominal {no fratture, 1, piu di 1}
+            '1 FRATTURA_FEMORE',  # ok trasformato in nominal {no fratture, 1, piu di 1}
+            '1 FRATTURA_SITI_DIVERSI',  # NON lo riconosce come nominal**
+            '1 FRATTURA_FAMILIARITA',  # NON lo riconosce come nominal**
+            '1 ABUSO_FUMO_CHECKBOX',  # NON lo riconosce come nominal**
+            '1 ABUSO_FUMO',  # ok  tengo cosi com'è .. al posto di null metto 'non fuma'
+            '1 USO_CORTISONE_CHECKBOX',  # NON**
+            '1 USO_CORTISONE',  # ok trasformato in nominal
+            '1 MALATTIE_ATTUALI_CHECKBOX',  # NON**
+            '1 MALATTIE_ATTUALI_ARTRITE_REUM',  # NON**
+            '1 MALATTIE_ATTUALI_ARTRITE_PSOR',  # NON**
+            '1 MALATTIE_ATTUALI_LUPUS',  # NON**
+            '1 MALATTIE_ATTUALI_SCLERODERMIA',  # NON**
+            '1 MALATTIE_ATTUALI_ALTRE_CONNETTIVITI',  # NON**
+            '1 CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX',  # NON***
+            '1 PATOLOGIE_UTERINE_CHECKBOX',  # NON
+            '1 NEOPLASIA_CHECKBOX',  # NON
+            '1 SINTOMI_VASOMOTORI',  # NON
+            '1 SINTOMI_DISTROFICI',  # NON
+            '1 DISLIPIDEMIA_CHECKBOX',  # NON
+            '1 IPERTENSIONE',  # NON
+            '1 RISCHIO_TEV',  # NON
+            '1 PATOLOGIA_CARDIACA',  # NON
+            '1 PATOLOGIA_VASCOLARE',  # NON
+            '1 INSUFFICIENZA_RENALE',  # NON
+            '1 PATOLOGIA_RESPIRATORIA',  # NON
+            '1 PATOLOGIA_CAVO_ORALE_CHECKBOX',  # NON
+            '1 PATOLOGIA_EPATICA',  # NON
+            '1 PATOLOGIA_ESOFAGEA',  # NON
+            '1 GASTRO_DUODENITE',  # NON
+            '1 GASTRO_RESEZIONE',  # NON
+            '1 RESEZIONE_INTESTINALE',  # NON
+            '1 MICI',  # NON
+            '1 VITAMINA_D_CHECKBOX',  # NON
+            '1 VITAMINA_D',  # ok
+            '1 ALLERGIE_CHECKBOX',  # NON + quella sotto
+            '1 INTOLLERANZE_CHECKBOX'] + \
+        nomi_nuove_colonne_vectorized_TERAPIA_ALTRO + \
+        nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE + \
+        nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA + \
+        nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI + \
+        nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA + \
+        nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA + \
+        nomi_nuove_colonne_vectorized_ALLERGIE + \
+        nomi_nuove_colonne_vectorized_INTOLLERANZE + \
+        nomi_nuove_colonne_vectorized_ALTRO + \
+        nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO + \
+        nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA + \
+        nomi_nuove_colonne_vectorized_CAUSE_OSTEOPOROSI_SECONDARIA \
+        + [
+
+            '1 SITUAZIONE_COLONNA_CHECKBOX',  # NON**
+            '1 SITUAZIONE_COLONNA',  # ok
+            '1 SITUAZIONE_FEMORE_SN_CHECKBOX',  # NON**
+            '1 SITUAZIONE_FEMORE_SN',  # ok
+            '1 SITUAZIONE_FEMORE_DX_CHECKBOX',  # NON**
+            '1 SITUAZIONE_FEMORE_DX',
+            '1 OSTEOPOROSI_GRAVE',  # NON
+            '1 VERTEBRE_NON_ANALIZZATE_CHECKBOX',  # NON
+            '1 VERTEBRE_NON_ANALIZZATE_L1',  # NON
+            '1 VERTEBRE_NON_ANALIZZATE_L2',  # NON
+            '1 VERTEBRE_NON_ANALIZZATE_L3',  # NON
+            '1 VERTEBRE_NON_ANALIZZATE_L4',  # NON
+            '1 COLONNA_NON_ANALIZZABILE',  # NON
+            '1 COLONNA_VALORI_SUPERIORI',  # NON
+            '1 FEMORE_NON_ANALIZZABILE',  # NON
+            '1 FRAX_APPLICABILE',  # NON**
+            '1 FRAX_FRATTURE_MAGGIORI_INTERO',
+            '1 FRAX_COLLO_FEMORE_INTERO',
+            '1 TBS_COLONNA_APPLICABILE',  # NON**
+            '1 TBS_COLONNA_VALORE',
+            '1 DEFRA_APPLICABILE',  # NON
+            '1 DEFRA_INTERO',
+            '1 NORME_PREVENZIONE',  # NON
+            '1 ALTRO_CHECKBOX',  # NON
+            '1 NORME_COMPORTAMENTALI',  # NON
+            '1 ATTIVITA_FISICA',  # NON
+            '1 SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
+            '1 INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
+            '1 SOSPENSIONE_FUMO',  # NON
+            '1 CONTROLLO_DENSITOMETRICO_CHECKBOX',  # NON**
+            '1 TOT_Tscore',
+            '1 TOT_Zscore',
+        ]
+
+    l.append(class_name)
+    return tabella_completa[l], col_name_to_ngram, stemmed_to_original
+
+def preprocessa_per_java(class_name, file):
+    tabella_completa = pd.read_csv(file)
+    tabella_preprocessata, colname_to_ngram, stemmed_to_original = preprocessamento_nuovo2(tabella_completa, class_name)
+    print("ok18")
+
+    # we don't keep instances where class is missing
+    tabella_preprocessata.dropna(subset=[class_name], inplace=True)
+    print("ok19")
+
+    file = open('colnametongram.txt', 'wt')
+    file.write(str(colname_to_ngram))
+    file.close()
+    file = open('/var/www/sto/stemmed_to_original_{}.txt'.format(class_name), 'wt')
+    json.dump(stemmed_to_original, file)
+    file.close()
+    tabella_preprocessata.to_csv('{}.csv'.format(class_name), index=False)
 if __name__ == '__main__':
     main()
