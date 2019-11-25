@@ -25,6 +25,7 @@ import mysql.connector
 import json
 import datetime
 
+#sys.stderr = open("log.txt", "a")
 
 # todo controlla che tutti i regex che abbiano anche '_' e dove serve áéíóúàèìòùàèìòù
 # todo sost. vitamina con vit
@@ -32,9 +33,8 @@ import datetime
 # convertire in int le colonne tipo AGE
 
 def main():
-
-    leggo_regole_dal_db_e_verifico_accuracy()
-    #singola_istanza()
+    #leggo_regole_dal_db_e_verifico_accuracy()
+    singola_istanza()
 
 
 
@@ -254,17 +254,17 @@ def leggo_regole_dal_db_e_verifico_accuracy():
     class_names = [
         'TERAPIE_ORMONALI_CHECKBOX',#[0]
         'TERAPIE_ORMONALI_LISTA',#[1]
-        'TERAPIE_OSTEOPROTETTIVE_CHECKBOX',#[2] refined piu basso di not refined
+        'TERAPIE_OSTEOPROTETTIVE_CHECKBOX',#[2]
         'TERAPIE_OSTEOPROTETTIVE_LISTA',#[3]
         'VITAMINA_D_TERAPIA_CHECKBOX',#[4]
         'VITAMINA_D_TERAPIA_LISTA',#[5]
         'VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',#[6]
         'VITAMINA_D_SUPPLEMENTAZIONE_LISTA',#[7]
         'CALCIO_SUPPLEMENTAZIONE_CHECKBOX',#[8]
-        'CALCIO_SUPPLEMENTAZIONE_LISTA']  #[9]
+        'CALCIO_SUPPLEMENTAZIONE_LISTA'] #[9]
 
-    class_name = class_names[6]
-    preprocessa = True
+    class_name = class_names[5]
+    preprocessa = False
 
 
     if preprocessa:
@@ -304,13 +304,10 @@ def leggo_regole_dal_db_e_verifico_accuracy():
         test_x_text = add_text_columns(test_x)
 
         print(accuracy_rules3(test_x_text, test_y, rules_user_not_ref, class_name))
-        print(accuracy_rules3(test_x_text, test_y, rules_user_ref, class_name))
+        #print(accuracy_rules3(test_x_text, test_y, rules_user_ref, class_name))
 
-        print(accuracy_rules3(test_x, test_y, rules_not_ref, class_name))
-        print(accuracy_rules3(test_x, test_y, rules_ref, class_name))
-
-
-
+        #print(accuracy_rules3(test_x, test_y, rules_not_ref, class_name))
+        #print(accuracy_rules3(test_x, test_y, rules_ref, class_name))
 
 def df_column_uniquify(df):
     df_columns = df.columns
@@ -330,14 +327,15 @@ def preprocessa_per_java2(class_name):
     db_connection = create_engine(db_connection_str)
     # I read everything except scananalisys cause it has the BMI attribute which is already present in anamnesi
     tabella_completa = pd.read_sql(
-        'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE',
+        'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE'
+        ' where Anamnesi.SCAN_DATE < "2019-05-01"',
         con=db_connection)
 
     tabella_preprocessata, colname_to_ngram, stemmed_to_original = preprocessamento_nuovo3(tabella_completa, class_name)
 
     # we don't keep instances where class is missing
     tabella_preprocessata.dropna(subset=[class_name], inplace=True)
-
+    #tabella_preprocessata.reset_index(drop=True, inplace=True)
 
     file = open('colnametongram.txt', 'wt')
     file.write(str(colname_to_ngram))
@@ -381,10 +379,12 @@ def add_text_columns(test):
     db_connection = create_engine(db_connection_str)
     # I read everything except scananalisys cause it has the BMI attribute which is already present in anamnesi
     tabella_completa = pd.read_sql(
-        'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE',
+        'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE'
+        ' where Anamnesi.SCAN_DATE < "2019-05-01"',
         con=db_connection)
 
     tabella_completa = df_column_uniquify(tabella_completa)
+
 
   
     # le colonne testo vuota la trattiamo come stringa vuota non null.. perchè se è null siammo costretti a ddire nonso
@@ -488,6 +488,8 @@ def add_text_columns(test):
 
         if pk_matched is False:
             print("pk not matched for: " + pk_test)
+
+    test.replace('NULL', value='', inplace=True)
 
     print("matches: " + str(m) + " of: " + str(test.shape[0]))
     return test
@@ -640,6 +642,7 @@ def preprocessamento_nuovo3(tabella_completa, class_name):
         # lista di frasi tutte in minuscolo
         column_list = [str(cell).lower() for cell in column_list]
         for i in range(0, len(column_list)):
+
             column_list[i] = remove_stopwords_and_stem(column_list[i], regex)
         # non idf = false perchè voglio un output binario.
         # binario perchè voglio poter dire: consiglio TERAPIE_ORMONALI perchè è presente (non è presente) la parola 'p'
@@ -813,6 +816,7 @@ def preprocessamento_nuovo3(tabella_completa, class_name):
 
     # tolgo tutti \t\t\t\\t\n\n\
     for row_index in range(0, tabella_completa.shape[0]):
+        tabella_completa.loc[row_index, 'CAUSE_OSTEOPOROSI_SECONDARIA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIE_ORMONALI_LISTA'])
         tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'])
         tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'])
         tabella_completa.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA'])
@@ -820,6 +824,11 @@ def preprocessamento_nuovo3(tabella_completa, class_name):
         tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
         tabella_completa.loc[row_index, 'TERAPIE_ORMONALI_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIE_ORMONALI_LISTA'])
         tabella_completa.loc[row_index, 'VITAMINA_D_TERAPIA_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIE_ORMONALI_LISTA'])
+        # elimino il secondo elemento (tutto ciò che è dopo lacapo) #todo controlla uesta cosa anche per gli altri
+        # attenzione lascia un \s ('colecalciferolo 10.000UI, 30gocce alla settimana ') 194591351EMASTROGIR
+        tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = re.sub(r'\n.*', '', tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
+        tabella_completa.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'] = re.sub(r'\n.*', '', tabella_completa.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'])
+
 
 
     # region creazione di XXX_TERAPIA_OST_ORM_ANNI_XXX da TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA separando gli anni
@@ -944,6 +953,8 @@ def preprocessamento_nuovo3(tabella_completa, class_name):
     for row_index in range(0, tabella_completa.shape[0]):
         row = tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA']
         if row != '':
+            if tabella_completa.loc[row_index,'PATIENT_KEY'] == '194591351EMASTROGIR':
+                print('194591351EMASTROGIR')
             # faccio regex piu semplice dato che ho gia fatto delle sostituzioni nel paragrafo prec.
             x = re.sub(r'^(colecalciferolo\s[0-9]*[.][0-9]*UI).*|^(Calcifediolo\scpr\smolli).*|'
                        r'^(Calcifediolo\sgocce).*|^(Supplementazione\sgiornaliera\sdi\sVit\sD3).*', r'\1\2\3\4',
@@ -1077,14 +1088,19 @@ def accuracy_rules3(test_X, test_Y, regole,class_name):
     # per ogni riga
     for row_index in range(0, num_instances):
         # print(row_index)
-        if row_index == 13:
+        if row_index == 32:
             h = 0
         istance_X = test_X.iloc[row_index, :]
         true_Y = test_Y.values[row_index]
         predicted_Y, golden_rule = regole.predict(istance_X)
         #print("{}: {}".format(row_index, predicted_Y))
         # attenzione che golden rule puo esser null se non sa
-        # print(golden_rule.get_medic_readable_version(istance_X,stemmed_to_original))
+        if golden_rule is not None:
+            print(golden_rule.get_medic_readable_version(istance_X,stemmed_to_original))
+            print('\n')
+        else:
+            print('non so')
+            print('\n')
         if predicted_Y is None:
             doesnt_know += 1
 
@@ -1271,11 +1287,11 @@ class Regola:
         "cataratt oper". This is not very nice, this should have been "cataratte operazioni" or
         "cataratta operata".
 
-        stemm_dict: what happens when the proposition is: 'X does not contain "(a stemmed word)"' and X
+        stemm_dict: what happens when the proposition is: 'X does not contain "(some stemmed word)"' and X
         in fact does not contain it. How do I retrieve the original word? There is no way! the stemming
         function is not injective, so it has (no inverse)/(multiple inverses).
         The route I chose is to show a random inverse.
-        The inverses are stored in 'stemm_dict', a dictionary which allows given a key (stemmed) to
+        The inverses are stored in 'stemm_dict', a dictionary which allows, given a key (stemmed) to
         retrieve some random word that generated the the key
 
         '''
@@ -1295,6 +1311,7 @@ class Regola:
                        'l', 'nel']
 
         output = ''
+        # the else branch
         if self.propositions is None:
             return 'Spiegazione non disponibile'
 
