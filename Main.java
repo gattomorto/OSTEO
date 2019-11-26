@@ -48,10 +48,11 @@ public class Main {
                 "CALCIO_SUPPLEMENTAZIONE_CHECKBOX",
                 "CALCIO_SUPPLEMENTAZIONE_LISTA"
         };
-        String className = classNames[4];
+        //String className = classNames[9];
 
 
-            String[] tmp = {
+
+        String[] tmp = {
                 "TERAPIA_OSTEOPROTETTIVA_ORMONALE",
                 "TERAPIA_OSTEOPROTETTIVA_SPECIFICA",
                 "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA",
@@ -118,136 +119,167 @@ public class Main {
         };
 
         List<String> nomiColDaTrasInNominal = new ArrayList<String>();
-        nomiColDaTrasInNominal.add(className);
+        //nomiColDaTrasInNominal.add(className);
 
         Collections.addAll(nomiColDaTrasInNominal,tmp);
 
         CSVLoader loader = new CSVLoader();
-        loader.setFile(new File(String.format("/home/dadawg/PycharmProjects/untitled1/%s.csv",className)));
-        Instances data = loader.getDataSet();
+        loader.setFile(new File(String.format("/home/dadawg/PycharmProjects/untitled1/perJAVA.csv")));
+        //Instances data = loader.getDataSet();
         //System.out.println(data);
-        data.setClassIndex(data.numAttributes()-1);
+        //data.setClassIndex(data.numAttributes()-1);
 
-
-        int[] indiciColDaTrasInNominal= new int[nomiColDaTrasInNominal.size()];
-        int i=0;
-        for (String colName: nomiColDaTrasInNominal)
+        //Map<String, Instances> classNameToDataset = new HashMap<>();
+        for (String className: classNames)
         {
-            System.out.println(colName);
-            //System.out.println(data.attribute(colName));
-            indiciColDaTrasInNominal[i]=data.attribute(colName).index();
-            i++;
+            Instances dati =  loader.getDataSet();
+            nomiColDaTrasInNominal.add(className);
+
+
+            int[] indiciColDaTrasInNominal= new int[nomiColDaTrasInNominal.size()];
+            int i=0;
+            for (String colName: nomiColDaTrasInNominal)
+            {
+                //System.out.println(colName);
+                //System.out.println(data.attribute(colName));
+                indiciColDaTrasInNominal[i]=dati.attribute(colName).index();
+                i++;
+            }
+
+
+            Filter filter;
+            filter = new NumericToNominal();
+            ((NumericToNominal)filter).setAttributeIndicesArray(indiciColDaTrasInNominal);
+            filter.setInputFormat(dati);
+            dati = Filter.useFilter(dati,filter);
+
+
+            int[] classIndexesToRemove = new int[classNames.length-1];
+            i = 0;
+            for(String className_: classNames)
+            {
+                if(!className_.equals(className)) {
+                    classIndexesToRemove[i] = dati.attribute(className_).index();
+                    i++;
+                }
+            }
+
+
+
+            filter = new Remove();
+            ((Remove)filter).setAttributeIndicesArray(classIndexesToRemove);
+            filter.setInputFormat(dati);
+            dati = Filter.useFilter(dati,filter);
+
+            dati.setClassIndex(dati.numAttributes()-1);
+
+            dati.removeIf(instance -> (instance.classIsMissing()==true));
+
+
+            //This is because sometimes the training set is so small that an entire column has missing values, SITUAZIONE_FEMORE_DX,
+            //for example.
+            //If this happens, weka assigns string type to that column. The proplem is that JRip or PART can't operate with
+            //string type attributes.
+            //Therefore we use this filter to remove such type columns.
+            //What happens if we have string attributes which don't have all missing values? Doesn't the filter remove those
+            //as well?
+            //We do not have string attributes, so no problem
+            filter = new RemoveType();
+            filter.setOptions(new String[]{"-T","string"});
+            filter.setInputFormat(dati);
+            dati = Filter.useFilter(dati,filter);
+
+
+
+            filter = new StratifiedRemoveFolds();
+            filter.setOptions(new String[]{"-S", "0", "-N", "4", "-F", "1"});
+            filter.setInputFormat(dati);
+            Instances test =  Filter.useFilter(dati, filter);
+
+            filter.setOptions(new String[]{"-S", "0", "-V", "-N", "4", "-F", "1"});
+            filter.setInputFormat(dati);
+            Instances train = Filter.useFilter(dati, filter);
+
+
+            //test set per python, percè vogliamo verificare che il classificatore fittizio fatto solo di regole s python
+            //si comporta come uelllo vero
+            Saver saver = new CSVSaver();
+            saver.setInstances(test);
+            saver.setFile(new File(String.format("/home/dadawg/PycharmProjects/untitled1/%s_perpython.csv",className)));
+            saver.writeBatch();
+
+
+            //questa parte è per la storia che devo recuperare le colonne con il testo su python sul test set
+            //lo faccio usando pk.. allora salvo il test set e poi la rimuovo subito
+            filter = new Remove();
+            ((Remove)filter).setAttributeIndicesArray(new int[] {dati.attribute("PATIENT_KEY").index()});
+            filter.setInputFormat(train);
+            train = Filter.useFilter(train,filter);
+            filter.setInputFormat(test);
+            test = Filter.useFilter(test,filter);
+
+
+
+            //this is not very useful, unless you want to see what weka GUI says
+            saver = new ArffSaver();
+            saver.setInstances(test);
+            saver.setFile(new File(String.format("%s_test.arff",className)));
+            saver.writeBatch();
+            saver = new ArffSaver();
+            saver.setInstances(train);
+            saver.setFile(new File(String.format("%s_train.arff",className)));
+            saver.writeBatch();
+
+            PART cls = new PART();
+            //JRip cls = new JRip();
+
+            cls.buildClassifier(train);
+
+            Evaluation evl = new Evaluation(train);
+            evl.evaluateModel(cls,test);
+            System.out.println(evl.toSummaryString());
+
+
+            Rules rules = new Rules(cls);
+            String not_refined = rules.toString();
+
+            Rules rules2 = new Rules(cls);
+            rules2.refineRules(train.numInstances(),0.8,0.1);
+            String refined_rules = rules2.toString();
+
+            Rules rules3 = new Rules(cls);
+            rules3.generateUserReadableRules(getColNameToNgram());
+            String user_readable_rules_not_ref = rules3.toString();
+
+            Rules rules4 = new Rules(cls);
+            //0.8 0.1
+            rules4.refineRules(train.numInstances(),0.8,0.1);
+            rules4.generateUserReadableRules(getColNameToNgram());
+            String user_readable_rules_ref = rules4.toString();
+
+            System.out.println(className);
+            System.out.println(rules.getAccuracy(test));
+            System.out.println(rules2.getAccuracy(test));
+
+            //System.out.println(not_refined);
+
+            //String qry = String.format("update regole set regola_refined = '%s', regola_not_refined = '%s' where terapia = 'TERAPIE_OSTEOPROTETTIVE_CHECKBOX'",refined_rules,not_refined);
+            String qry = String.format("replace into regole values('%s','%s','%s', '%s', '%s')",className,refined_rules,not_refined,user_readable_rules_not_ref,user_readable_rules_ref);
+            //System.out.println(qry);
+
+
+            Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO2","utente_web","CMOREL96T45");
+            Statement myStmt = myConn.createStatement();
+            // todo attenzione se devi modificare questa, assicurati di cancellare la tabella dal terminale
+            myStmt.executeUpdate( "create table if not exists regole (terapia VARCHAR(256) PRIMARY KEY, regola_refined VARCHAR(10000), regola_not_refined VARCHAR(20000), user_readable_not_ref VARCHAR(20000), user_readable_ref VARCHAR(15000))");
+
+            myStmt.executeUpdate(qry);
+
         }
 
-        Filter filter;
-        filter = new NumericToNominal();
-        ((NumericToNominal)filter).setAttributeIndicesArray(indiciColDaTrasInNominal);
-        filter.setInputFormat(data);
-        data = Filter.useFilter(data,filter);
-
-        //This is because sometimes the training set is so small that an entire column has missing values, SITUAZIONE_FEMORE_DX,
-        //for example.
-        //If this happens, weka assigns string type to that column. The proplem is that JRip or PART can't operate with
-        //string type attributes.
-        //Therefore we use this filter to remove such type columns.
-        //What happens if we have string attributes which don't have all missing values? Doesn't the filter remove those
-        //as well?
-        //We do not have string attributes, so no problem
-        filter = new RemoveType();
-        filter.setOptions(new String[]{"-T","string"});
-        filter.setInputFormat(data);
-        data = Filter.useFilter(data,filter);
 
 
 
-        filter = new StratifiedRemoveFolds();
-        filter.setOptions(new String[]{"-S", "0", "-N", "4", "-F", "1"});
-        filter.setInputFormat(data);
-        Instances test =  Filter.useFilter(data, filter);
-
-        filter.setOptions(new String[]{"-S", "0", "-V", "-N", "4", "-F", "1"});
-        filter.setInputFormat(data);
-        Instances train = Filter.useFilter(data, filter);
-
-
-
-
-
-        //test set per python, percè vogliamo verificare che il classificatore fittizio fatto solo di regole s python
-        //si comporta come uelllo vero
-        Saver saver = new CSVSaver();
-        saver.setInstances(test);
-        saver.setFile(new File("/home/dadawg/PycharmProjects/untitled1/perpython.csv"));
-        saver.writeBatch();
-
-
-
-        //System.out.println(test);
-
-
-        //questa parte è per la storia che devo recuperare le colonne con il testo su python sul test set
-        //lo faccio usando pk.. allora salvo il test set e poi la rimuovo subito
-        filter = new Remove();
-        ((Remove)filter).setAttributeIndicesArray(new int[] {data.attribute("PATIENT_KEY").index()});
-        filter.setInputFormat(train);
-        train = Filter.useFilter(train,filter);
-        filter.setInputFormat(test);
-        test = Filter.useFilter(test,filter);
-
-
-        //this is not very useful, unless you want to see what weka GUI says
-        saver = new ArffSaver();
-        saver.setInstances(test);
-        saver.setFile(new File("test.arff"));
-        saver.writeBatch();
-        saver = new ArffSaver();
-        saver.setInstances(train);
-        saver.setFile(new File("train.arff"));
-        saver.writeBatch();
-
-        PART cls = new PART();
-        //JRip cls = new JRip();
-
-        cls.buildClassifier(train);
-
-        Evaluation evl = new Evaluation(train);
-        evl.evaluateModel(cls,test);
-        System.out.println(evl.toSummaryString());
-
-
-        Rules rules = new Rules(cls);
-        String not_refined = rules.toString();
-
-        Rules rules2 = new Rules(cls);
-        rules2.refineRules(train.numInstances(),0.8,0.1);
-        String refined_rules = rules2.toString();
-
-        Rules rules3 = new Rules(cls);
-        rules3.generateUserReadableRules(getColNameToNgram());
-        String user_readable_rules_not_ref = rules3.toString();
-
-        Rules rules4 = new Rules(cls);
-        //0.8 0.1
-        rules4.refineRules(train.numInstances(),0.8,0.1);
-        rules4.generateUserReadableRules(getColNameToNgram());
-        String user_readable_rules_ref = rules4.toString();
-
-        System.out.println(rules.getAccuracy(test));
-        System.out.println(rules2.getAccuracy(test));
-
-        //System.out.println(not_refined);
-
-        //String qry = String.format("update regole set regola_refined = '%s', regola_not_refined = '%s' where terapia = 'TERAPIE_OSTEOPROTETTIVE_CHECKBOX'",refined_rules,not_refined);
-        String qry = String.format("replace into regole values('%s','%s','%s', '%s', '%s')",className,refined_rules,not_refined,user_readable_rules_not_ref,user_readable_rules_ref);
-        //System.out.println(qry);
-
-
-        Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO2","utente_web","CMOREL96T45");
-        Statement myStmt = myConn.createStatement();
-        // todo attenzione se devi modificare questa, assicurati di cancellare la tabella dal terminale
-        myStmt.executeUpdate( "create table if not exists regole (terapia VARCHAR(256) PRIMARY KEY, regola_refined VARCHAR(10000), regola_not_refined VARCHAR(20000), user_readable_not_ref VARCHAR(20000), user_readable_ref VARCHAR(15000))");
-
-        myStmt.executeUpdate(qry);
 
 
     }
@@ -725,6 +757,11 @@ class Rules implements Iterable<Regola>
 
 
         return output;
+    }
+
+    public List<Regola> extractRulesJRip(Classifier cls)
+    {
+        return null;
     }
 
     private void removeRules(List<Regola> rulesToRemove)

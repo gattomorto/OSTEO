@@ -33,62 +33,49 @@ import datetime
 # convertire in int le colonne tipo AGE
 
 def main():
-    #leggo_regole_dal_db_e_verifico_accuracy()
-    singola_istanza()
+    leggo_regole_dal_db_e_verifico_accuracy()
+    #singola_istanza()
 
 
 
 # altri main()
-def preprocessamento_singolo(instance, class_name):
-    db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
-    db_connection = create_engine(db_connection_str)
+def preprocessamento_singolo(instance):
+    #tabella_completa = df_column_uniquify(tabella_completa)
+    instance.rename(columns={'PAROLOGIA_ESOFAGEA': 'PATOLOGIA_ESOFAGEA'}, inplace=True)
+    instance.replace('NULL', value='', inplace=True)
+    instance.replace(r"'", value='', inplace=True, regex=True)
 
-    # region categorizzo ULTIMA_MESTRUAZIONE
-    # come prima cosa sostituisco l'anno dell'ultima mestruazione con quanti anni non ha mestruazioni
-    # divido in range [-inf,mean-std]=poco, [mean-std,mean+std]=medio, [mean+std,+inf]=tanto, e per gli uomini e/o per
-    # le donne che hanno ancora il ciclo lascio null
-    birthdate = instance['1 BIRTHDATE']
-    # dalla data di nascita mi serve solo l'anno
-    birthdate_year = str(birthdate)[0:4]
+    instance['ANNI_DALLA_MENOPAUSA'] = datetime.datetime.now().year - instance['ULTIMA_MESTRUAZIONE']
 
-    # qui sostituisco alla data dell'ultima mest. con gli anni che non ha mest.
-    # la differenza lascia nan per chi ha ULTIMA_MESTRUAZIONE nan
-    instance['1 ULTIMA_MESTRUAZIONE'] = instance['1 ULTIMA_MESTRUAZIONE'] - int(birthdate_year)
 
-    t = text(
-        "select avg(ULTIMA_MESTRUAZIONE -YEAR(BIRTHDATE)) as 'mean',stddev(ULTIMA_MESTRUAZIONE -YEAR(BIRTHDATE)) as 'std'  from Anamnesi inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY")
-    result = db_connection.execute(t).fetchone()
+    instance['CAUSE_OSTEOPOROSI_SECONDARIA'] = re.sub(
+        r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '',
+        instance['TERAPIE_ORMONALI_LISTA'])
 
-    std = float(result['std'])
-    mean = float(result['mean'])
-    # todo ce un errore: quello che ho calcolato è per quanti anni ha mestruato, cioè eta menopausa
-    anni_senza_ciclo = instance['1 ULTIMA_MESTRUAZIONE']
-    if mean - std <= anni_senza_ciclo <= mean + std:
-        instance['1 ULTIMA_MESTRUAZIONE'] = 'medio'
-    elif anni_senza_ciclo > mean + std:
-        instance['1 ULTIMA_MESTRUAZIONE'] = 'tanto'
-    elif anni_senza_ciclo < mean - std:
-        instance['1 ULTIMA_MESTRUAZIONE'] = 'poco'
-    # endregion
+    instance['TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = re.sub(
+        r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '',
+        instance['TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'])
 
-    # todo sicuramente non posso sostituire con la media su prepr. singolo
-    # alcuni hanno -1
-    # tabella_completa['1 BMI'].replace(-1, tabella_completa['1 BMI'].mean(), inplace=True)
+    instance['TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = re.sub(
+        r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '',
+        instance['TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'])
+
+
 
     # region creazione di XXX_TERAPIA_OST_ORM_ANNI_XXX da TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA separando gli anni
-    # attenzione questo paragrafo deve stare prima di sostituizione della colonna con il principio
 
-    # la lista da trasformare poi in colonna del DataFrame
 
-    # vedo che le strighe vuote le legge come '', invece se passo attraverso csv è nan
-    terapia_osteoprotettiva_orm = instance['1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
+    terapia_osteoprotettiva_orm = instance['TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
     if terapia_osteoprotettiva_orm != '':
+        # print(terapia_osteoprotettiva_orm)
         # isolo la parte di testo con il numero di anni
-        anni = re.search(r'[a-z\s],[0-9]+(?:[,.][0-9]+)*\sanni$', terapia_osteoprotettiva_orm)
-        # ottengo il numero senza altri caratteri
-        anni = re.search('[0-9]+(?:[.,][0-9]*)*', anni.group(0))
-        # se il numero ha una virgola, si sostituisce con il punto
-        anni = re.sub(",", ".", anni.group(0))
+        anni_match_obj = re.search(r'(?<=,)[0-9]+([,.][0-9]+)?(?=\sanni)', terapia_osteoprotettiva_orm)
+        if anni_match_obj is not None:
+            anni = anni_match_obj.group(0)
+            anni = re.sub(',', '.', anni)
+            # print(anni)
+        else:
+            anni = np.nan
     else:
         anni = np.nan
 
@@ -96,75 +83,50 @@ def preprocessamento_singolo(instance, class_name):
     instance['XXX_TERAPIA_OST_ORM_ANNI_XXX'] = anni
     # endregion
 
-    # region sostituisco TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA solo con il principio (non è da prevedere)
-    # se in origine era: "TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg,1 anni" diventa TSEC
-    # lascio i null, ci pensa weka
-
-    terapia = instance['1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
-    if terapia != '':
-        # estraggo solo il principio
-        principio_MatchObject = re.search(
-            r'(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-zA-Z]*))|(\s[+][a-zA-Z]*)){0,1})', terapia)
-        instance['1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = principio_MatchObject.group(0)
-    else:
-        instance['1 TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = np.nan
-
-    # endregion
-
-    # todo: mettere un nome piu decente
     # region creazione di XXX_TERAPIA_OST_SPEC_ANNI_XXX da TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA separando gli anni
-    # attenzione questo paragrafo deve stare prima di sostituizione della colonna con il principio
-    # la lista da trasformare poi in colonna del DataFrame
 
-    terapia = instance['1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
-    if terapia != '':
+    terapia_osteoprotettiva_spec = instance['TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
+    if terapia_osteoprotettiva_spec != '':
         # isolo la parte di testo con il numero di anni
-        anni = re.search(r'[a-z\s],[0-9]+(?:[,.][0-9]+)*\sanni$', terapia)
-        # ottengo il numero senza altri caratteri
-        anni = re.search('[0-9]+(?:[.,][0-9]*)*', anni.group(0))
-        # se il numero ha una virgola, si sostituisce con il punto
-        anni = re.sub(",", ".", anni.group(0))
-    # i valori null li lascio, ci pensa weka
+        anni_match_obj = re.search(r'(?<=,)[0-9]+([,.][0-9]+)?(?=\sanni)', terapia_osteoprotettiva_spec)
+        # 'clodronato fiale 200 mg im,1 fl ogni 15 giorni,6  anni' per esempio
+        if anni_match_obj is not None:
+            anni = anni_match_obj.group(0)
+            anni = re.sub(',', '.', anni)
+
+        else:
+            anni = np.nan
     else:
         anni = np.nan
 
-    # aggiungo la nuova colonna con un nome che suggerisce l'artificialità
     instance['XXX_TERAPIA_OST_SPEC_ANNI_XXX'] = anni
     # endregion
 
-    # region sostituisco TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA solo con il principio (non è da prevedere)
-    # se in origine era: "TSEC, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg,1 anni" diventa TSEC
-    # lascio i null, ci pensa weka
-    row = instance['1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
-    if row != '':
-        # estraggo solo il principio
-        principio_MatchObject = re.search(
-            r'(^[a-zA-Z]+(([+](\s[a-zA-Z]*|[a-zA-Z]*))|(\s[+](\s[a-zA-Z]*))|(\s[+][a-zA-Z]*)){0,1})', row)
-        instance['1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = principio_MatchObject.group(0)
-    else:
-        instance['1 TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = np.nan
-    # endregion
+    # tolgo le informazioni sugli anni da TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA, TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA
+    # perche sono gia state salvate in un altra colonna
+
+    instance['TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = re.sub(
+        r',[0-9]+([,.][0-9]+)?\sanni$', '',
+        instance['TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'])
+
+    instance['TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = re.sub(
+        r',[0-9]+([,.][0-9]+)?\sanni$', '',
+        instance['TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'])
+
 
     # region fillna
+    instance['FRATTURA_VERTEBRE'].replace('', 'no fratture', inplace=True)
+    instance['FRATTURA_FEMORE'].replace('', 'no fratture', inplace=True)
+    instance['ABUSO_FUMO'].replace('', 'non fuma', inplace=True)
+    instance['USO_CORTISONE'].replace('', 'non usa cortisone', inplace=True)
+    instance['TERAPIA_ALTRO_CHECKBOX'].fillna(0, inplace=True)
+    instance['STATO_MENOPAUSALE'].replace('', np.nan, inplace=True)
+    instance['TERAPIA_STATO'].replace('', np.nan, inplace=True)
+    instance['TERAPIE_ORMONALI_LISTA'].replace('', np.nan, inplace=True)
+    instance['VITAMINA_D_TERAPIA_LISTA'].replace('', np.nan, inplace=True)
 
-    if instance['1 FRATTURA_FEMORE'] == '':
-        instance['1 FRATTURA_FEMORE'] = 'no fratture'
-
-    if instance['1 FRATTURA_VERTEBRE'] == '':
-        instance['1 FRATTURA_VERTEBRE'] = 'no fratture'
-
-    if instance['1 ABUSO_FUMO'] == '':
-        instance['1 ABUSO_FUMO'] = 'non fuma'
-
-    if instance['1 USO_CORTISONE'] == '':
-        instance['1 USO_CORTISONE'] = 'non usa cortisone'
-
-    # todo nel db si salva come null no come stringa vuota
-    if instance['1 TERAPIA_ALTRO_CHECKBOX'] == '':
-        instance['1 TERAPIA_ALTRO_CHECKBOX'] = 0
-
-    return instance
     # endregion
+
 
 
 def singola_istanza():
@@ -249,7 +211,6 @@ def singola_istanza():
 
     exit(5)
 
-
 def leggo_regole_dal_db_e_verifico_accuracy():
     class_names = [
         'TERAPIE_ORMONALI_CHECKBOX',#[0]
@@ -264,13 +225,10 @@ def leggo_regole_dal_db_e_verifico_accuracy():
         'CALCIO_SUPPLEMENTAZIONE_LISTA'] #[9]
 
     class_name = class_names[5]
-    preprocessa = False
 
 
-    if preprocessa:
-        preprocessa_per_java2(class_name)
-        print("preprocess concluso, metti false e vai su java")
-    else:
+
+    for class_name in class_names:
         db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
         db_connection = create_engine(db_connection_str)
 
@@ -294,7 +252,7 @@ def leggo_regole_dal_db_e_verifico_accuracy():
         # it is produced by java, so first run java
         #todo capire perchè qui mi da errore se cella contiene testo con virgola
         # e perchè nel preprocessamento no... forse pechè npn cerecano virgole
-        test = pd.read_csv('perpython.csv', quotechar="'")
+        test = pd.read_csv('/home/dadawg/PycharmProjects/untitled1/{}_perpython.csv'.format(class_name), quotechar="'")
         test.replace('?', np.nan, inplace=True)
 
         test_x = test.iloc[:, :-1]
@@ -303,8 +261,9 @@ def leggo_regole_dal_db_e_verifico_accuracy():
         # aggiungo le colonne con il testo a test_x
         test_x_text = add_text_columns(test_x)
 
+        print(class_name)
         print(accuracy_rules3(test_x_text, test_y, rules_user_not_ref, class_name))
-        #print(accuracy_rules3(test_x_text, test_y, rules_user_ref, class_name))
+        print(accuracy_rules3(test_x_text, test_y, rules_user_ref, class_name))
 
         #print(accuracy_rules3(test_x, test_y, rules_not_ref, class_name))
         #print(accuracy_rules3(test_x, test_y, rules_ref, class_name))
@@ -322,7 +281,7 @@ def df_column_uniquify(df):
     df.columns = new_columns
     return df
 
-def preprocessa_per_java2(class_name):
+def preprocessa_per_java2():
     db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
     db_connection = create_engine(db_connection_str)
     # I read everything except scananalisys cause it has the BMI attribute which is already present in anamnesi
@@ -331,20 +290,20 @@ def preprocessa_per_java2(class_name):
         ' where Anamnesi.SCAN_DATE < "2019-05-01"',
         con=db_connection)
 
-    tabella_preprocessata, colname_to_ngram, stemmed_to_original = preprocessamento_nuovo3(tabella_completa, class_name)
+    tabella_preprocessata, colname_to_ngram, stemmed_to_original = preprocessamento_nuovo3(tabella_completa)
 
     # we don't keep instances where class is missing
-    tabella_preprocessata.dropna(subset=[class_name], inplace=True)
+    #tabella_preprocessata.dropna(subset=[class_name], inplace=True)
     #tabella_preprocessata.reset_index(drop=True, inplace=True)
 
     file = open('colnametongram.txt', 'wt')
     file.write(str(colname_to_ngram))
     file.close()
-    file = open('/var/www/sto/stemmed_to_original_{}.txt'.format(class_name), 'wt')
+    file = open('/var/www/sto/stemmed_to_original.txt', 'wt')
     json.dump(stemmed_to_original, file)
     file.close()
 
-    tabella_preprocessata.to_csv('{}.csv'.format(class_name), index=False)
+    tabella_preprocessata.to_csv('perJAVA.csv', index=False)
 
 def primo_script():
     '''
@@ -544,7 +503,7 @@ def remove_stopwords_and_stem(sentence, regex):
 
 
 
-def preprocessamento_nuovo3(tabella_completa, class_name):
+def preprocessamento_nuovo3(tabella_completa):
     # todo controlla che tutte le vettorizzazioni si facciano correttamente
     # per il doppio bmi
     tabella_completa = df_column_uniquify(tabella_completa)
@@ -816,7 +775,7 @@ def preprocessamento_nuovo3(tabella_completa, class_name):
 
     # tolgo tutti \t\t\t\\t\n\n\
     for row_index in range(0, tabella_completa.shape[0]):
-        tabella_completa.loc[row_index, 'CAUSE_OSTEOPOROSI_SECONDARIA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIE_ORMONALI_LISTA'])
+        tabella_completa.loc[row_index, 'CAUSE_OSTEOPOROSI_SECONDARIA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'CAUSE_OSTEOPOROSI_SECONDARIA'])
         tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'])
         tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'])
         tabella_completa.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '', tabella_completa.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA'])
@@ -1070,9 +1029,20 @@ def preprocessamento_nuovo3(tabella_completa, class_name):
             'CONTROLLO_DENSITOMETRICO_CHECKBOX',  # NON**
             'TOT_Tscore',
             'TOT_Zscore',
+
+            'TERAPIE_ORMONALI_CHECKBOX',  # [0]
+            'TERAPIE_ORMONALI_LISTA',  # [1]
+            'TERAPIE_OSTEOPROTETTIVE_CHECKBOX',  # [2]
+            'TERAPIE_OSTEOPROTETTIVE_LISTA',  # [3]
+            'VITAMINA_D_TERAPIA_CHECKBOX',  # [4]
+            'VITAMINA_D_TERAPIA_LISTA',  # [5]
+            'VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',  # [6]
+            'VITAMINA_D_SUPPLEMENTAZIONE_LISTA',  # [7]
+            'CALCIO_SUPPLEMENTAZIONE_CHECKBOX',  # [8]
+            'CALCIO_SUPPLEMENTAZIONE_LISTA'
         ]
 
-    l.append(class_name)
+    #l.append(class_name)
 
     return tabella_completa[l], col_name_to_ngram, stemmed_to_original
 
@@ -1081,7 +1051,7 @@ def accuracy_rules3(test_X, test_Y, regole,class_name):
     predicted_right = 0
     doesnt_know = 0
 
-    stemmed_to_original = json.load(open("/var/www/sto/stemmed_to_original_{}.txt".format(class_name)))
+    stemmed_to_original = json.load(open("/var/www/sto/stemmed_to_original.txt".format(class_name)))
 
     # andava bene anche test_Y.shape[0]
     num_instances = test_X.shape[0]
@@ -1095,12 +1065,13 @@ def accuracy_rules3(test_X, test_Y, regole,class_name):
         predicted_Y, golden_rule = regole.predict(istance_X)
         #print("{}: {}".format(row_index, predicted_Y))
         # attenzione che golden rule puo esser null se non sa
-        if golden_rule is not None:
+        '''if golden_rule is not None:
             print(golden_rule.get_medic_readable_version(istance_X,stemmed_to_original))
             print('\n')
         else:
             print('non so')
-            print('\n')
+            print('\n')'''
+
         if predicted_Y is None:
             doesnt_know += 1
 
