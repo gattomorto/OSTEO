@@ -33,9 +33,9 @@ import datetime
 # convertire in int le colonne tipo AGE
 
 def main():
-    leggo_regole_dal_db_e_verifico_accuracy()
-    #singola_istanza()
-
+    #preprocessa_per_java2()
+    #leggo_regole_dal_db_e_verifico_accuracy()
+    singola_istanza()
 
 
 # altri main()
@@ -50,7 +50,7 @@ def preprocessamento_singolo(instance):
 
     instance['CAUSE_OSTEOPOROSI_SECONDARIA'] = re.sub(
         r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '',
-        instance['TERAPIE_ORMONALI_LISTA'])
+        instance['CAUSE_OSTEOPOROSI_SECONDARIA'])
 
     instance['TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = re.sub(
         r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '',
@@ -115,38 +115,56 @@ def preprocessamento_singolo(instance):
 
 
     # region fillna
-    instance['FRATTURA_VERTEBRE'].replace('', 'no fratture', inplace=True)
-    instance['FRATTURA_FEMORE'].replace('', 'no fratture', inplace=True)
-    instance['ABUSO_FUMO'].replace('', 'non fuma', inplace=True)
-    instance['USO_CORTISONE'].replace('', 'non usa cortisone', inplace=True)
-    instance['TERAPIA_ALTRO_CHECKBOX'].fillna(0, inplace=True)
-    instance['STATO_MENOPAUSALE'].replace('', np.nan, inplace=True)
-    instance['TERAPIA_STATO'].replace('', np.nan, inplace=True)
-    instance['TERAPIE_ORMONALI_LISTA'].replace('', np.nan, inplace=True)
-    instance['VITAMINA_D_TERAPIA_LISTA'].replace('', np.nan, inplace=True)
+
+    if instance['FRATTURA_VERTEBRE']=='':
+        instance['FRATTURA_VERTEBRE']='no fratture'
+
+    if instance['FRATTURA_FEMORE']== '':
+        instance['FRATTURA_FEMORE']='no fratture'
+
+    if instance['ABUSO_FUMO']== '':
+        instance['ABUSO_FUMO'] = 'non fuma'
+
+    if instance['USO_CORTISONE']== '':
+        instance['USO_CORTISONE']= 'non usa cortisone'
+
+    if pd.isna(instance['TERAPIA_ALTRO_CHECKBOX']):
+        instance['TERAPIA_ALTRO_CHECKBOX'] = 0
+
+    if instance['STATO_MENOPAUSALE'] == '':
+        instance['STATO_MENOPAUSALE']=np.nan
+
+
+
+
+    if instance['TERAPIA_STATO'] == '':
+        instance['TERAPIA_STATO']=np.nan
+
+    if instance['TERAPIE_ORMONALI_LISTA'] == '':
+        instance['TERAPIE_ORMONALI_LISTA']=np.nan
+
+    if instance['VITAMINA_D_TERAPIA_LISTA'] == '':
+        instance['VITAMINA_D_TERAPIA_LISTA']=np.nan
 
     # endregion
 
+    # todo cosa fare con situazione_femore_dx che se se non ce è ''
+    return instance
 
 
 def singola_istanza():
-    # class_name = '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX'
-    # class_name = '1 TERAPIE_ORMONALI_CHECKBOX'
-    class_name = '1 VITAMINA_D_TERAPIA_LISTA'
-    # class_name ='1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX'
-    # class_name = '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX'
 
     class_names = [
-                   '1 TERAPIE_ORMONALI_CHECKBOX',
-                   '1 TERAPIE_ORMONALI_LISTA',
-                   '1 TERAPIE_OSTEOPROTETTIVE_CHECKBOX',
-                   '1 TERAPIE_OSTEOPROTETTIVE_LISTA',
-                   '1 VITAMINA_D_TERAPIA_CHECKBOX',
-                   '1 VITAMINA_D_TERAPIA_LISTA',
-                   '1 VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',
-                   '1 VITAMINA_D_SUPPLEMENTAZIONE_LISTA',
-                   '1 CALCIO_SUPPLEMENTAZIONE_CHECKBOX',
-                   '1 CALCIO_SUPPLEMENTAZIONE_LISTA']
+                   'TERAPIE_ORMONALI_CHECKBOX',
+                   'TERAPIE_ORMONALI_LISTA',
+                   'TERAPIE_OSTEOPROTETTIVE_CHECKBOX',
+                   'TERAPIE_OSTEOPROTETTIVE_LISTA',
+                   'VITAMINA_D_TERAPIA_CHECKBOX',
+                   'VITAMINA_D_TERAPIA_LISTA',
+                   'VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',
+                   'VITAMINA_D_SUPPLEMENTAZIONE_LISTA',
+                   'CALCIO_SUPPLEMENTAZIONE_CHECKBOX',
+                   'CALCIO_SUPPLEMENTAZIONE_LISTA']
 
     # pk = sys.argv[1]
     # datascan = sys.argv[2]
@@ -163,56 +181,40 @@ def singola_istanza():
     db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
     db_connection = create_engine(db_connection_str)
     df = pd.read_sql(
-        'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE where Anamnesi.PATIENT_KEY = "{}" and Anamnesi.SCAN_DATE= "{}"'.format(
+        'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE where Anamnesi.PATIENT_KEY = "{}" and Anamnesi.SCAN_DATE= "{}"'.format(
             pk, datascan),
         con=db_connection)
-    # perchè bmi compare in due tabelle diverse
-    t = text("select AGE from ScanAnalysis where PATIENT_KEY = '{}' and SCAN_DATE = '{}'".format(pk, datascan))
-    result = db_connection.execute(t).fetchone()
-    age = result['AGE']
-    df['AGE'] = age
 
     df.rename(columns={'PAROLOGIA_ESOFAGEA': 'PATOLOGIA_ESOFAGEA'}, inplace=True)
 
-    # changing columns names: adding 1 in front
-    new_col_names = {}
-    for col in df.columns:
-        new_col_names[col] = '1 ' + col
-    df.rename(columns=new_col_names, inplace=True)
+    df_column_uniquify(df)
+
     instance = df.T.squeeze()
 
-    preprocessato = preprocessamento_singolo(instance, class_name)
+    preprocessato = preprocessamento_singolo(instance)
 
+    stemmed_to_original = json.load(open("/var/www/sto/stemmed_to_original.txt"))
     for class_name in class_names:
         t = text("SELECT * FROM regole WHERE terapia = '{}'".format(class_name))
         result = db_connection.execute(t).fetchone()
         reg = result['user_readable_not_ref']
         rules = Regole(reg)
-        predicted = rules.predict(preprocessato)
-        print(predicted[0])
-        print('\n')
-        stemmed_to_original = json.load(open("/var/www/sto/stemmed_to_original_{}.txt".format(class_name)))
-        print(predicted[1].get_medic_readable_version(preprocessato,stemmed_to_original))
-        #print(predicted[1])
-        print('\n')
 
-    '''t = text("SELECT * FROM regole WHERE terapia = '{}'".format(class_name))
-    result = db_connection.execute(t).fetchone()
-    reg = result['user_readable_not_ref']
-    rules = Regole(reg)
-    predicted = rules.predict(preprocessato)
-    print(predicted[0])
-    print('\n')
-    stemmed_to_original = json.load(open("stemmed_to_original_{}.txt".format(class_name)))
-    print(predicted[1].get_medic_readable_version(preprocessato,stemmed_to_original))
-    #print(predicted[1])
-    print('\n')'''
+        predicted, rule_predicted = rules.predict(preprocessato)
 
+        if rule_predicted is not None:
+            rule_predicted = rule_predicted.get_medic_readable_version(preprocessato, stemmed_to_original)
+
+        print(predicted)
+        print('\n')
+        print(rule_predicted)
+        print('\n')
 
     exit(5)
 
 def leggo_regole_dal_db_e_verifico_accuracy():
     class_names = [
+        #'CALCIO_SUPPLEMENTAZIONE_CHECKBOX',
         'TERAPIE_ORMONALI_CHECKBOX',#[0]
         'TERAPIE_ORMONALI_LISTA',#[1]
         'TERAPIE_OSTEOPROTETTIVE_CHECKBOX',#[2]
@@ -224,8 +226,7 @@ def leggo_regole_dal_db_e_verifico_accuracy():
         'CALCIO_SUPPLEMENTAZIONE_CHECKBOX',#[8]
         'CALCIO_SUPPLEMENTAZIONE_LISTA'] #[9]
 
-    class_name = class_names[5]
-
+    #class_names = [class_names[0]]
 
 
     for class_name in class_names:
@@ -255,18 +256,58 @@ def leggo_regole_dal_db_e_verifico_accuracy():
         test = pd.read_csv('/home/dadawg/PycharmProjects/untitled1/{}_perpython.csv'.format(class_name), quotechar="'")
         test.replace('?', np.nan, inplace=True)
 
-        test_x = test.iloc[:, :-1]
-        test_y = test.iloc[:, -1]
-
+        #test_x = test.iloc[:, :-1]
+        #test_y = test.iloc[:, -1]
         # aggiungo le colonne con il testo a test_x
-        test_x_text = add_text_columns(test_x)
+        #test_x_text = add_text_columns(test_x)
+
+        risorto = risorgi_test(test)
+
+
 
         print(class_name)
-        print(accuracy_rules3(test_x_text, test_y, rules_user_not_ref, class_name))
-        print(accuracy_rules3(test_x_text, test_y, rules_user_ref, class_name))
+        print(accuracy_rules4(risorto, test[class_name], rules_user_not_ref))
+        print(accuracy_rules4(risorto, test[class_name], rules_user_ref))
+        print('\n')
 
-        #print(accuracy_rules3(test_x, test_y, rules_not_ref, class_name))
-        #print(accuracy_rules3(test_x, test_y, rules_ref, class_name))
+
+def risorgi_test(test_di_java):
+    db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
+    db_connection = create_engine(db_connection_str)
+    tabella_completa = pd.read_sql(
+        'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE'
+        ' where Anamnesi.SCAN_DATE < "2019-05-01"',
+        con=db_connection)
+    tabella_completa.replace(r"'", value='', inplace=True, regex=True)
+    tabella_completa.rename(columns={'PAROLOGIA_ESOFAGEA': 'PATOLOGIA_ESOFAGEA'}, inplace=True)
+
+
+    tabella_completa = df_column_uniquify(tabella_completa)
+
+
+
+    instances_ok = []
+    for index_test in range(0, test_di_java.shape[0]):
+        pk = list(test_di_java)[0]
+        pk_test = test_di_java.loc[index_test, pk]
+
+        for index_completa in range(0, tabella_completa.shape[0]):
+            pk_completa = tabella_completa.loc[index_completa, 'PATIENT_KEY']
+
+            pk_test = pk_test.replace('\n', '')
+            pk_completa = pk_completa.replace('\n', '')
+            pk_test = pk_test.replace("'", '')
+            pk_completa = pk_completa.replace("'", '')
+
+            if pk_test == pk_completa:
+                instances_ok.append(tabella_completa.loc[index_completa])
+
+    output = pd.DataFrame(instances_ok)
+
+    output.reset_index(drop=True, inplace=True)
+    return output
+
+
 
 def df_column_uniquify(df):
     df_columns = df.columns
@@ -501,8 +542,6 @@ def remove_stopwords_and_stem(sentence, regex):
     # print(output)
     return output
 
-
-
 def preprocessamento_nuovo3(tabella_completa):
     # todo controlla che tutte le vettorizzazioni si facciano correttamente
     # per il doppio bmi
@@ -639,34 +678,9 @@ def preprocessamento_nuovo3(tabella_completa):
     #todo no l'anno di adesso, ma l'anno di scandate perchè
     tabella_completa['ANNI_DALLA_MENOPAUSA'] = datetime.datetime.now().year - tabella_completa['ULTIMA_MESTRUAZIONE']
 
-    # todo ricordati di aggiungere la nuova colonna
-    # todo sistema stato menopausale per le donne che hanno ancora mest o per i maschi
-    # todo guarda la colonna alcool se è sitemata + quella collonna nuova
-
-    # NULL shows up only in string type columns
-    # replacing with '' instead of nan makes vectorization easier
 
 
 
-
-
-    # vettorizato INDAGINI_APPROFONDIMENTO_LISTA
-    #tabella_completa['INDAGINI_APPROFONDIMENTO_LISTA'].fillna('', inplace=True)
-    tabella_completa, nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA = \
-        vectorize('INDAGINI_APPROFONDIMENTO_LISTA', tabella_completa, prefix='ial')
-
-    print("ok1")
-
-    # vettorizato SOSPENSIONE_TERAPIA_FARMACO
-    #tabella_completa['SOSPENSIONE_TERAPIA_FARMACO'].fillna('', inplace=True)
-    tabella_completa, nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO \
-        = vectorize('SOSPENSIONE_TERAPIA_FARMACO', tabella_completa, prefix='stf', n_gram_range=(1, 1))
-    print("ok2")
-
-    # vettorizato ALTRO
-    #tabella_completa['ALTRO'].fillna('', inplace=True)
-    tabella_completa, nomi_nuove_colonne_vectorized_ALTRO = vectorize('ALTRO', tabella_completa, prefix='altr')
-    print("ok3")
 
     # vettorizato INTOLLERANZE
     #tabella_completa['INTOLLERANZE'].fillna('', inplace=True)
@@ -912,8 +926,6 @@ def preprocessamento_nuovo3(tabella_completa):
     for row_index in range(0, tabella_completa.shape[0]):
         row = tabella_completa.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA']
         if row != '':
-            if tabella_completa.loc[row_index,'PATIENT_KEY'] == '194591351EMASTROGIR':
-                print('194591351EMASTROGIR')
             # faccio regex piu semplice dato che ho gia fatto delle sostituzioni nel paragrafo prec.
             x = re.sub(r'^(colecalciferolo\s[0-9]*[.][0-9]*UI).*|^(Calcifediolo\scpr\smolli).*|'
                        r'^(Calcifediolo\sgocce).*|^(Supplementazione\sgiornaliera\sdi\sVit\sD3).*', r'\1\2\3\4',
@@ -989,9 +1001,6 @@ def preprocessamento_nuovo3(tabella_completa):
         nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA + \
         nomi_nuove_colonne_vectorized_ALLERGIE + \
         nomi_nuove_colonne_vectorized_INTOLLERANZE + \
-        nomi_nuove_colonne_vectorized_ALTRO + \
-        nomi_nuove_colonne_vectorized_SOSPENSIONE_TERAPIA_FARMACO + \
-        nomi_nuove_colonne_vectorized_INDAGINI_APPROFONDIMENTO_LISTA + \
         nomi_nuove_colonne_vectorized_CAUSE_OSTEOPOROSI_SECONDARIA + \
         nomi_nuove_colonne_vectorized_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA + \
         nomi_nuove_colonne_vectorized_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA \
@@ -1019,14 +1028,6 @@ def preprocessamento_nuovo3(tabella_completa):
             'TBS_COLONNA_VALORE',
             'DEFRA_APPLICABILE',  # NON
             'DEFRA_INTERO',
-            'NORME_PREVENZIONE',  # NON
-            'ALTRO_CHECKBOX',  # NON
-            'NORME_COMPORTAMENTALI',  # NON
-            'ATTIVITA_FISICA',  # NON
-            'SOSPENSIONE_TERAPIA_CHECKBOX',  # NON
-            'INDAGINI_APPROFONDIMENTO_CHECKBOX',  # NON
-            'SOSPENSIONE_FUMO',  # NON
-            'CONTROLLO_DENSITOMETRICO_CHECKBOX',  # NON**
             'TOT_Tscore',
             'TOT_Zscore',
 
@@ -1053,13 +1054,9 @@ def accuracy_rules3(test_X, test_Y, regole,class_name):
 
     stemmed_to_original = json.load(open("/var/www/sto/stemmed_to_original.txt".format(class_name)))
 
-    # andava bene anche test_Y.shape[0]
     num_instances = test_X.shape[0]
-    # per ogni riga
     for row_index in range(0, num_instances):
-        # print(row_index)
-        if row_index == 32:
-            h = 0
+
         istance_X = test_X.iloc[row_index, :]
         true_Y = test_Y.values[row_index]
         predicted_Y, golden_rule = regole.predict(istance_X)
@@ -1078,6 +1075,34 @@ def accuracy_rules3(test_X, test_Y, regole,class_name):
         else:
             does_know += 1
             if str(predicted_Y) == str(true_Y):
+                predicted_right += 1
+
+    return predicted_right / does_know, doesnt_know / num_instances
+
+def accuracy_rules4(test_x, test_y, rules):
+    #test_x.reset_index(drop=True, inplace=True)
+
+    does_know = 0
+    predicted_right = 0
+    doesnt_know = 0
+
+    num_instances = test_x.shape[0]
+    for row_index in range(0, num_instances):
+
+        if row_index == 76:
+            c = -0
+
+        instance_x = test_x.iloc[row_index, :].copy()
+        true_Y = test_y.values[row_index]
+        preprocessed_instance_x = preprocessamento_singolo(instance_x)
+        predicted_y, gr = rules.predict(preprocessed_instance_x)
+        #print('{}: {}'.format(row_index,predicted_y))
+
+        if predicted_y is None:
+            doesnt_know += 1
+        else:
+            does_know += 1
+            if str(predicted_y) == str(true_Y):
                 predicted_right += 1
 
     return predicted_right / does_know, doesnt_know / num_instances
@@ -1282,9 +1307,9 @@ class Regola:
                        'l', 'nel']
 
         output = ''
-        # the else branch
+        # the else rule
         if self.propositions is None:
-            return 'Spiegazione non disponibile'
+            return 'None'
 
         for prop in self.propositions:
             new_perando1 = prop.nome_variabile_operando1.replace('1 ', '')

@@ -37,6 +37,7 @@ public class Main {
         //System.out.println(args[0]);
 
         String[] classNames = {
+
                 "TERAPIE_ORMONALI_CHECKBOX",
                 "TERAPIE_ORMONALI_LISTA",
                 "TERAPIE_OSTEOPROTETTIVE_CHECKBOX",
@@ -49,7 +50,7 @@ public class Main {
                 "CALCIO_SUPPLEMENTAZIONE_LISTA"
         };
         //String className = classNames[9];
-
+        //classNames = new String[]{classNames[0]};
 
 
         String[] tmp = {
@@ -107,15 +108,7 @@ public class Main {
                 "FEMORE_NON_ANALIZZABILE",
                 "FRAX_APPLICABILE",
                 "TBS_COLONNA_APPLICABILE",
-                "DEFRA_APPLICABILE",
-                "NORME_PREVENZIONE",
-                "ALTRO_CHECKBOX",
-                "NORME_COMPORTAMENTALI",
-                "ATTIVITA_FISICA",
-                "SOSPENSIONE_TERAPIA_CHECKBOX",
-                "INDAGINI_APPROFONDIMENTO_CHECKBOX",
-                "SOSPENSIONE_FUMO",
-                "CONTROLLO_DENSITOMETRICO_CHECKBOX"
+                "DEFRA_APPLICABILE"
         };
 
         List<String> nomiColDaTrasInNominal = new ArrayList<String>();
@@ -237,7 +230,7 @@ public class Main {
 
             Evaluation evl = new Evaluation(train);
             evl.evaluateModel(cls,test);
-            System.out.println(evl.toSummaryString());
+            //System.out.println(evl.toSummaryString());
 
 
             Rules rules = new Rules(cls);
@@ -260,6 +253,7 @@ public class Main {
             System.out.println(className);
             System.out.println(rules.getAccuracy(test));
             System.out.println(rules2.getAccuracy(test));
+            System.out.println();
 
             //System.out.println(not_refined);
 
@@ -334,6 +328,7 @@ class Proposizione
            return false;
         }
 
+        //ricrodati che le ceckbox non sono numeric, ma nominal
         if(attOfoperando1.isNumeric())
         {
             double operando1 = inst.value(attOfoperando1);
@@ -528,7 +523,7 @@ class Rules implements Iterable<Regola>
         Enumeration instances = testset.enumerateInstances();
         while (instances.hasMoreElements())
         {
-            if (i==13)
+            if (i==76)
             {
                 int x = 9;
             }
