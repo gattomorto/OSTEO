@@ -38,6 +38,7 @@ public class Main {
 
         String[] classNames = {
 
+                "VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
                 "TERAPIE_ORMONALI_CHECKBOX",
                 "TERAPIE_ORMONALI_LISTA",
                 "TERAPIE_OSTEOPROTETTIVE_CHECKBOX",
@@ -45,8 +46,8 @@ public class Main {
                 "VITAMINA_D_TERAPIA_CHECKBOX",
                 "VITAMINA_D_TERAPIA_LISTA",
                 "VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX",
-                "VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
-                "CALCIO_SUPPLEMENTAZIONE_CHECKBOX",
+                //"VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
+               "CALCIO_SUPPLEMENTAZIONE_CHECKBOX",
                 "CALCIO_SUPPLEMENTAZIONE_LISTA"
         };
         //String className = classNames[9];
@@ -204,13 +205,20 @@ public class Main {
 
             //questa parte è per la storia che devo recuperare le colonne con il testo su python sul test set
             //lo faccio usando pk.. allora salvo il test set e poi la rimuovo subito
+
+            filter = new Remove();
+            ((Remove)filter).setAttributeIndicesArray(new int[] {dati.attribute("SCAN_DATE").index()});
+            filter.setInputFormat(train);
+            train = Filter.useFilter(train,filter);
+            filter.setInputFormat(test);
+            test = Filter.useFilter(test,filter);
+
             filter = new Remove();
             ((Remove)filter).setAttributeIndicesArray(new int[] {dati.attribute("PATIENT_KEY").index()});
             filter.setInputFormat(train);
             train = Filter.useFilter(train,filter);
             filter.setInputFormat(test);
             test = Filter.useFilter(test,filter);
-
 
 
             //this is not very useful, unless you want to see what weka GUI says
@@ -255,26 +263,16 @@ public class Main {
             System.out.println(rules2.getAccuracy(test));
             System.out.println();
 
-            //System.out.println(not_refined);
 
-            //String qry = String.format("update regole set regola_refined = '%s', regola_not_refined = '%s' where terapia = 'TERAPIE_OSTEOPROTETTIVE_CHECKBOX'",refined_rules,not_refined);
             String qry = String.format("replace into regole values('%s','%s','%s', '%s', '%s')",className,refined_rules,not_refined,user_readable_rules_not_ref,user_readable_rules_ref);
-            //System.out.println(qry);
-
-
             Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO2","utente_web","CMOREL96T45");
             Statement myStmt = myConn.createStatement();
             // todo attenzione se devi modificare questa, assicurati di cancellare la tabella dal terminale
-            myStmt.executeUpdate( "create table if not exists regole (terapia VARCHAR(256) PRIMARY KEY, regola_refined VARCHAR(10000), regola_not_refined VARCHAR(20000), user_readable_not_ref VARCHAR(20000), user_readable_ref VARCHAR(15000))");
+            myStmt.executeUpdate( "create table if not exists regole (terapia VARCHAR(256) PRIMARY KEY, regola_refined TEXT, regola_not_refined TEXT, user_readable_not_ref TEXT, user_readable_ref TEXT)");
 
             myStmt.executeUpdate(qry);
 
         }
-
-
-
-
-
 
     }
 
@@ -323,6 +321,7 @@ class Proposizione
         // TODO: meglio mettere a null il tipo di ritorno cosi diciamo che non sappiamo perchè ho paura che se sia è
         //  sia corretto e poi perchè i risualtati sembrano dimostrare che sia meglio
 
+        //System.out.println(this.operando1+" ** "+attOfoperando1);
         if(inst.isMissing(attOfoperando1))
         {
            return false;
@@ -676,9 +675,9 @@ class Rules implements Iterable<Regola>
                 Regola r = new Regola();
 
                 String[] stringArray_props = string_rule.split("\n");
-                Pattern colNamePattern = Pattern.compile("^.+(?=\\s(=|<|>|<=|>=)\\s)");
-                Pattern operatorPattern = Pattern.compile("(?<=\\s)(<=|>=|=|<|>)(?=\\s)");
-                Pattern operand2Pattern = Pattern.compile("(?<=(<|<=|>|>=|=)\\s)[\\w\\d\\s.,+-]+((?=\\sAND$)|(?=:))");
+                Pattern colNamePattern = Pattern.compile("^\\w+(?=\\s(=|<|>|<=|>=)\\s)");
+                Pattern operatorPattern = Pattern.compile("(?<=^\\w+\\s)(<=|>=|=|<|>)(?=\\s)");
+                Pattern operand2Pattern = Pattern.compile("((> 2.5 mg e < 5 mg)|(>= 5 mg \\(Prednisone\\))|(<= 10 sigarette/di)|(> 10 sigarette/di))|((?<=(<|<=|>|>=|=)\\s)[\\w\\d\\s.,+-]+((?=\\sAND$)|(?=:)))");
 
 
                 for (String string_prop : stringArray_props) {

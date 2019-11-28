@@ -32,10 +32,12 @@ import datetime
 # todo fare quando per esempio sostituisci con il principio fai il controllo che se non lo trovi.. percè potrebbere aver aggiunto uno nuovo
 # convertire in int le colonne tipo AGE
 
+#todo in valuta mi arriva cause osteoporosi secondaria con Menopausa prematura\r\nM.I.C.I\r\n va bene? significa ce il preprocessamento signolo non lo ha tolto
+#todo inoltre situazione femore dx = '' non va bene.. controllare ongn preprocessato nuovo
 def main():
     #preprocessa_per_java2()
-    #leggo_regole_dal_db_e_verifico_accuracy()
-    singola_istanza()
+    leggo_regole_dal_db_e_verifico_accuracy()
+    #singola_istanza()
 
 
 # altri main()
@@ -214,7 +216,7 @@ def singola_istanza():
 
 def leggo_regole_dal_db_e_verifico_accuracy():
     class_names = [
-        #'CALCIO_SUPPLEMENTAZIONE_CHECKBOX',
+        'VITAMINA_D_SUPPLEMENTAZIONE_LISTA',
         'TERAPIE_ORMONALI_CHECKBOX',#[0]
         'TERAPIE_ORMONALI_LISTA',#[1]
         'TERAPIE_OSTEOPROTETTIVE_CHECKBOX',#[2]
@@ -222,7 +224,7 @@ def leggo_regole_dal_db_e_verifico_accuracy():
         'VITAMINA_D_TERAPIA_CHECKBOX',#[4]
         'VITAMINA_D_TERAPIA_LISTA',#[5]
         'VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',#[6]
-        'VITAMINA_D_SUPPLEMENTAZIONE_LISTA',#[7]
+        #'VITAMINA_D_SUPPLEMENTAZIONE_LISTA',#[7]
         'CALCIO_SUPPLEMENTAZIONE_CHECKBOX',#[8]
         'CALCIO_SUPPLEMENTAZIONE_LISTA'] #[9]
 
@@ -276,7 +278,8 @@ def risorgi_test(test_di_java):
     db_connection = create_engine(db_connection_str)
     tabella_completa = pd.read_sql(
         'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE'
-        ' where Anamnesi.SCAN_DATE < "2019-05-01"',
+        #' where Anamnesi.SCAN_DATE < "2019-05-01"',
+        ,
         con=db_connection)
     tabella_completa.replace(r"'", value='', inplace=True, regex=True)
     tabella_completa.rename(columns={'PAROLOGIA_ESOFAGEA': 'PATOLOGIA_ESOFAGEA'}, inplace=True)
@@ -288,23 +291,32 @@ def risorgi_test(test_di_java):
 
     instances_ok = []
     for index_test in range(0, test_di_java.shape[0]):
+        # qui ce scritto PRIMARY_KEY
         pk = list(test_di_java)[0]
         pk_test = test_di_java.loc[index_test, pk]
 
+        sd = list(test_di_java)[1]
+        sd_test = test_di_java.loc[index_test, sd]
+
+
         for index_completa in range(0, tabella_completa.shape[0]):
             pk_completa = tabella_completa.loc[index_completa, 'PATIENT_KEY']
+            sd_completa = tabella_completa.loc[index_completa, 'SCAN_DATE']
+            sd_completa = str(sd_completa)
 
             pk_test = pk_test.replace('\n', '')
             pk_completa = pk_completa.replace('\n', '')
-            pk_test = pk_test.replace("'", '')
-            pk_completa = pk_completa.replace("'", '')
+            sd_test = sd_test.replace('\n', '')
+            sd_completa = sd_completa.replace('\n', '')
 
-            if pk_test == pk_completa:
+
+            if pk_test == pk_completa and sd_test == sd_completa:
                 instances_ok.append(tabella_completa.loc[index_completa])
 
     output = pd.DataFrame(instances_ok)
 
     output.reset_index(drop=True, inplace=True)
+    print("test_da_java: {}, risorto: {}".format(test_di_java.shape[0],output.shape[0]))
     return output
 
 
@@ -328,7 +340,8 @@ def preprocessa_per_java2():
     # I read everything except scananalisys cause it has the BMI attribute which is already present in anamnesi
     tabella_completa = pd.read_sql(
         'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE'
-        ' where Anamnesi.SCAN_DATE < "2019-05-01"',
+        #' where Anamnesi.SCAN_DATE < "2019-05-01"',
+,
         con=db_connection)
 
     tabella_preprocessata, colname_to_ngram, stemmed_to_original = preprocessamento_nuovo3(tabella_completa)
@@ -344,7 +357,7 @@ def preprocessa_per_java2():
     json.dump(stemmed_to_original, file)
     file.close()
 
-    tabella_preprocessata.to_csv('perJAVA.csv', index=False)
+    tabella_preprocessata.to_csv('perJAVA.csv', index = False)
 
 def primo_script():
     '''
@@ -373,126 +386,7 @@ def primo_script():
 
 
 # funzioni moderne
-def add_text_columns(test):
 
-    db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
-    db_connection = create_engine(db_connection_str)
-    # I read everything except scananalisys cause it has the BMI attribute which is already present in anamnesi
-    tabella_completa = pd.read_sql(
-        'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE'
-        ' where Anamnesi.SCAN_DATE < "2019-05-01"',
-        con=db_connection)
-
-    tabella_completa = df_column_uniquify(tabella_completa)
-
-
-  
-    # le colonne testo vuota la trattiamo come stringa vuota non null.. perchè se è null siammo costretti a ddire nonso
-    # se è vuota "non contiene: " sara vera
-    # penso che il primo gruppo non serva perchè ogni cella nuova sarà sovrascritta dai valori in tabella completa
-    test['TERAPIA_ALTRO'] = ''
-    test['ALTRE_PATOLOGIE'] = ''
-    test['VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = ''
-    test['PATOLOGIE_UTERINE_DIAGNOSI'] = ''
-    test['NEOPLASIA_MAMMARIA_TERAPIA'] = ''
-    test['DISLIPIDEMIA_TERAPIA'] = ''
-    test['ALLERGIE'] = ''
-    test['INTOLLERANZE'] = ''
-    test['ALTRO'] = ''
-    test['SOSPENSIONE_TERAPIA_FARMACO'] = ''
-    test['INDAGINI_APPROFONDIMENTO_LISTA'] = ''
-    test['CAUSE_OSTEOPOROSI_SECONDARIA'] = ''
-    test['TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = ''
-    test['TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = ''
-
-    
-    tabella_completa['TERAPIA_ALTRO'].fillna('', inplace=True)
-    tabella_completa['ALTRE_PATOLOGIE'].fillna('', inplace=True)
-    tabella_completa['VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'].fillna('', inplace=True)
-    tabella_completa['PATOLOGIE_UTERINE_DIAGNOSI'].fillna('', inplace=True)
-    tabella_completa['NEOPLASIA_MAMMARIA_TERAPIA'].fillna('', inplace=True)
-    tabella_completa['DISLIPIDEMIA_TERAPIA'].fillna('', inplace=True)
-    tabella_completa['ALLERGIE'].fillna('', inplace=True)
-    tabella_completa['INTOLLERANZE'].fillna('', inplace=True)
-    tabella_completa['ALTRO'].fillna('', inplace=True)
-    tabella_completa['SOSPENSIONE_TERAPIA_FARMACO'].fillna('', inplace=True)
-    tabella_completa['INDAGINI_APPROFONDIMENTO_LISTA'].fillna('', inplace=True)
-    tabella_completa['CAUSE_OSTEOPOROSI_SECONDARIA'].fillna('', inplace=True)
-    tabella_completa['TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'].fillna('', inplace=True)
-    tabella_completa['TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'].fillna('', inplace=True)
-
-    m = 0
-    previously_matched = []
-
-    for index_test in range(0, test.shape[0]):
-        # contiene la stringa '1 PATIENT_KEY' (con le virgolette) perchè quando leggo il csv prodotto da weka, ce le mette
-        pk = list(test)[0]
-        pk_test = test.loc[index_test, pk]
-
-        pk_matched = False
-
-        for index_completa in range(0, tabella_completa.shape[0]):
-            # print(index_completa)
-
-            pk_completa = tabella_completa.loc[index_completa, 'PATIENT_KEY']
-
-            # if pk_test == '1960419447BORINI PA' or pk_completa == '1960419447BORINI PA' or pk_test=='1960419447BORINI PA\n' or  pk_completa == '1960419447BORINI PA\n':
-            # x = 5
-
-            pk_test = pk_test.replace('\n', '')
-            pk_completa = pk_completa.replace('\n', '')
-            pk_test = pk_test.replace("'", '')
-            pk_completa = pk_completa.replace("'", '')
-
-            if pk_test == pk_completa:
-
-                # per i pazienti che sono tornati
-                #if pk_test in previously_matched:
-                   # continue
-
-                #previously_matched.append(pk_test)
-
-                m += 1
-                pk_matched = True
-                x = tabella_completa.loc[index_completa, 'TERAPIA_ALTRO']
-                y = tabella_completa.loc[index_completa, 'ALTRE_PATOLOGIE']
-                # print(x)
-                # print(y)
-                test.loc[index_test, 'TERAPIA_ALTRO'] = x
-                test.loc[index_test, 'ALTRE_PATOLOGIE'] = y
-
-                test.loc[index_test, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = tabella_completa.loc[
-                    index_completa, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA']
-                test.loc[index_test, 'PATOLOGIE_UTERINE_DIAGNOSI'] = tabella_completa.loc[
-                    index_completa, 'PATOLOGIE_UTERINE_DIAGNOSI']
-                test.loc[index_test, 'NEOPLASIA_MAMMARIA_TERAPIA'] = tabella_completa.loc[
-                    index_completa, 'NEOPLASIA_MAMMARIA_TERAPIA']
-                test.loc[index_test, 'DISLIPIDEMIA_TERAPIA'] = tabella_completa.loc[
-                    index_completa, 'DISLIPIDEMIA_TERAPIA']
-                test.loc[index_test, 'ALLERGIE'] = tabella_completa.loc[index_completa, 'ALLERGIE']
-                test.loc[index_test, 'INTOLLERANZE'] = tabella_completa.loc[index_completa, 'INTOLLERANZE']
-                test.loc[index_test, 'ALTRO'] = tabella_completa.loc[index_completa, 'ALTRO']
-                test.loc[index_test, 'SOSPENSIONE_TERAPIA_FARMACO'] = tabella_completa.loc[
-                    index_completa, 'SOSPENSIONE_TERAPIA_FARMACO']
-                test.loc[index_test, 'INDAGINI_APPROFONDIMENTO_LISTA'] = tabella_completa.loc[
-                    index_completa, 'INDAGINI_APPROFONDIMENTO_LISTA']
-                test.loc[index_test, 'CAUSE_OSTEOPOROSI_SECONDARIA'] = tabella_completa.loc[
-                    index_completa, 'CAUSE_OSTEOPOROSI_SECONDARIA']
-
-                test.loc[index_test, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = tabella_completa.loc[
-                    index_completa, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
-                
-                test.loc[index_test, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = tabella_completa.loc[
-                    index_completa, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
-                
-
-        if pk_matched is False:
-            print("pk not matched for: " + pk_test)
-
-    test.replace('NULL', value='', inplace=True)
-
-    print("matches: " + str(m) + " of: " + str(test.shape[0]))
-    return test
 
 
 def remove_stopwords_and_stem(sentence, regex):
@@ -514,12 +408,14 @@ def remove_stopwords_and_stem(sentence, regex):
     stop_words = stopwords.words('italian')
     # 'non' è molto importante
     stop_words.remove('non')
-    stop_words += ['.', ',', 'm', 't', 'gg', 'die', 'fa', 'im', 'fino', 'uno', 'due', 'tre', 'quattro', 'cinque',
-                   'sei', 'ogni',
+    stop_words += ['.', ',', 'm', 't', 'gg', 'die', 'fa', 'mg', 'cp', 'im', 'fino', 'uno', 'due', 'tre', 'quattro',
+                   'cinque', 'sei', 'ogni',
                    'alcuni', 'giorni', 'giorno', 'mesi', 'mese', 'settimana', 'settimane', 'circa', 'aa', 'gtt',
                    'poi', 'gennaio', 'febbraio', 'marzo', 'maggio', 'aprile', 'giugno', 'luglio', 'agosto',
-                   'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett', 'pu', 'u', 'dx', 'sn',
-                   'l', 'nel']
+                   'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett', 'pu', 'u', 'q', 'w', 'e',
+                   'r', 't'
+        , 'y', 'u', 'i', 'o', 'p', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b', 'n', 'm', 'á',
+                   'é', 'í', 'ó', 'ú', 'à', 'è', 'ì', 'ò', 'ù', 'à', 'è', 'ì', 'ò', 'ù']
 
     # trovo tutti i token da eliminare dalla frase
     to_be_removed = []
@@ -575,12 +471,13 @@ def preprocessamento_nuovo3(tabella_completa):
         stop_words = stopwords.words('italian')
         # 'non' è molto importante
         stop_words.remove('non')
-        stop_words += ['.', ',', 'm', 't', 'gg', 'die', 'fa', 'im', 'fino', 'uno', 'due', 'tre', 'quattro', 'cinque',
-                       'sei', 'ogni',
+        stop_words += ['.', ',', 'm', 't', 'gg', 'die', 'fa', 'mg', 'cp', 'im', 'fino', 'uno', 'due', 'tre', 'quattro',
+                       'cinque', 'sei', 'ogni',
                        'alcuni', 'giorni', 'giorno', 'mesi', 'mese', 'settimana', 'settimane', 'circa', 'aa', 'gtt',
                        'poi', 'gennaio', 'febbraio', 'marzo', 'maggio', 'aprile', 'giugno', 'luglio', 'agosto',
-                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett', 'pu', 'u', 'dx', 'sn',
-                       'l', 'nel']
+                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett', 'pu', 'u', 'q', 'w', 'e',
+                       'r', 't'
+            , 'y', 'u', 'i', 'o', 'p', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b', 'n', 'm','á','é','í','ó','ú','à','è','ì','ò','ù','à','è','ì','ò','ù']
 
         # trovo tutti i token da eliminare dalla frase
         to_be_removed = []
@@ -637,10 +534,20 @@ def preprocessamento_nuovo3(tabella_completa):
         '''
         # lista di frasi
         column_list = frame[column_name].tolist()
+
+        i = 0
+
+        for e in column_list:
+            if '11/12/18' in e:
+                print(i)
+            i+=1
+
         # lista di frasi tutte in minuscolo
         column_list = [str(cell).lower() for cell in column_list]
-        for i in range(0, len(column_list)):
 
+
+
+        for i in range(0, len(column_list)):
             column_list[i] = remove_stopwords_and_stem(column_list[i], regex)
         # non idf = false perchè voglio un output binario.
         # binario perchè voglio poter dire: consiglio TERAPIE_ORMONALI perchè è presente (non è presente) la parola 'p'
@@ -940,6 +847,7 @@ def preprocessamento_nuovo3(tabella_completa):
 
     l = [
             'PATIENT_KEY',
+            'SCAN_DATE',
             'AGE',  # OK
             'SEX',  # OK weka trasforma in nominal
             'STATO_MENOPAUSALE',  # OK weka trasforma in nominal
@@ -1047,37 +955,7 @@ def preprocessamento_nuovo3(tabella_completa):
 
     return tabella_completa[l], col_name_to_ngram, stemmed_to_original
 
-def accuracy_rules3(test_X, test_Y, regole,class_name):
-    does_know = 0
-    predicted_right = 0
-    doesnt_know = 0
 
-    stemmed_to_original = json.load(open("/var/www/sto/stemmed_to_original.txt".format(class_name)))
-
-    num_instances = test_X.shape[0]
-    for row_index in range(0, num_instances):
-
-        istance_X = test_X.iloc[row_index, :]
-        true_Y = test_Y.values[row_index]
-        predicted_Y, golden_rule = regole.predict(istance_X)
-        #print("{}: {}".format(row_index, predicted_Y))
-        # attenzione che golden rule puo esser null se non sa
-        '''if golden_rule is not None:
-            print(golden_rule.get_medic_readable_version(istance_X,stemmed_to_original))
-            print('\n')
-        else:
-            print('non so')
-            print('\n')'''
-
-        if predicted_Y is None:
-            doesnt_know += 1
-
-        else:
-            does_know += 1
-            if str(predicted_Y) == str(true_Y):
-                predicted_right += 1
-
-    return predicted_right / does_know, doesnt_know / num_instances
 
 def accuracy_rules4(test_x, test_y, rules):
     #test_x.reset_index(drop=True, inplace=True)
@@ -1089,7 +967,7 @@ def accuracy_rules4(test_x, test_y, rules):
     num_instances = test_x.shape[0]
     for row_index in range(0, num_instances):
 
-        if row_index == 76:
+        if row_index == 172:
             c = -0
 
         instance_x = test_x.iloc[row_index, :].copy()
@@ -1428,7 +1306,7 @@ class Regole:
             for prop in rule.split('\n'):
 
                 match_obj_operand1 = re.search(
-                    r'(^.+(?=\s(=|<|>|<=|>=|non contiene)\s))|(^.+(?=\s(=|<|>|<=|>=|contiene)\s))',
+                    r'(^\w+(?=\s(=|<|>|<=|>=|non contiene)\s))|(^\w+(?=\s(=|<|>|<=|>=|contiene)\s))',
                     prop)
 
                 # generic case
@@ -1436,7 +1314,7 @@ class Regole:
                     operand1 = match_obj_operand1.group(0)
                     operator = re.search(r'(?<=\s)(<=|>=|=|<|>|contiene|(non\scontiene))(?=\s)', prop).group(0)
                     operand2 = re.search(
-                        r'((?<=#)[\s\w.áéíóúàèìòùàèìòù]+((?=#\s)|(?=#:)))|((?<=\s)[\w\s.,+-]+((?=\sAND$)|(?=:)))',
+                        r'((> 2.5 mg e < 5 mg)|(>= 5 mg \(Prednisone\))|(<= 10 sigarette/di)|(> 10 sigarette/di))|((?<=#)[\s\w.áéíóúàèìòùàèìòù]+((?=#\s)|(?=#:)))|((?<=\s)[\w\s.,+-]+((?=\sAND$)|(?=:)))',
                         prop).group(0)
                     p = Proposizione(operator, operand1, operand2)
                     r.add_proposision(p)
@@ -1615,7 +1493,8 @@ def preprocessamento_vecchio(tabella_completa, class_name):
                        'cinque', 'sei', 'ogni',
                        'alcuni', 'giorni', 'giorno', 'mesi', 'mese', 'settimana', 'settimane', 'circa', 'aa', 'gtt',
                        'poi', 'gennaio', 'febbraio', 'marzo', 'maggio', 'aprile', 'giugno', 'luglio', 'agosto',
-                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett', 'pu', 'u']
+                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett', 'pu', 'u','q','w','e','r','t'
+                       ,'y','u','i','o','p','a','s','d','f','g','h','j','k','l','z','x','c','v','b','n','m']
 
         # trovo tutti i token da eliminare dalla frase
         to_be_removed = []
@@ -2729,12 +2608,13 @@ def preprocessamento_nuovo2(tabella_completa, class_name):
         stop_words = stopwords.words('italian')
         # 'non' è molto importante
         stop_words.remove('non')
-        stop_words += ['.', ',', 'm', 't', 'gg', 'die', 'fa', 'im', 'fino', 'uno', 'due', 'tre', 'quattro', 'cinque',
-                       'sei', 'ogni',
+        stop_words += ['.', ',', 'm', 't', 'gg', 'die', 'fa', 'mg', 'cp', 'im', 'fino', 'uno', 'due', 'tre', 'quattro',
+                       'cinque', 'sei', 'ogni',
                        'alcuni', 'giorni', 'giorno', 'mesi', 'mese', 'settimana', 'settimane', 'circa', 'aa', 'gtt',
                        'poi', 'gennaio', 'febbraio', 'marzo', 'maggio', 'aprile', 'giugno', 'luglio', 'agosto',
-                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett', 'pu', 'u', 'dx', 'sn',
-                       'l', 'nel']
+                       'settembre', 'ottobre', 'novembre', 'dicembre', 'anno', 'anni', 'sett', 'pu', 'u', 'q', 'w', 'e',
+                       'r', 't'
+            , 'y', 'u', 'i', 'o', 'p', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b', 'n', 'm']
 
         # trovo tutti i token da eliminare dalla frase
         to_be_removed = []
@@ -3226,5 +3106,155 @@ def preprocessa_per_java(class_name, file):
     json.dump(stemmed_to_original, file)
     file.close()
     tabella_preprocessata.to_csv('{}.csv'.format(class_name), index=False)
+
+
+def accuracy_rules3(test_X, test_Y, regole,class_name):
+    does_know = 0
+    predicted_right = 0
+    doesnt_know = 0
+
+    stemmed_to_original = json.load(open("/var/www/sto/stemmed_to_original.txt".format(class_name)))
+
+    num_instances = test_X.shape[0]
+    for row_index in range(0, num_instances):
+
+        istance_X = test_X.iloc[row_index, :]
+        true_Y = test_Y.values[row_index]
+        predicted_Y, golden_rule = regole.predict(istance_X)
+        #print("{}: {}".format(row_index, predicted_Y))
+        # attenzione che golden rule puo esser null se non sa
+        '''if golden_rule is not None:
+            print(golden_rule.get_medic_readable_version(istance_X,stemmed_to_original))
+            print('\n')
+        else:
+            print('non so')
+            print('\n')'''
+
+        if predicted_Y is None:
+            doesnt_know += 1
+
+        else:
+            does_know += 1
+            if str(predicted_Y) == str(true_Y):
+                predicted_right += 1
+
+    return predicted_right / does_know, doesnt_know / num_instances
+
+
+def add_text_columns(test):
+    db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
+    db_connection = create_engine(db_connection_str)
+    # I read everything except scananalisys cause it has the BMI attribute which is already present in anamnesi
+    tabella_completa = pd.read_sql(
+        'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE'
+        # ' where Anamnesi.SCAN_DATE < "2019-05-01"',
+        ,
+        con=db_connection)
+
+    tabella_completa = df_column_uniquify(tabella_completa)
+
+    # le colonne testo vuota la trattiamo come stringa vuota non null.. perchè se è null siammo costretti a ddire nonso
+    # se è vuota "non contiene: " sara vera
+    # penso che il primo gruppo non serva perchè ogni cella nuova sarà sovrascritta dai valori in tabella completa
+    test['TERAPIA_ALTRO'] = ''
+    test['ALTRE_PATOLOGIE'] = ''
+    test['VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = ''
+    test['PATOLOGIE_UTERINE_DIAGNOSI'] = ''
+    test['NEOPLASIA_MAMMARIA_TERAPIA'] = ''
+    test['DISLIPIDEMIA_TERAPIA'] = ''
+    test['ALLERGIE'] = ''
+    test['INTOLLERANZE'] = ''
+    test['ALTRO'] = ''
+    test['SOSPENSIONE_TERAPIA_FARMACO'] = ''
+    test['INDAGINI_APPROFONDIMENTO_LISTA'] = ''
+    test['CAUSE_OSTEOPOROSI_SECONDARIA'] = ''
+    test['TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = ''
+    test['TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = ''
+
+    tabella_completa['TERAPIA_ALTRO'].fillna('', inplace=True)
+    tabella_completa['ALTRE_PATOLOGIE'].fillna('', inplace=True)
+    tabella_completa['VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'].fillna('', inplace=True)
+    tabella_completa['PATOLOGIE_UTERINE_DIAGNOSI'].fillna('', inplace=True)
+    tabella_completa['NEOPLASIA_MAMMARIA_TERAPIA'].fillna('', inplace=True)
+    tabella_completa['DISLIPIDEMIA_TERAPIA'].fillna('', inplace=True)
+    tabella_completa['ALLERGIE'].fillna('', inplace=True)
+    tabella_completa['INTOLLERANZE'].fillna('', inplace=True)
+    tabella_completa['ALTRO'].fillna('', inplace=True)
+    tabella_completa['SOSPENSIONE_TERAPIA_FARMACO'].fillna('', inplace=True)
+    tabella_completa['INDAGINI_APPROFONDIMENTO_LISTA'].fillna('', inplace=True)
+    tabella_completa['CAUSE_OSTEOPOROSI_SECONDARIA'].fillna('', inplace=True)
+    tabella_completa['TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'].fillna('', inplace=True)
+    tabella_completa['TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'].fillna('', inplace=True)
+
+    m = 0
+    previously_matched = []
+
+    for index_test in range(0, test.shape[0]):
+        # contiene la stringa '1 PATIENT_KEY' (con le virgolette) perchè quando leggo il csv prodotto da weka, ce le mette
+        pk = list(test)[0]
+        pk_test = test.loc[index_test, pk]
+
+        pk_matched = False
+
+        for index_completa in range(0, tabella_completa.shape[0]):
+            # print(index_completa)
+
+            pk_completa = tabella_completa.loc[index_completa, 'PATIENT_KEY']
+
+            # if pk_test == '1960419447BORINI PA' or pk_completa == '1960419447BORINI PA' or pk_test=='1960419447BORINI PA\n' or  pk_completa == '1960419447BORINI PA\n':
+            # x = 5
+
+            pk_test = pk_test.replace('\n', '')
+            pk_completa = pk_completa.replace('\n', '')
+            pk_test = pk_test.replace("'", '')
+            pk_completa = pk_completa.replace("'", '')
+
+            if pk_test == pk_completa:
+                # per i pazienti che sono tornati
+                # if pk_test in previously_matched:
+                # continue
+
+                # previously_matched.append(pk_test)
+
+                m += 1
+                pk_matched = True
+                x = tabella_completa.loc[index_completa, 'TERAPIA_ALTRO']
+                y = tabella_completa.loc[index_completa, 'ALTRE_PATOLOGIE']
+                # print(x)
+                # print(y)
+                test.loc[index_test, 'TERAPIA_ALTRO'] = x
+                test.loc[index_test, 'ALTRE_PATOLOGIE'] = y
+
+                test.loc[index_test, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = tabella_completa.loc[
+                    index_completa, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA']
+                test.loc[index_test, 'PATOLOGIE_UTERINE_DIAGNOSI'] = tabella_completa.loc[
+                    index_completa, 'PATOLOGIE_UTERINE_DIAGNOSI']
+                test.loc[index_test, 'NEOPLASIA_MAMMARIA_TERAPIA'] = tabella_completa.loc[
+                    index_completa, 'NEOPLASIA_MAMMARIA_TERAPIA']
+                test.loc[index_test, 'DISLIPIDEMIA_TERAPIA'] = tabella_completa.loc[
+                    index_completa, 'DISLIPIDEMIA_TERAPIA']
+                test.loc[index_test, 'ALLERGIE'] = tabella_completa.loc[index_completa, 'ALLERGIE']
+                test.loc[index_test, 'INTOLLERANZE'] = tabella_completa.loc[index_completa, 'INTOLLERANZE']
+                test.loc[index_test, 'ALTRO'] = tabella_completa.loc[index_completa, 'ALTRO']
+                test.loc[index_test, 'SOSPENSIONE_TERAPIA_FARMACO'] = tabella_completa.loc[
+                    index_completa, 'SOSPENSIONE_TERAPIA_FARMACO']
+                test.loc[index_test, 'INDAGINI_APPROFONDIMENTO_LISTA'] = tabella_completa.loc[
+                    index_completa, 'INDAGINI_APPROFONDIMENTO_LISTA']
+                test.loc[index_test, 'CAUSE_OSTEOPOROSI_SECONDARIA'] = tabella_completa.loc[
+                    index_completa, 'CAUSE_OSTEOPOROSI_SECONDARIA']
+
+                test.loc[index_test, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = tabella_completa.loc[
+                    index_completa, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA']
+
+                test.loc[index_test, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = tabella_completa.loc[
+                    index_completa, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA']
+
+        if pk_matched is False:
+            print("pk not matched for: " + pk_test)
+
+    test.replace('NULL', value='', inplace=True)
+
+    print("matches: " + str(m) + " of: " + str(test.shape[0]))
+    return test
 if __name__ == '__main__':
     main()
