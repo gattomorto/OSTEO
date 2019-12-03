@@ -4,7 +4,7 @@ import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sqlalchemy import create_engine
 import json
-from main import df_column_uniquify, remove_stopwords_and_stem, preprocessamento_nuovo3
+from lib import preprocess
 
 def main():
     preprocessa_per_java2()
@@ -18,7 +18,7 @@ def preprocessa_per_java2():
         ,
         con=db_connection)
 
-    tabella_preprocessata, colname_to_ngram, stemmed_to_original = preprocessamento_nuovo3(tabella_completa, is_single_instance=False)
+    tabella_preprocessata, colname_to_ngram, stemmed_to_original = preprocess(tabella_completa, is_single_instance=False)
 
     # we don't keep instances where class is missing
     #tabella_preprocessata.dropna(subset=[class_name], inplace=True)

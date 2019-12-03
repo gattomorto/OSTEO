@@ -1,7 +1,8 @@
 import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy import text
-from main import Regole, df_column_uniquify, preprocess
+from lib import preprocess, Regole, df_column_uniquify
+import json
 
 def risorgi_test(test_di_java):
     db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
@@ -106,6 +107,7 @@ def  accuracy_rules4(test_x, test_y, rules):
     doesnt_know = 0
 
     num_instances = test_x.shape[0]
+    stemmed_to_original = json.load(open("/var/www/sto/stemmed_to_original.txt"))
     for row_index in range(0, num_instances):
 
         if row_index == 172:
@@ -115,7 +117,11 @@ def  accuracy_rules4(test_x, test_y, rules):
         true_Y = test_y.values[row_index]
         #preprocessed_instance_x = preprocessamento_singolo(instance_x)
         preprocessed_instance_x = preprocess(instance_x.to_frame().transpose(), is_single_instance=True)
-        predicted_y, gr = rules.predict(preprocessed_instance_x)
+        predicted_y, golden_rule, props_not_satisfied = rules.predict(preprocessed_instance_x)
+
+
+        print(golden_rule.get_medic_readable_version(preprocessed_instance_x,stemmed_to_original))
+
         #print('{}: {}'.format(row_index,predicted_y))
 
         if predicted_y is None:
