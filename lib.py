@@ -6,9 +6,12 @@ from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 # nltk.download('stopwords')
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import MultiLabelBinarizer
 from sqlalchemy import create_engine
 from sqlalchemy import text
 import json
+from collections import Counter
+import operator
 
 def df_column_uniquify(df):
     df_columns = df.columns
@@ -83,16 +86,72 @@ def remove_stopwords_and_stem(sentence, regex= r'[a-z]{2,}|100000|2000|25000|100
     return output, stemmed_to_original_locale
 
 def preprocess(instances, is_single_instance):
-    instances.reset_index(drop=True, inplace=True)
-    # per il doppio bmi
-    instances = df_column_uniquify(instances)
-    instances.rename(columns={'PAROLOGIA_ESOFAGEA': 'PATOLOGIA_ESOFAGEA'}, inplace=True)
-    instances.replace('NULL', value='', inplace=True)
-    instances.replace(r"'", value='', inplace=True, regex=True)
+    def prova():
+        words = []
+        tokenizer = RegexpTokenizer(r'[a-z]+')
+        for _, item in instances['TERAPIA_ALTRO'].iteritems():
+            t =  tokenizer.tokenize(item.lower())
+            if 'menopausa' in t:
+                print(item)
+            words += t
+
+        # lascio iu, assunto.. ma devi fare solo bigrammi
+        stop_words = stopwords.words('italian')+['ui','vacanza','menopausa','supplementazione','sospeso','anni','anno','mesi','aa','circa','mese','die','dopo','tp','cp','ogni','indicazione','fino','assunto','gtt','mg','curante','sett','settimana','poi','fa','riferisce','assume','assunzione','alcuni','terapia','due','im','volont','ricorda','gg','fl','precedente','consigliata','seguito','odierna','consigliato']
+
+
+        to_be_removed = []
+        for token in words:
+            if token in stop_words:
+                to_be_removed.append(token)
+
+        for elem in to_be_removed:
+            if elem in words:
+                words.remove(elem)
+        counts = Counter(words)
+
+        normalized_count = {w: c / sum(counts.values()) for w, c in counts.items()}
+        normalized_count = sorted(normalized_count.items(), key=lambda kv: kv[1],reverse=True)
+        print(counts)
+
+        '''for _, item in instances['TERAPIA_ALTRO'].iteritems():
+            if 'D' in item:
+                print(item)'''
+
+
+        print(normalized_count)
+        exit()
+    def prova2():
+        words = []
+        tokenizer = RegexpTokenizer(r'[a-z]+')
+        for _, item in instances['ALTRE_PATOLOGIE'].iteritems():
+            t = tokenizer.tokenize(item.lower())
+            if 'menopausa' in t:
+                print(item)
+            words += t
+
+        # lascio iu, assunto.. ma devi fare solo bigrammi
+        stop_words = stopwords.words('italian')
+
+        to_be_removed = []
+        for token in words:
+            if token in stop_words:
+                to_be_removed.append(token)
+
+        for elem in to_be_removed:
+            if elem in words:
+                words.remove(elem)
+        counts = Counter(words)
+
+        normalized_count = {w: c / sum(counts.values()) for w, c in counts.items()}
+        normalized_count = sorted(normalized_count.items(), key=lambda kv: kv[1], reverse=True)
+        print(counts)
+
+
+        #print(normalized_count)
+        exit()
 
     global stemmed_to_original
     stemmed_to_original = {}
-
     global col_name_to_ngram
     col_name_to_ngram = {}
 
@@ -154,10 +213,129 @@ def preprocess(instances, is_single_instance):
 
         return frame, nomi_nuove_colonne_vectorized
 
+    def one_hot_encode(sep, instances, col_name, classes):
+        # x is a list of tuples, each tuple contains classes present in some row of the column
+        x = []
+        # item is some row of the column
+        for _ ,item in instances[col_name].iteritems():
+            #print('{}:{}'.format(i,item))
+            # the tuple for the current row
+            t = ()
+            if item != '':
+                # bear in mind that a row may contain multiple classes. For example the TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA column
+                # might contain 'ibandronato capsule\nRaloxifene 20mg'
+                # first of all we split the sentences and get: ['ibandronato capsule', 'Raloxifene 20mg']
+                # for each sentence:
+                for line in item.split('\n'):
+                    line = line.lower()
+                    # each sentence should be assigned to some class, if not, something's not working
+                    line_assigned = False
+                    # we check if the sentence contains some class
+                    for cl in classes:
+                        # each sentence should contain one and only one class, so the if shoul fire once
+                        if cl in line:
+                            # add the class to the tuple
+                            t = t + (cl,)
+                            line_assigned = True
+                    if line_assigned is False:
+                        print('err')
+                        exit(-2)
+                # t for this example is ('ibandronato','raloxifene')
+                x.append(t)
+            else:
+                x.append(t)
+
+
+        # one column for each class
+        new_columns = MultiLabelBinarizer(classes = classes).fit_transform(x)
+        new_columns_names = ['{}_{}'.format(col_name,i) for i in range(0,len(classes)) ]
+        new_columns= pd.DataFrame(new_columns, columns=new_columns_names)
+        instances = pd.concat([instances, new_columns], axis=1)
+        return instances, new_columns_names
+
+    db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
+    db_connection = create_engine(db_connection_str)
+    instances.reset_index(drop=True, inplace=True)
+    # per il doppio bmi
+    instances = df_column_uniquify(instances)
+    instances.rename(columns={'PAROLOGIA_ESOFAGEA': 'PATOLOGIA_ESOFAGEA'}, inplace=True)
+    instances.replace('NULL', value='', inplace=True)
+    instances.replace(r"'", value='', inplace=True, regex=True)
+
+
+
+
+    # TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA(beginning)/TERAPIE_ORMONALI_LISTA(class)/ORM.SOST./C.O.(site)
+    ter_orm_kinds = ['tibolone', 'estradiolo + drospirenone', 'tsec, estrogeni coniugati equini 0,4 mg- bazedoxifene 20 mg', 'terapia ormonale sostitutiva per via transdermica']
+    # TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA(beginnig)/TERAPIE_OSTEOPROTETTIVE_LISTA(class)/OSTEOPROTETTIVA SPECIFICA(site)
+    ter_osteo_kinds = ['alendronato', 'risedronato', 'ibandronato', 'clodronato', 'raloxifene', 'bazedoxifene', 'denosumab', 'teriparatide', 'zoledronato']
+    # VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA(beginning)/VITAMINA_D_SUPPLEMENTAZIONE_LISTA(class)/VITAMINA D SUPPLEMENTAZIONE(site)
+    vit_d_sup_kinds = [ 'colecalciferolo 300.000ui','colecalciferolo 100.000ui', 'colecalciferolo 25.000ui','colecalciferolo 10.000ui', 'calcifediolo', 'supplementazione giornaliera di vit d3 (colecalciferolo) a dose  2000ui /die']
+    # VITAMINA_D_TERAPIA_LISTA(class)/VITAMINA D TERAPIA(site)
+    vit_d_ter_kinds = ['colecalciferolo','calcifediolo']
+    # CALCIO_SUPPLEMENTAZIONE_LISTA(class)/CALCIO SUPPLEMENTAZIONE(site)
+    calcio_supp_kinds = ['calcio citrato','calcio carbonato']
+
     # commento per il momento perchè devo fare riferimento a valori vecchi
     '''# Tengo solo quelli che sono venuti prima di ottobre
     instances = tabella_completa.loc[instances['SCAN_DATE'] <= '2019-10-01', :].copy()
     instances.reset_index(drop=True, inplace=True)'''
+    '''
+    many sentences taken from the html select list have the this form: \t\t\r\n\telement1\r\n\t\t\selement2\t\t\t\t\s\s
+    we remove the stuff in front, in the back, and for some in the middle.
+    '''
+    # todo non so se importa rimuovere alle colonne da vettorizzare la roba
+    back_front_junk_regex = r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$'
+    middle_junk = r'[\r\n\s\t]*(\r\n)+[\r\n\s\t]*'
+    for row_index in range(0, instances.shape[0]):
+        instances.loc[row_index, 'CAUSE_OSTEOPOROSI_SECONDARIA'] = re.sub(back_front_junk_regex, '',instances.loc[row_index, 'CAUSE_OSTEOPOROSI_SECONDARIA'])
+        instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = re.sub( back_front_junk_regex, '', instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'])
+        instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = re.sub( back_front_junk_regex, '', instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'])
+        instances.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA'] = re.sub(back_front_junk_regex, '',  instances.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA'])
+        instances.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'] = re.sub(back_front_junk_regex, '', instances.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'])
+        instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = re.sub(back_front_junk_regex, '', instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
+        instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = re.sub(back_front_junk_regex, '', instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])
+        instances.loc[row_index, 'TERAPIE_ORMONALI_LISTA'] = re.sub(back_front_junk_regex, '', instances.loc[row_index, 'TERAPIE_ORMONALI_LISTA'])
+        instances.loc[row_index, 'VITAMINA_D_TERAPIA_LISTA'] = re.sub(back_front_junk_regex,'', instances.loc[row_index, 'VITAMINA_D_TERAPIA_LISTA'])
+        # remove the middle and substitute with \n
+        instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = re.sub(middle_junk, '\n', instances.loc[row_index, 'TERAPIE_ORMONALI_LISTA'])
+        instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = re.sub(middle_junk, '\n', instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'])
+        instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] = re.sub(middle_junk,'\n', instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])
+
+
+    # tolgo le informazioni sugli anni da TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA, TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA
+    # perche sono gia state salvate in un altra colonna
+    for row_index in range(0, instances.shape[0]):
+        instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = re.sub(  r',[0-9]+([,.][0-9]+)?\s*anni', '',instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'])
+        instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = re.sub( r',[0-9]+([,.][0-9]+)?\s*anni', '', instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'])
+
+
+    # sostituisco a 10000UI 10.000UI e 25000 UI con 25.000UI in VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA(beginning)/VITAMINA_D_SUPPLEMENTAZIONE_LISTA(class)
+    # perchè non voglio avere robe diverse
+    for row_index in range(0, instances.shape[0]):
+        instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] \
+            = re.sub(r'10000', r'10.000', instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])
+        instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] \
+            = re.sub(r'25000', r'25.000', instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])
+        instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] \
+            = re.sub(r'100000', r'100.000', instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])
+        instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] \
+            = re.sub(r'\sUI', r'UI', instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])
+
+        instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] \
+            = re.sub(r'10000', r'10.000', instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
+        instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] \
+            = re.sub(r'25000', r'25.000', instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
+        instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] \
+            = re.sub(r'100000', r'100.000', instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
+        instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] \
+            = re.sub(r'\sUI', r'UI', instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
+
+
+
+    instances, new_column_names_for_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA = one_hot_encode('\r\n',instances,'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA', ter_orm_kinds)
+    instances, new_column_names_for_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA = one_hot_encode('\r\n',instances,'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA', ter_osteo_kinds)
+    instances, new_column_names_for_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA = one_hot_encode('\r\n',instances,'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA', vit_d_sup_kinds)
 
 
     # creates a new column with the difference between the current year and last period year
@@ -166,17 +344,9 @@ def preprocess(instances, is_single_instance):
         scan =  instances.loc[row_index, 'SCAN_DATE'].year
         um =  instances.loc[row_index, 'ULTIMA_MESTRUAZIONE']
         adm = scan - um
-
         instances.loc[row_index, 'ANNI_DALLA_MENOPAUSA'] = adm
 
-    # sostituisco a 10000UI 10.000UI e 25000 UI con 25.000UI in VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
-    for row_index in range(0, instances.shape[0]):
-        instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] \
-            = re.sub(r'10.000', r'10000', instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])
-        instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] \
-            = re.sub(r'25.000', r'25000', instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])
-        instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'] \
-            = re.sub(r'100.000', r'100000', instances.loc[row_index, 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA'])
+
 
 
     # questo paragrafo perchè voglio che 10000UI sia trattato come 10.000UI
@@ -199,39 +369,6 @@ def preprocess(instances, is_single_instance):
     # alcuni hanno -1
     instances['BMI'].replace(-1, np.nan, inplace=True)
 
-    # tolgo tutti \t\t\t\\t\n\n\
-    for row_index in range(0, instances.shape[0]):
-        instances.loc[row_index, 'CAUSE_OSTEOPOROSI_SECONDARIA'] = re.sub(
-            r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '',
-            instances.loc[row_index, 'CAUSE_OSTEOPOROSI_SECONDARIA'])
-        instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = re.sub(
-            r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '',
-            instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'])
-        instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = re.sub(
-            r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '',
-            instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'])
-        instances.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA'] = re.sub(
-            r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '',
-            instances.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA'])
-        instances.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'] = re.sub(
-            r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '',
-            instances.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'])
-        instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = re.sub(
-            r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$', '',
-            instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
-        instances.loc[row_index, 'TERAPIE_ORMONALI_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$',
-                                                                           '', instances.loc[
-                                                                               row_index, 'TERAPIE_ORMONALI_LISTA'])
-        instances.loc[row_index, 'VITAMINA_D_TERAPIA_LISTA'] = re.sub(r'^[\n\s\r\t]*(?=\w)|(?<=\w)[\s\t\n\r]*$',
-                                                                             '', instances.loc[
-                                                                                 row_index, 'TERAPIE_ORMONALI_LISTA'])
-        # elimino il secondo elemento (tutto ciò che è dopo lacapo) #todo controlla uesta cosa anche per gli altri
-        # attenzione lascia un \s ('colecalciferolo 10.000UI, 30gocce alla settimana ') 194591351EMASTROGIR
-        instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = re.sub(r'\n.*', '', instances.loc[
-            row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
-        instances.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'] = re.sub(r'\n.*', '', instances.loc[
-            row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'])
-
 
     # region fillna
     instances['FRATTURA_VERTEBRE'].replace('', 'no fratture', inplace=True)
@@ -241,15 +378,20 @@ def preprocess(instances, is_single_instance):
     instances['TERAPIA_ALTRO_CHECKBOX'].fillna(0, inplace=True)
     instances['STATO_MENOPAUSALE'].replace('', np.nan, inplace=True)
     instances['TERAPIA_STATO'].replace('', np.nan, inplace=True)
-    instances['TERAPIE_ORMONALI_LISTA'].replace('', np.nan, inplace=True)
-    instances['VITAMINA_D_TERAPIA_LISTA'].replace('', np.nan, inplace=True)
     instances['SITUAZIONE_FEMORE_SN'].replace('', np.nan, inplace=True)
     instances['SITUAZIONE_COLONNA'].replace('', np.nan, inplace=True)
+    # classes
+    instances['TERAPIE_ORMONALI_LISTA'].replace('', np.nan, inplace=True)
+    instances['VITAMINA_D_TERAPIA_LISTA'].replace('', np.nan, inplace=True)
+    instances['VITAMINA_D_SUPPLEMENTAZIONE_LISTA'].replace('', np.nan, inplace=True)
+    instances['TERAPIE_OSTEOPROTETTIVE_LISTA'].replace('', np.nan, inplace=True)
+    instances['CALCIO_SUPPLEMENTAZIONE_LISTA'].replace('', np.nan, inplace=True)
 
 
 
     # endregion
 
+    '''
     # region creazione di TERAPIA_OST_ORM_ANNI da TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA separando gli anni
     # attenzione questo paragrafo deve stare prima di sostituizione della colonna con il principio
 
@@ -274,8 +416,6 @@ def preprocess(instances, is_single_instance):
     # aggiungo la nuova colonna con un nome che suggerisce l'artificialità
     instances['TERAPIA_OST_ORM_ANNI'] = terapia_osteoprotettiva_ormon_anni_col
     # endregion
-
-
     # region creazione di TERAPIA_OST_SPEC_ANNI da TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA separando gli anni
     # attenzione questo paragrafo deve stare prima di sostituizione della colonna con il principio
     # la lista da trasformare poi in colonna del DataFrame
@@ -298,68 +438,73 @@ def preprocess(instances, is_single_instance):
     # aggiungo la nuova colonna con un nome che suggerisce l'artificialità
     instances['TERAPIA_OST_SPEC_ANNI'] = terapia_osteoprotettiva_spec_anni_col
     # endregion
-
-    # tolgo le informazioni sugli anni da TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA, TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA
-    # perche sono gia state salvate in un altra colonna
-    for row_index in range(0, instances.shape[0]):
-        instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'] = re.sub(
-            r',[0-9]+([,.][0-9]+)?\sanni$', '',
-            instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA'])
-        instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'] = re.sub(
-            r',[0-9]+([,.][0-9]+)?\sanni$', '',
-            instances.loc[row_index, 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA'])
+    '''
 
 
     if not is_single_instance:
+        def class_preprocess(class_name, class_kinds):
+            i = 0
+            for row_index in range(0, instances.shape[0]):
+                row = instances.loc[row_index, class_name]
+                #print('{}:{}'.format(i, row))
+
+                if not pd.isna(row):
+                    row = row.lower()
+                    row_assigned = False
+                    for kind in class_kinds:
+                        if kind in row:
+                            instances.loc[row_index, class_name] = kind
+                            #print('\t' + kind)
+                            row_assigned = True
+                            break
+
+                    if row_assigned is False:
+                        print('errrrr')
+                        exit(-3)
+                i = i + 1
+        class_preprocess('CALCIO_SUPPLEMENTAZIONE_LISTA',calcio_supp_kinds)
+        class_preprocess('TERAPIE_OSTEOPROTETTIVE_LISTA',ter_osteo_kinds)
+        class_preprocess('VITAMINA_D_SUPPLEMENTAZIONE_LISTA',vit_d_sup_kinds)
+        class_preprocess('VITAMINA_D_TERAPIA_LISTA',vit_d_ter_kinds)
+        class_preprocess('TERAPIE_ORMONALI_LISTA',ter_orm_kinds)
+
+
+
         # vettorizato INTOLLERANZE
         #instances['INTOLLERANZE'].fillna('', inplace=True)
         instances, nomi_nuove_colonne_vectorized_INTOLLERANZE = \
             vectorize('INTOLLERANZE', instances, prefix='i', n_gram_range=(1, 1))
-        print("ok4")
 
         # vettorizato ALLERGIE
         #instances['ALLERGIE'].fillna('', inplace=True)
         instances, nomi_nuove_colonne_vectorized_ALLERGIE = \
             vectorize('ALLERGIE', instances, prefix='a', n_gram_range=(1, 1))
-        print("ok5")
 
         # vettorizato DISLIPIDEMIA_TERAPIA
         #instances['DISLIPIDEMIA_TERAPIA'].fillna('', inplace=True)
         # (1,1) perchè sono quasi tutte parole singole
         instances, nomi_nuove_colonne_vectorized_DISLIPIDEMIA_TERAPIA = \
             vectorize('DISLIPIDEMIA_TERAPIA', instances, prefix='dt', n_gram_range=(1, 1))
-        print("ok6")
 
         # vettorizato NEOPLASIA_MAMMARIA_TERAPIA
         #instances['NEOPLASIA_MAMMARIA_TERAPIA'].fillna('', inplace=True)
         instances, nomi_nuove_colonne_vectorized_NEOPLASIA_MAMMARIA_TERAPIA = \
             vectorize('NEOPLASIA_MAMMARIA_TERAPIA', instances, prefix='nmt', n_gram_range=(1, 1))
-        print("ok7")
 
         # vettorizato PATOLOGIE_UTERINE_DIAGNOSI
         #instances['PATOLOGIE_UTERINE_DIAGNOSI'].fillna('', inplace=True)
         instances, nomi_nuove_colonne_vectorized_PATOLOGIE_UTERINE_DIAGNOSI = \
             vectorize('PATOLOGIE_UTERINE_DIAGNOSI', instances, prefix='pud', n_gram_range=(1, 1))
-        print("ok8")
 
 
         # vettorizato VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA
-        instances, nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA = \
-            vectorize('VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA',
-                      instances,
-                      prefix='vidtol',
-                      n_gram_range=(1, 2))
+        instances, nomi_nuove_colonne_vectorized_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA = vectorize('VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA',  instances,prefix='vidtol',n_gram_range=(1, 2))
 
-        instances, \
-        nomi_nuove_colonne_vectorized_TERAPIA_ALTRO \
-            = vectorize('TERAPIA_ALTRO',
-                        instances,
-                        'ta')
+        instances, nomi_nuove_colonne_vectorized_TERAPIA_ALTRO  = vectorize('TERAPIA_ALTRO', instances,'ta')
 
         # vettorizzato ALTRE_PATOLOGIE
         #instances['ALTRE_PATOLOGIE'].fillna('', inplace=True)
-        instances, nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE = vectorize('ALTRE_PATOLOGIE', instances,
-                                                                                    'ap')
+        instances, nomi_nuove_colonne_vectorized_ALTRE_PATOLOGIE = vectorize('ALTRE_PATOLOGIE', instances, 'ap')
 
 
 
@@ -367,63 +512,14 @@ def preprocess(instances, is_single_instance):
         instances, nomi_nuove_colonne_vectorized_CAUSE_OSTEOPOROSI_SECONDARIA = \
             vectorize('CAUSE_OSTEOPOROSI_SECONDARIA', instances, 'cos', n_gram_range=(1, 1))
 
+        '''
         # vettorizzo TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA
         instances, nomi_nuove_colonne_vectorized_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA = vectorize('TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA', instances, 'tool')
-
         # vettorizzo TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA
         instances, nomi_nuove_colonne_vectorized_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA= vectorize('TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA', instances, 'tosl')
+        '''
 
 
-
-        # region sostituisco solo con il principio TERAPIE_OSTEOPROTETTIVE_LISTA (da prevedere)
-        for row_index in range(0, instances.shape[0]):
-            row = instances.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA']
-            if row!='':
-                # esempio: se row = 'alendronato 70 mg, 1cpr/settimana', poi diventa 'alendronato'
-                x = re.sub(r'^([a-zA-Z]+).*', r'\1', row)
-                instances.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA'] = x
-            else:
-                instances.loc[row_index, 'TERAPIE_OSTEOPROTETTIVE_LISTA']=np.nan
-        # endregion
-        print("ok15")
-
-        # region sostituisco solo con il principio CALCIO_SUPPLEMENTAZIONE_LISTA (da prevedere)
-        for row_index in range(0, instances.shape[0]):
-            row = instances.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA']
-            if row != '':
-                # perchè ce 'calcio carbonato' e 'Calcio carbonato' e vogliamo trattarla come la stessa stringa
-                row = row.lower()
-                # esempio: 'calcio carbonato 600 mg per 2 / die' diventa 'calcio carbonato'
-                x = re.sub(r'^([a-zA-Z]*\s[a-zA-Z]*).*', r'\1', row)
-                instances.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'] = x
-            else:
-                instances.loc[row_index, 'CALCIO_SUPPLEMENTAZIONE_LISTA'] = np.nan
-        # endregion
-        print("ok16")
-
-        # region sitemo VITAMINA_D_SUPPLEMENTAZIONE_LISTA (quella da prevedere)
-        # sostituisco a 10000UI 10.000UI e 25000 UI con 25.000UI in VITAMINA_D_SUPPLEMENTAZIONE_LISTA
-        for row_index in range(0, instances.shape[0]):
-            instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] =re.sub(r'10000UI', r'10.000UI', instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
-            instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = re.sub(r'25000\sUI', r'25.000UI', instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'])
-
-
-        # sostituisco alla cura solo il principio e la quantità
-        # esempio: 'colecalciferolo 25.000UI, 1 flacone monodose 1 volta al mese' va sostituita con 'calciferolo 25.000UI'
-        for row_index in range(0, instances.shape[0]):
-            row = instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA']
-            if row != '':
-                # faccio regex piu semplice dato che ho gia fatto delle sostituzioni nel paragrafo prec.
-                x = re.sub(r'^(colecalciferolo\s[0-9]*[.][0-9]*UI).*|^(Calcifediolo\scpr\smolli).*|'
-                           r'^(Calcifediolo\sgocce).*|^(Supplementazione\sgiornaliera\sdi\sVit\sD3).*', r'\1\2\3\4',
-                           row)
-                instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = x
-            else:
-                instances.loc[row_index, 'VITAMINA_D_SUPPLEMENTAZIONE_LISTA'] = np.nan
-
-
-        # endregion
-        print("ok17")
 
         l = [
                 'PATIENT_KEY',
@@ -436,8 +532,8 @@ def preprocess(instances, is_single_instance):
                 'TERAPIA_STATO',  # OK
                 'TERAPIA_OSTEOPROTETTIVA_ORMONALE',#checkbox
                 'TERAPIA_OSTEOPROTETTIVA_SPECIFICA',#ceckbox
-                'TERAPIA_OST_ORM_ANNI',  # OK numeric
-                'TERAPIA_OST_SPEC_ANNI',  # OK numeric
+                #'TERAPIA_OST_ORM_ANNI',  # OK numeric
+                #'TERAPIA_OST_SPEC_ANNI',  # OK numeric
                 'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA',  # NON lo riconosce come nominal**
                 'TERAPIA_ALTRO_CHECKBOX',  # NON lo riconosce come nominal attenzione ci sono dei null**
                 'TERAPIA_COMPLIANCE',  # NON lo riconosce come nominal**
@@ -514,8 +610,9 @@ def preprocess(instances, is_single_instance):
             nomi_nuove_colonne_vectorized_ALLERGIE + \
             nomi_nuove_colonne_vectorized_INTOLLERANZE + \
             nomi_nuove_colonne_vectorized_CAUSE_OSTEOPOROSI_SECONDARIA + \
-            nomi_nuove_colonne_vectorized_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA + \
-            nomi_nuove_colonne_vectorized_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA \
+            new_column_names_for_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA+ \
+            new_column_names_for_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA+ \
+            new_column_names_for_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA\
             + [
 
                 'TERAPIE_ORMONALI_CHECKBOX',  # [0]
