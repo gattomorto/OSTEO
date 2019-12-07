@@ -18,6 +18,9 @@ import weka.filters.unsupervised.attribute.RemoveType;
 import javax.swing.*;
 import javax.swing.text.html.HTMLDocument;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +31,7 @@ public class Main {
     //attenzione se i tuoi valori differiscono dal classificatore, è perchè il classificatore si comporta diversamnte qnd vede null
     public static void main(String[] args) throws Exception
     {
+        //Rules rs = new Rules(null);
         vecchiomain();
     }
 
@@ -38,7 +42,7 @@ public class Main {
 
         String[] classNames = {
 
-                "VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
+                //"CALCIO_SUPPLEMENTAZIONE_CHECKBOX",
                 "TERAPIE_ORMONALI_CHECKBOX",
                 "TERAPIE_ORMONALI_LISTA",
                 "TERAPIE_OSTEOPROTETTIVE_CHECKBOX",
@@ -46,7 +50,7 @@ public class Main {
                 "VITAMINA_D_TERAPIA_CHECKBOX",
                 "VITAMINA_D_TERAPIA_LISTA",
                 "VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX",
-                //"VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
+                "VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
                "CALCIO_SUPPLEMENTAZIONE_CHECKBOX",
                 "CALCIO_SUPPLEMENTAZIONE_LISTA"
         };
@@ -147,9 +151,11 @@ public class Main {
             filter.setInputFormat(dati);
             dati = Filter.useFilter(dati,filter);
 
-
+            // the dataset comes with different classes at the end. The classifier can be built for one class only, so
+            // we need to remove all classes apart from 'className'.
             int[] classIndexesToRemove = new int[classNames.length-1];
             i = 0;
+            // finding out indices of columns to be removed
             for(String className_: classNames)
             {
                 if(!className_.equals(className)) {
@@ -157,17 +163,16 @@ public class Main {
                     i++;
                 }
             }
-
-
-
+            // the removal itself
             filter = new Remove();
             ((Remove)filter).setAttributeIndicesArray(classIndexesToRemove);
             filter.setInputFormat(dati);
             dati = Filter.useFilter(dati,filter);
 
+            // setting the class
             dati.setClassIndex(dati.numAttributes()-1);
 
-            dati.removeIf(instance -> (instance.classIsMissing()==true));
+            dati.removeIf(Instance::classIsMissing);
 
 
             //This is because sometimes the training set is so small that an entire column has missing values, SITUAZIONE_FEMORE_DX,
@@ -183,8 +188,7 @@ public class Main {
             filter.setInputFormat(dati);
             dati = Filter.useFilter(dati,filter);
 
-
-
+            // train test sets generation
             filter = new StratifiedRemoveFolds();
             filter.setOptions(new String[]{"-S", "0", "-N", "4", "-F", "1"});
             filter.setInputFormat(dati);
@@ -205,7 +209,6 @@ public class Main {
 
             //questa parte è per la storia che devo recuperare le colonne con il testo su python sul test set
             //lo faccio usando pk.. allora salvo il test set e poi la rimuovo subito
-
             filter = new Remove();
             ((Remove)filter).setAttributeIndicesArray(new int[] {dati.attribute("SCAN_DATE").index()});
             filter.setInputFormat(train);
@@ -231,14 +234,14 @@ public class Main {
             saver.setFile(new File(String.format("%s_train.arff",className)));
             saver.writeBatch();
 
-            PART cls = new PART();
-            //JRip cls = new JRip();
+            //PART cls = new PART();
+            JRip cls = new JRip();
 
             cls.buildClassifier(train);
 
             Evaluation evl = new Evaluation(train);
             evl.evaluateModel(cls,test);
-            //System.out.println(evl.toSummaryString());
+            System.out.println(evl.toSummaryString());
 
 
             Rules rules = new Rules(cls);
@@ -313,6 +316,26 @@ class Proposizione
         this.operatore = operatore;
     }
 
+    public Proposizione(String prop)
+    {
+        Pattern operand1Pattern = Pattern.compile("(?<=\\()\\w+");
+        Pattern operatorPattern = Pattern.compile("(<=|>=|<|>|=)");
+        Pattern operand2Pattern = Pattern.compile("(?<=(<=|>=|<|>|=)\\s)[\\w\\s.+,-/()]+(?=\\))");
+        Matcher matcher;
+
+        matcher = operand1Pattern.matcher(prop);
+        matcher.find();
+        this.operando1 = matcher.group();
+
+        matcher = operatorPattern.matcher(prop);
+        matcher.find();
+        this.operatore = matcher.group();
+
+        matcher = operand2Pattern.matcher(prop);
+        matcher.find();
+        this.operando2 = matcher.group();
+    }
+
     public boolean valuta(Instance inst)
     {
         Attribute attOfoperando1 = inst.dataset().attribute(this.operando1);
@@ -379,6 +402,8 @@ class Proposizione
 
     }
 
+
+
     @Override
     public String toString() {
         return operando1+" "+this.operatore+" "+this.operando2;
@@ -412,11 +437,11 @@ class Proposizione
 class Regola
 {
     private String predizione;
-    private float m;
-    private float n;
+    private double m;
+    private double n;
     private List<Proposizione> proposizioni;
 
-    public Regola(String predizione, float m, float n, List<Proposizione> proposizioni) {
+    public Regola(String predizione, double m, double n, List<Proposizione> proposizioni) {
         this.predizione = predizione;
         this.m = m;
         this.n = n;
@@ -431,6 +456,53 @@ class Regola
         this.proposizioni = new ArrayList<>();
     }
 
+    public Regola (String rule)
+    {
+        this.proposizioni = this.extractProposisionsJRip(rule);
+        double[] mn = this.extractMN(rule);
+        this.m = mn[0];
+        this.n = mn[1];
+        this.predizione = this.extractPrediction(rule);
+    }
+
+    private List<Proposizione> extractProposisionsJRip(String rule)
+    {
+        List<Proposizione> propositions = new ArrayList<>();
+
+        Pattern propositionPattern = Pattern.compile("\\([\\w>=<.\\d\\s-+]+\\)");
+
+        Matcher matcher = propositionPattern.matcher(rule);
+
+        while (matcher.find()) {
+            String prop = matcher.group();
+            propositions.add(new Proposizione(prop));
+        }
+
+        return propositions;
+    }
+    private double[] extractMN(String rule)
+    {
+        double[] mn = new double[2];
+
+        Pattern mnPattern = Pattern.compile("((?<=\\()|(?<=/))\\d+.\\d+((?=/)|(?=\\)))");
+        Matcher matcher = mnPattern.matcher(rule);
+
+        matcher.find();
+        mn[0] =Double.parseDouble(matcher.group(0));
+        matcher.find();
+        mn[1] =Double.parseDouble(matcher.group(0));
+
+        return mn;
+    }
+
+    private String extractPrediction(String rule)
+    {
+        Pattern predictionPattern = Pattern.compile("(?<=\\w=)[\\w\\s.+,-/()]+(?=\\s\\(\\d)");
+        Matcher matcher = predictionPattern.matcher(rule);
+        matcher.find();
+        return matcher.group();
+    }
+
     public void addProposision(Proposizione p)
     {
         this.proposizioni.add(p);
@@ -438,7 +510,7 @@ class Regola
 
     public boolean valuta(Instance inst)
     {
-        if(this.proposizioni==null)
+        if(this.proposizioni.isEmpty())
             return true;
 
         for(Proposizione p: this.proposizioni)
@@ -457,7 +529,7 @@ class Regola
     {
         String lastPiece = ": "+this.predizione+" ("+this.m+"/"+this.n+")";
         String output = "";
-        if (this.proposizioni!=null)
+        if (!this.proposizioni.isEmpty())
         {
             for(Proposizione p :this.proposizioni)
             {
@@ -483,19 +555,19 @@ class Regola
         this.predizione = predizione;
     }
 
-    public void setM(float m) {
+    public void setM(double m) {
         this.m = m;
     }
 
-    public void setN(float n) {
+    public void setN(double n) {
         this.n = n;
     }
 
-    public float getM() {
+    public double getM() {
         return m;
     }
 
-    public float getN() {
+    public double getN() {
         return n;
     }
 
@@ -509,9 +581,9 @@ class Rules implements Iterable<Regola>
 {
     private List<Regola> rules;
 
-    public Rules(Classifier cls)
-    {
-        this.rules = this.extractRules(cls);
+    public Rules(Classifier cls) throws IOException {
+        this.rules = this.extractRulesJRip(cls);
+        //this.rules = this.extractRules(cls);
     }
 
     public String getAccuracy(Instances testset) throws Exception {
@@ -522,7 +594,7 @@ class Rules implements Iterable<Regola>
         Enumeration instances = testset.enumerateInstances();
         while (instances.hasMoreElements())
         {
-            if (i==76)
+            if (i==106)
             {
                 int x = 9;
             }
@@ -646,13 +718,18 @@ class Rules implements Iterable<Regola>
     public String predict(Instance inst)
     {
         for(Regola r :this.rules)
-            if(r.valuta(inst))
+        {
+            /*if (r.getM() == 10.86| r.getN() == 1)
+                System.out.println("dd");*/
+
+            if (r.valuta(inst))
                 return r.getPredizione();
+        }
 
         return null;
     }
 
-    public List<Regola> extractRules(Classifier cls)
+    public List<Regola> extractRulesPART(Classifier cls)
     {
         String rulesInStringFormat = cls.toString();
         rulesInStringFormat=rulesInStringFormat.replaceAll("^PART decision list[\r\n][-]+[\r\n]{2}","");
@@ -753,9 +830,22 @@ class Rules implements Iterable<Regola>
         return output;
     }
 
-    public List<Regola> extractRulesJRip(Classifier cls)
-    {
-        return null;
+    public List<Regola> extractRulesJRip(Classifier cls) throws IOException {
+        List<Regola> rules_list = new ArrayList<>();
+        String rules_string = cls.toString();
+        //String rules_string = new String(Files.readAllBytes(Paths.get("r.txt")), StandardCharsets.UTF_8);
+        rules_string=rules_string.replaceAll("^JRIP rules:[\\n\\r]=+[\\n\\r]{2}","");
+        rules_string=rules_string.replaceAll("[\\n\\r]Number.*$","");
+
+        String[] array_rules = rules_string.split("\n");
+
+        for(String rule: array_rules)
+        {
+            rules_list.add(new Regola(rule));
+        }
+
+
+        return rules_list;
     }
 
     private void removeRules(List<Regola> rulesToRemove)
