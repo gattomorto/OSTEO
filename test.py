@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy import text
-from lib import preprocess, Regole, df_column_uniquify
+from lib import preprocess, Formulaes, df_column_uniquify
 import json
 
 def risorgi_test(test_di_java):
@@ -48,7 +48,7 @@ def risorgi_test(test_di_java):
     return output
 def leggo_regole_dal_db_e_verifico_accuracy():
     class_names = [
-        #'CALCIO_SUPPLEMENTAZIONE_CHECKBOX',
+        'VITAMINA_D_SUPPLEMENTAZIONE_LISTA',
         'TERAPIE_ORMONALI_CHECKBOX',#[0]
         'TERAPIE_ORMONALI_LISTA',#[1]
         'TERAPIE_OSTEOPROTETTIVE_CHECKBOX',#[2]
@@ -56,7 +56,7 @@ def leggo_regole_dal_db_e_verifico_accuracy():
         'VITAMINA_D_TERAPIA_CHECKBOX',#[4]
         'VITAMINA_D_TERAPIA_LISTA',#[5]
         'VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',#[6]
-        'VITAMINA_D_SUPPLEMENTAZIONE_LISTA',#[7]
+        #'VITAMINA_D_SUPPLEMENTAZIONE_LISTA',#[7]
          'CALCIO_SUPPLEMENTAZIONE_CHECKBOX',#[8]
         'CALCIO_SUPPLEMENTAZIONE_LISTA'] #[9]
 
@@ -69,19 +69,13 @@ def leggo_regole_dal_db_e_verifico_accuracy():
 
         t = text("SELECT * FROM regole where terapia = '{}'".format(class_name))
         result = db_connection.execute(t).fetchone()
-        reg_ref = result['regola_refined']
-        reg_not_ref = result['regola_not_refined']
-        reg_user_read_not_ref = result['user_readable_not_ref']
-        reg_user_read_ref = result['user_readable_ref']
+        reg_user_read_not_ref = result['not_refined']
+        reg_user_read_ref = result['refined']
 
-        rules_ref = Regole(reg_ref)
-        rules_not_ref = Regole(reg_not_ref)
-        rules_user_not_ref = Regole(reg_user_read_not_ref)
-        rules_user_ref = Regole(reg_user_read_ref)
+        formulaes_not_refined = Formulaes(reg_user_read_not_ref)
+        formulaes_refined = Formulaes(reg_user_read_ref)
 
-        # print(rules_user_not_ref)
 
-        # print(rules)
 
         # ATTENZIONE: this is not a random testset, it's a stratified one, bases on a particular class
         # it is produced by java, so first run java
@@ -96,10 +90,10 @@ def leggo_regole_dal_db_e_verifico_accuracy():
         risorto = risorgi_test(test)
 
         print(class_name)
-        print(accuracy_rules4(risorto, test[class_name], rules_user_not_ref))
-        print(accuracy_rules4(risorto, test[class_name], rules_user_ref))
+        print(accuracy_rules4(risorto, test[class_name], formulaes_not_refined))
+        print(accuracy_rules4(risorto, test[class_name], formulaes_refined))
         print('\n')
-def  accuracy_rules4(test_x, test_y, rules):
+def  accuracy_rules4(test_x, test_y, formulaes):
     #test_x.reset_index(drop=True, inplace=True)
 
     does_know = 0
@@ -107,7 +101,6 @@ def  accuracy_rules4(test_x, test_y, rules):
     doesnt_know = 0
 
     num_instances = test_x.shape[0]
-    stemmed_to_original = json.load(open("/var/www/sto/stemmed_to_original.txt"))
     for row_index in range(0, num_instances):
 
         if row_index == 172:
@@ -117,10 +110,10 @@ def  accuracy_rules4(test_x, test_y, rules):
         true_Y = test_y.values[row_index]
         #preprocessed_instance_x = preprocessamento_singolo(instance_x)
         preprocessed_instance_x = preprocess(instance_x.to_frame().transpose(), is_single_instance=True)
-        predicted_y, golden_rule, props_not_satisfied = rules.predict(preprocessed_instance_x)
+        predicted_y = formulaes.predict(preprocessed_instance_x)
 
 
-        print(golden_rule.get_medic_readable_version(preprocessed_instance_x,stemmed_to_original))
+        #print(golden_rule.get_medic_readable_version(preprocessed_instance_x,stemmed_to_original))
 
         #print('{}: {}'.format(row_index,predicted_y))
 

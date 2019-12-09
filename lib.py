@@ -12,6 +12,7 @@ from sqlalchemy import text
 import json
 from collections import Counter
 import operator
+from abc import ABC, abstractmethod
 
 def df_column_uniquify(df):
     df_columns = df.columns
@@ -213,7 +214,7 @@ def preprocess(instances, is_single_instance):
 
         return frame, nomi_nuove_colonne_vectorized
 
-    def one_hot_encode(sep, instances, col_name, classes):
+    def one_hot_encode(instances, col_name, classes, sep = '\n'):
         # x is a list of tuples, each tuple contains classes present in some row of the column
         x = []
         # item is some row of the column
@@ -226,7 +227,7 @@ def preprocess(instances, is_single_instance):
                 # might contain 'ibandronato capsule\nRaloxifene 20mg'
                 # first of all we split the sentences and get: ['ibandronato capsule', 'Raloxifene 20mg']
                 # for each sentence:
-                for line in item.split('\n'):
+                for line in item.split(sep):
                     line = line.lower()
                     # each sentence should be assigned to some class, if not, something's not working
                     line_assigned = False
@@ -262,6 +263,12 @@ def preprocess(instances, is_single_instance):
     instances.replace('NULL', value='', inplace=True)
     instances.replace(r"'", value='', inplace=True, regex=True)
 
+    # some text has uncomfortable values for regular expressions, such as: <,=,>,(,...
+    for row_index in range(0, instances.shape[0]):
+        instances.loc[row_index, 'ABUSO_FUMO'] = re.sub('> 10 sigarette/di', 'piu di 10 sigarette', instances.loc[row_index, 'ABUSO_FUMO'])
+        instances.loc[row_index, 'ABUSO_FUMO'] = re.sub('<= 10 sigarette/di', 'meno di 10 sigarette', instances.loc[row_index, 'ABUSO_FUMO'])
+        instances.loc[row_index, 'USO_CORTISONE'] = re.sub('>= 5 mg (Prednisone)', 'piu di 5 mg', instances.loc[row_index, 'USO_CORTISONE'])
+        instances.loc[row_index, 'USO_CORTISONE'] = re.sub('> 2.5 mg e < 5 mg', 'tra 2.5 e 5 mg', instances.loc[row_index, 'USO_CORTISONE'])
 
 
 
@@ -333,9 +340,9 @@ def preprocess(instances, is_single_instance):
 
 
 
-    instances, new_column_names_for_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA = one_hot_encode('\r\n',instances,'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA', ter_orm_kinds)
-    instances, new_column_names_for_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA = one_hot_encode('\r\n',instances,'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA', ter_osteo_kinds)
-    instances, new_column_names_for_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA = one_hot_encode('\r\n',instances,'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA', vit_d_sup_kinds)
+    instances, new_column_names_for_TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA = one_hot_encode(instances,'TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA', ter_orm_kinds)
+    instances, new_column_names_for_TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA = one_hot_encode(instances,'TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA', ter_osteo_kinds)
+    instances, new_column_names_for_VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA = one_hot_encode(instances,'VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA', vit_d_sup_kinds)
 
 
     # creates a new column with the difference between the current year and last period year
@@ -640,10 +647,10 @@ class Proposizione:
     operando2 contains some value to check operando1 against to
     '''
 
-    def __init__(self, operatore, operando1, operando2):
-        self.operatore = operatore
-        self.operando1 = operando1
-        self.operando2 = operando2
+    def __init__(self, prop_string):
+        self.operatore =re.search(r'(?<=\s)(<=|>=|=|<|>|!=|contiene|(non\scontiene))(?=\s)', prop_string).group(0)
+        self.operando1 = re.search(r'(^\w+(?=\s(=|<|>|<=|>=|!=|non contiene)\s))|(^\w+(?=\s(=|<|>|<=|>=|!=|contiene)\s))', prop_string).group(0)
+        self.operando2 = re.search(r'((?<=([=><])\s)[\w\s.,+-]+$)|((?<=contiene\sle\sparole\s#)[\w\s.]+(?=#$))', prop_string).group(0)
 
     def valuta(self, istanza):
         '''
@@ -745,13 +752,11 @@ class Regola:
         self.m = None
         self.n = None
         self.prediction = None
-        self.propositions = None
+        self.propositions = []
+
+
 
     def add_proposision(self, prop):
-        # if it's the first time we need to create the list and then add
-        if self.propositions is None:
-            self.propositions = []
-        # otherwise just add
         self.propositions.append(prop)
 
 
@@ -760,8 +765,8 @@ class Regola:
         Given an instans of type 'Series', returns true if it satisfies the rule, false otherwise
         '''
 
-        # the "always true" rule
-        if self.propositions is None:
+        # list is empty
+        if self.propositions==[]:
             return True, None
         # for a rule to be true it needs to have all its propositions true
         for prop in self.propositions:
@@ -771,7 +776,7 @@ class Regola:
         return True, None
 
     def __str__(self):
-        if self.propositions is not None:
+        if self.propositions==[]:
             output = ""
             for prop in self.propositions:
                 if prop != self.propositions[-1]:
@@ -959,3 +964,82 @@ class Regole:
                     # given that this is the last proposition, now the rule 'r' is complete.
                     rules.append(r)
         return rules
+
+class Clause:
+    def __init__(self, clause_string):
+        self.propositions, self.logical_operator = self.extract_propositions(clause_string)
+
+    def evaluate(self,instance):
+        # conjunctive clause
+        if self.logical_operator == 'AND':
+            for p in self.propositions:
+                if p.valuta(instance) == False:
+                    return False
+            return True
+        # disunctive clause
+        elif self.logical_operator == 'OR':
+            for p in self.propositions:
+                if p.valuta(instance) == True:
+                    return True
+            return False
+
+    def extract_propositions(self, clause_string):
+        logical_operator = None
+        output = []
+
+        if re.search('\sOR\s',clause_string)is not None:
+            logical_operator = 'OR'
+        else:
+            logical_operator = 'AND'
+
+        props = clause_string.split(' '+logical_operator+' ')
+
+        for prop in props:
+            output.append(Proposizione(prop))
+
+        return output, logical_operator
+class ConjunctiveFormula:
+    def __init__(self,formula):
+        self.clauses=self.extract_clauses(formula)
+        self.mn = self.extract_mn(formula)
+        self.prediction = self.extract_prediction(formula)
+
+    def evaluate(self,inst):
+        for cl in self.clauses:
+            if cl.evaluate(inst)==False:
+                return False
+        return True
+
+    def extract_clauses(self, formula):
+        output = []
+        clauses_list = formula.split(') AND (')
+        for cl in clauses_list:
+            cl = re.sub(r'(^\()|(\).*)','',cl)
+            output.append(Clause(cl))
+
+        return output
+
+    def extract_mn(self, formula):
+        mn = re.findall(r'(?:(?<=\()|(?<=/))(\d+\.\d+)(?:(?=/)|(?=\)))',formula)
+        return float(mn[0]),float(mn[1])
+
+    def extract_prediction(self, formula):
+        x = re.search(r'(?<=::\s)[\w\s.+,-/()]+(?=\s\(\d)', formula).group()
+        return x
+class Formulaes:
+    def __init__(self,formulaes_string):
+        self.formulaes =self.extract_formulaes(formulaes_string)
+
+    def extract_formulaes(self, formulaes_string):
+        output = []
+        formulaes_list = formulaes_string.split('\n')
+        for formula in formulaes_list:
+            output.append(ConjunctiveFormula(formula))
+
+        return output
+
+    def predict(self,inst):
+        for f in self.formulaes:
+            if f.evaluate(inst)==True:
+                return f.prediction
+        return None

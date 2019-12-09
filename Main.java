@@ -3,8 +3,6 @@ package com.company;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.rules.JRip;
-import weka.classifiers.rules.PART;
-import weka.classifiers.rules.Rule;
 import weka.core.Attribute;
 import weka.core.Instances;
 import weka.core.Instance;
@@ -15,8 +13,6 @@ import weka.filters.unsupervised.attribute.NumericToNominal;
 import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.attribute.RemoveType;
 
-import javax.swing.*;
-import javax.swing.text.html.HTMLDocument;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -27,12 +23,14 @@ import java.util.regex.Pattern;
 import java.sql.*;
 //todo le regole non devono avere apostrofi perchè non piace a mysql
 public class Main {
-
+    //todo: capire cosa succede se refine rules produce no regole
     //attenzione se i tuoi valori differiscono dal classificatore, è perchè il classificatore si comporta diversamnte qnd vede null
     public static void main(String[] args) throws Exception
     {
         //Rules rs = new Rules(null);
+        //Formulaes f = new Formulaes(rs);
         vecchiomain();
+        // prova();
     }
 
 
@@ -42,7 +40,7 @@ public class Main {
 
         String[] classNames = {
 
-                //"CALCIO_SUPPLEMENTAZIONE_CHECKBOX",
+                "VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
                 "TERAPIE_ORMONALI_CHECKBOX",
                 "TERAPIE_ORMONALI_LISTA",
                 "TERAPIE_OSTEOPROTETTIVE_CHECKBOX",
@@ -50,7 +48,7 @@ public class Main {
                 "VITAMINA_D_TERAPIA_CHECKBOX",
                 "VITAMINA_D_TERAPIA_LISTA",
                 "VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX",
-                "VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
+                //"VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
                "CALCIO_SUPPLEMENTAZIONE_CHECKBOX",
                 "CALCIO_SUPPLEMENTAZIONE_LISTA"
         };
@@ -227,11 +225,11 @@ public class Main {
             //this is not very useful, unless you want to see what weka GUI says
             saver = new ArffSaver();
             saver.setInstances(test);
-            saver.setFile(new File(String.format("%s_test.arff",className)));
+            saver.setFile(new File(String.format("Tests/%s_test.arff",className)));
             saver.writeBatch();
             saver = new ArffSaver();
             saver.setInstances(train);
-            saver.setFile(new File(String.format("%s_train.arff",className)));
+            saver.setFile(new File(String.format("Tests/%s_train.arff",className)));
             saver.writeBatch();
 
             //PART cls = new PART();
@@ -241,37 +239,45 @@ public class Main {
 
             Evaluation evl = new Evaluation(train);
             evl.evaluateModel(cls,test);
-            System.out.println(evl.toSummaryString());
+            //System.out.println(evl.toSummaryString());
+            System.out.println(cls);
 
 
             Rules rules = new Rules(cls);
-            String not_refined = rules.toString();
 
             Rules rules2 = new Rules(cls);
             rules2.refineRules(train.numInstances(),0.8,0.1);
-            String refined_rules = rules2.toString();
 
             Rules rules3 = new Rules(cls);
             rules3.generateUserReadableRules(getColNameToNgram());
-            String user_readable_rules_not_ref = rules3.toString();
 
             Rules rules4 = new Rules(cls);
             //0.8 0.1
             rules4.refineRules(train.numInstances(),0.8,0.1);
             rules4.generateUserReadableRules(getColNameToNgram());
-            String user_readable_rules_ref = rules4.toString();
 
             System.out.println(className);
-            System.out.println(rules.getAccuracy(test));
-            System.out.println(rules2.getAccuracy(test));
+
+            Formulaes ff = new Formulaes(rules);
+            System.out.println(ff.getAccuracy(test));
+            ff.refine(train.numInstances(),0.8,0.1);
+            System.out.println(ff.getAccuracy(test));
+
+            ff = new Formulaes(rules3);
+            String formulaeUserNonRefined = ff.toString();
+            ff.refine(train.numInstances(),0.8,0.1);
+            String formulaesUserRefined = ff.toString();
+
+
+
             System.out.println();
 
 
-            String qry = String.format("replace into regole values('%s','%s','%s', '%s', '%s')",className,refined_rules,not_refined,user_readable_rules_not_ref,user_readable_rules_ref);
+            String qry = String.format("replace into regole values('%s','%s','%s')",className,formulaeUserNonRefined,formulaesUserRefined);
             Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO2","utente_web","CMOREL96T45");
             Statement myStmt = myConn.createStatement();
             // todo attenzione se devi modificare questa, assicurati di cancellare la tabella dal terminale
-            myStmt.executeUpdate( "create table if not exists regole (terapia VARCHAR(256) PRIMARY KEY, regola_refined TEXT, regola_not_refined TEXT, user_readable_not_ref TEXT, user_readable_ref TEXT)");
+            myStmt.executeUpdate( "create table if not exists regole (terapia VARCHAR(256) PRIMARY KEY, not_refined TEXT, refined TEXT)");
 
             myStmt.executeUpdate(qry);
 
@@ -301,8 +307,53 @@ public class Main {
         }
         return colnameToNgram;
     }
-}
 
+    public static void prova() throws Exception {
+
+        List<String> datasets = new LinkedList<>();
+        datasets.add("cpu.arff");
+        datasets.add("colic.arff");
+        datasets.add("credit.arff");
+        datasets.add("derma.arff");
+        datasets.add("ecoli.arff");
+
+        for (String dataset : datasets) {
+
+            ArffLoader loader = new ArffLoader();
+            loader.setFile(new File(String.format("Tests/"+dataset)));
+            Instances dati = loader.getDataSet();
+            dati.setClassIndex(dati.numAttributes() - 1);
+
+            StratifiedRemoveFolds filter;
+            filter = new StratifiedRemoveFolds();
+            filter.setOptions(new String[]{"-S", "0", "-N", "4", "-F", "1"});
+            filter.setInputFormat(dati);
+            Instances test = Filter.useFilter(dati, filter);
+
+            filter.setOptions(new String[]{"-S", "0", "-V", "-N", "4", "-F", "1"});
+            filter.setInputFormat(dati);
+            Instances train = Filter.useFilter(dati, filter);
+
+
+            JRip cls = new JRip();
+            cls.buildClassifier(train);
+            Evaluation evl = new Evaluation(train);
+            evl.evaluateModel(cls, test);
+            //System.out.println(evl.toSummaryString());
+            //System.out.println(cls);
+
+
+            Rules rules = new Rules(cls);
+            System.out.println(rules.getAccuracy(test));
+
+            Formulaes ff = new Formulaes(rules);
+            System.out.println(ff.getAccuracy(test));
+
+            System.out.println();
+        }
+
+    }
+}
 
 class Proposizione
 {
@@ -361,6 +412,11 @@ class Proposizione
                 if(operando1==operando2)
                     return true;
             }
+            else if (this.operatore.equals("!="))
+            {
+                if(operando1!=operando2)
+                    return true;
+            }
             else if(this.operatore.equals("<"))
             {
                 if(operando1<operando2)
@@ -391,18 +447,17 @@ class Proposizione
                 if(operando1.equals(operando2))
                     return true;
             }
+            else if(this.operatore.equals("!="))
+            {
+                if(!operando1.equals(operando2))
+                    return true;
+            }
         }
-
-
-
-
 
 
         return false;
 
     }
-
-
 
     @Override
     public String toString() {
@@ -431,6 +486,38 @@ class Proposizione
 
     public void setOperando1(String operando1) {
         this.operando1 = operando1;
+    }
+
+    public Proposizione negate()
+    {
+        String outputOperator=null;
+        String outputOperand1=this.operando1;
+        String outputOperand2=this.operando2;
+
+        switch (this.operatore) {
+            case "=":
+                outputOperator="!=";
+                break;
+            case ">":
+                outputOperator = "<=";
+                break;
+            case "<":
+                outputOperator = ">=";
+                break;
+            case ">=":
+                outputOperator = "<";
+                break;
+            case "<=":
+                outputOperator = ">";
+                break;
+            case "contiene le parole":
+                outputOperator = "non contiene le parole";
+                break;
+            case "non contiene le parole":
+                outputOperator = "contiene le parole";
+
+        }
+        return new Proposizione(outputOperand1,outputOperator,outputOperand2);
     }
 }
 
@@ -581,6 +668,15 @@ class Rules implements Iterable<Regola>
 {
     private List<Regola> rules;
 
+    public int size()
+    {
+        return this.rules.size();
+    }
+    public Regola get(int index)
+    {
+        return this.rules.get(index);
+    }
+
     public Rules(Classifier cls) throws IOException {
         this.rules = this.extractRulesJRip(cls);
         //this.rules = this.extractRules(cls);
@@ -657,8 +753,8 @@ class Rules implements Iterable<Regola>
     {
         for(Regola r: this.rules)
         {
-            //attenzione al caso della regola sempre vera in cui proposizioni = null
-            if(r.getProposizioni()!=null) {
+            //attenzione al caso della regola sempre vera in cui proposizioni is empty()
+            if(!r.getProposizioni().isEmpty()) {
                 for (Proposizione p : r.getProposizioni()) {
                     if (colnameToNgram.get(p.getOperando1()) != null) {
                         String newOperando1, newOperando2, newOperatore;
@@ -678,10 +774,10 @@ class Rules implements Iterable<Regola>
 
                         if (secondaParte.equals("<= 0"))
                             newOperatore = "non contiene le parole";
-                        else if (secondaParte.equals("> 0"))
+                        else if (secondaParte.equals(">= 1"))
                             newOperatore = "contiene le parole";
                         else
-                            newOperatore = "errore in generateUserReadableRules";
+                            throw new RuntimeException("Strange operator");
 
                         newOperando2 = colnameToNgram.get(oldOperando1);
 
@@ -885,4 +981,272 @@ class Rules implements Iterable<Regola>
         }
     }
 
+}
+
+//cojunction of clauses
+class ConjunctiveFormula
+{
+    private List<Clause> clauses;
+    private String predizione;
+    private double m;
+    private double n;
+
+    public String getPrediction()
+    {
+        return this.predizione;
+    }
+
+    public ConjunctiveFormula(Regola r)
+    {
+        clauses = new ArrayList<>();
+
+        if(!r.getProposizioni().isEmpty())
+            clauses.add(new ConjunctionClause(r.getProposizioni()));
+
+        this.predizione=r.getPredizione();
+        this.m=r.getM();
+        this.n = r.getN();
+    }
+    public void addClause(Clause cl)
+    {
+        this.clauses.add(cl);
+    }
+
+    @Override
+    public String toString() {
+        String output = "";
+        for(Clause cl: this.clauses)
+        {
+            if(cl != this.clauses.get(this.clauses.size()-1))
+                output += cl+" AND ";
+            else
+                output += cl;
+        }
+        output+=" :: "+this.predizione + " ("+this.m+"/"+this.n+")";
+
+        return output;
+    }
+
+    //if at least one clause if false, the whole formula is false
+    public boolean evaluate(Instance inst)
+    {
+        for(Clause cl : this.clauses)
+        {
+            if(cl.evaluate(inst)==false)
+                return false;
+        }
+        return true;
+    }
+
+    public double getM() {
+        return m;
+    }
+
+    public double getN() {
+        return n;
+    }
+}
+//(regole) fatte di formule.. ogni formula è una lista di clausole
+class Formulaes
+{
+    public void refine(int numTrainInstances, double min_f1, double min_f2)
+    {
+        List<ConjunctiveFormula> formulaesToBeRemoved = new ArrayList<>();
+        for (ConjunctiveFormula f:this.formulaes)
+        {
+            double f1 = (1-f.getN()/f.getM());
+            double f2 = f.getM()/numTrainInstances;
+            if(f1 < min_f1 | f2 < min_f2)
+                formulaesToBeRemoved.add(f);
+        }
+
+        this.removeFormulaes(formulaesToBeRemoved);
+    }
+
+    private void removeFormulaes(List<ConjunctiveFormula> formulaesToRemove)
+    {
+        for (ConjunctiveFormula f: formulaesToRemove)
+            this.formulaes.remove(f);
+    }
+
+    List<ConjunctiveFormula> formulaes;
+    public Formulaes(Rules rules)
+    {
+        formulaes= new ArrayList<>();
+
+        for(int i=0; i<rules.size(); i++)
+        {
+            formulaes.add(new ConjunctiveFormula(rules.get(i)));
+            for (int j=0; j<i; j++)
+            {
+                List<Proposizione> propsOfJthRule = rules.get(j).getProposizioni();
+                ConjunctionClause conjC = new ConjunctionClause(propsOfJthRule);
+                DisjunctionClause disjC = conjC.negate();
+                this.get(i).addClause(disjC);
+            }
+        }
+    }
+
+    public ConjunctiveFormula get(int index)
+    {
+        return this.formulaes.get(index);
+    }
+
+    public String predict(Instance inst)
+    {
+        for (ConjunctiveFormula formula: this.formulaes)
+        {
+            if(formula.evaluate(inst)==true)
+                return formula.getPrediction();
+        }
+        return null;
+    }
+
+
+    public String getAccuracy(Instances testset) throws Exception {
+        int predictedRight = 0;
+        int doesKnow = 0;
+        int doesntKnow = 0;
+        int i =0;
+        Enumeration instances = testset.enumerateInstances();
+        while (instances.hasMoreElements())
+        {
+            if (i==106)
+            {
+                int x = 9;
+            }
+            Instance inst = (Instance) instances.nextElement();
+            //System.out.println(inst);
+            String predicted_y = this.predict(inst);
+
+            /*Double predictedByCls = cls.classifyInstance(inst);
+            if(Double.parseDouble(predicted_y) != predictedByCls) {
+                int r = 5;
+            }*/
+
+            //System.out.println(predicted_y+" "+predictedByCls);
+
+            //System.out.println(i+": "+predicted_y);
+
+
+            String right_y = inst.stringValue(testset.classIndex());
+
+            if(predicted_y == null)
+                doesntKnow++;
+            else
+            {
+                doesKnow++;
+                if(predicted_y.equals(right_y))
+                    predictedRight++;
+            }
+
+            //System.out.println(i+": "+predicted_y);
+            i++;
+        }
+
+        return (double)predictedRight/doesKnow+" "+(double)doesntKnow/testset.numInstances();
+    }
+
+    public String toString()
+    {
+        String output = "";
+        for (ConjunctiveFormula f: this.formulaes)
+        {
+            output+=f.toString() + "\n";
+        }
+        //rimuovo \n\n dell'ultima formula
+        return output.substring(0,output.length()-1);
+    }
+}
+
+abstract class Clause
+{
+    protected List<Proposizione> propositions;
+    public Clause(List<Proposizione> propositions)
+    {
+        this.propositions = propositions;
+    }
+
+    abstract public boolean evaluate(Instance inst);
+    public String toString() {
+        String logicalOperator=null;
+
+        if (this instanceof ConjunctionClause)
+            logicalOperator = " AND ";
+        else if(this instanceof DisjunctionClause)
+            logicalOperator = " OR ";
+
+        String output = "(";
+        for (Proposizione prop: this.propositions)
+        {
+            if(prop!=this.propositions.get(this.propositions.size()-1))
+                output += prop + logicalOperator;
+            else
+                output += prop + ")";
+        }
+        return output;
+    }
+
+}
+//todo: change to conjunctive
+class ConjunctionClause extends Clause
+{
+    public ConjunctionClause(List<Proposizione> propositions)
+    {
+        super(propositions);
+    }
+
+    @Override
+    public boolean evaluate(Instance inst) {
+        for(Proposizione p:super.propositions)
+        {
+            if(p.valuta(inst)==false)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        String output = "(";
+        for (Proposizione prop: super.propositions)
+        {
+            if(prop!=super.propositions.get(super.propositions.size()-1))
+                output += prop + " AND ";
+            else
+                output += prop + ")";
+        }
+        return output;
+    }
+
+    public DisjunctionClause negate()
+    {
+        List<Proposizione> negatedPropositions= new LinkedList<>();
+        for(Proposizione prop: super.propositions)
+        {
+            negatedPropositions.add(prop.negate());
+        }
+
+        return new DisjunctionClause(negatedPropositions);
+    }
+}
+class DisjunctionClause extends Clause
+{
+    public DisjunctionClause(List<Proposizione> propositions) {
+        super(propositions);
+    }
+
+    @Override
+    public boolean evaluate(Instance inst) {
+        // if at least one proposition is true, the whole clause is true
+        for(Proposizione prop: super.propositions)
+        {
+            if(prop.valuta(inst)==true)
+                return true;
+        }
+        return false;
+    }
 }
