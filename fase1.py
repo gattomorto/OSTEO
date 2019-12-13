@@ -14,7 +14,7 @@ def preprocessa_per_java2():
     db_connection = create_engine(db_connection_str)
     tabella_completa = pd.read_sql(
         'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE'
-        #' where Anamnesi.SCAN_DATE < "2019-05-01"',
+        #' where Anamnesi.SCAN_DATE < "2018-12-01"' #543 istanze 2019-10-07
         ,
         con=db_connection)
 

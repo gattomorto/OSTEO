@@ -40,7 +40,7 @@ public class Main {
 
         String[] classNames = {
 
-                "VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
+                "CALCIO_SUPPLEMENTAZIONE_LISTA",
                 "TERAPIE_ORMONALI_CHECKBOX",
                 "TERAPIE_ORMONALI_LISTA",
                 "TERAPIE_OSTEOPROTETTIVE_CHECKBOX",
@@ -48,9 +48,9 @@ public class Main {
                 "VITAMINA_D_TERAPIA_CHECKBOX",
                 "VITAMINA_D_TERAPIA_LISTA",
                 "VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX",
-                //"VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
+                "VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
                "CALCIO_SUPPLEMENTAZIONE_CHECKBOX",
-                "CALCIO_SUPPLEMENTAZIONE_LISTA"
+                //"CALCIO_SUPPLEMENTAZIONE_LISTA"
         };
         //String className = classNames[9];
         //classNames = new String[]{classNames[0]};
@@ -62,12 +62,8 @@ public class Main {
                 "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA",
                 "TERAPIA_ALTRO_CHECKBOX",
                 "TERAPIA_COMPLIANCE",
-                //"FRATTURE",
-                "FRATTURA_VERTEBRE_CHECKBOX",
                 "FRATTURA_SITI_DIVERSI",
                 "FRATTURA_FAMILIARITA",
-                "ABUSO_FUMO_CHECKBOX",
-                "USO_CORTISONE_CHECKBOX",
                 "MALATTIE_ATTUALI_CHECKBOX",
                 "MALATTIE_ATTUALI_ARTRITE_REUM",
                 "MALATTIE_ATTUALI_ARTRITE_PSOR",
@@ -96,10 +92,6 @@ public class Main {
                 "VITAMINA_D_CHECKBOX",
                 "ALLERGIE_CHECKBOX",
                 "INTOLLERANZE_CHECKBOX",
-                "SITUAZIONE_COLONNA_CHECKBOX",
-                "SITUAZIONE_FEMORE_SN_CHECKBOX",
-                "SITUAZIONE_FEMORE_DX_CHECKBOX",
-                "SITUAZIONE_FEMORE_DX",
                 "OSTEOPOROSI_GRAVE",
                 "VERTEBRE_NON_ANALIZZATE_CHECKBOX",
                 "VERTEBRE_NON_ANALIZZATE_L1",
@@ -111,21 +103,94 @@ public class Main {
                 "FEMORE_NON_ANALIZZABILE",
                 "FRAX_APPLICABILE",
                 "TBS_COLONNA_APPLICABILE",
-                "DEFRA_APPLICABILE"
+                "DEFRA_APPLICABILE",
+
+                "TERAPIA_ALTRO_0",
+                "TERAPIA_ALTRO_1",
+                "TERAPIA_ALTRO_2",
+                "TERAPIA_ALTRO_3",
+                "TERAPIA_ALTRO_4",
+                "TERAPIA_ALTRO_5",
+                "TERAPIA_ALTRO_6",
+                "TERAPIA_ALTRO_7",
+                "TERAPIA_ALTRO_8",
+                "TERAPIA_ALTRO_9",
+                "TERAPIA_ALTRO_10",
+                "TERAPIA_ALTRO_11",
+                "TERAPIA_ALTRO_12",
+                "TERAPIA_ALTRO_13",
+                "TERAPIA_ALTRO_14",
+                "TERAPIA_ALTRO_15",
+                "TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA_0",
+                "TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA_1",
+                "TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA_2",
+                "TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA_3",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_0",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_1",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_2",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_3",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_4",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_5",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_6",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_7",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_8",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA_0",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA_1",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA_2",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA_3",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA_4",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA_5",
+                "PATOLOGIE_UTERINE_DIAGNOSI_0",
+                "PATOLOGIE_UTERINE_DIAGNOSI_1",
+                "PATOLOGIE_UTERINE_DIAGNOSI_2",
+                "PATOLOGIE_UTERINE_DIAGNOSI_3",
+                "ALTRE_PATOLOGIE_0",
+                "ALTRE_PATOLOGIE_1",
+                "NEOPLASIA_MAMMARIA_TERAPIA_0",
+                "NEOPLASIA_MAMMARIA_TERAPIA_1",
+                "NEOPLASIA_MAMMARIA_TERAPIA_2",
+                "NEOPLASIA_MAMMARIA_TERAPIA_3",
+                "NEOPLASIA_MAMMARIA_TERAPIA_4",
+                "NEOPLASIA_MAMMARIA_TERAPIA_5",
+                "DISLIPIDEMIA_TERAPIA_0",
+                "DISLIPIDEMIA_TERAPIA_1",
+                "DISLIPIDEMIA_TERAPIA_2",
+                "DISLIPIDEMIA_TERAPIA_3",
+                "ALLERGIE_0",
+                "ALLERGIE_1",
+                "ALLERGIE_2",
+                "ALLERGIE_3",
+                "ALLERGIE_4",
+                "ALLERGIE_5",
+                "ALLERGIE_6",
+                "ALLERGIE_7",
+                "ALLERGIE_8",
+                "INTOLLERANZE_0",
+                "INTOLLERANZE_1",
+                "INTOLLERANZE_2",
+                "INTOLLERANZE_3",
+                "INTOLLERANZE_4",
+                "INTOLLERANZE_5",
+                "INTOLLERANZE_6",
+                "INTOLLERANZE_7",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_0",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_1",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_2",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_3",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_4",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_5",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_6",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_7"
+
         };
 
         List<String> nomiColDaTrasInNominal = new ArrayList<String>();
-        //nomiColDaTrasInNominal.add(className);
 
         Collections.addAll(nomiColDaTrasInNominal,tmp);
 
         CSVLoader loader = new CSVLoader();
         loader.setFile(new File(String.format("/home/dadawg/PycharmProjects/untitled1/perJAVA.csv")));
-        //Instances data = loader.getDataSet();
-        //System.out.println(data);
-        //data.setClassIndex(data.numAttributes()-1);
 
-        //Map<String, Instances> classNameToDataset = new HashMap<>();
         for (String className: classNames)
         {
             Instances dati =  loader.getDataSet();
@@ -234,6 +299,7 @@ public class Main {
 
             //PART cls = new PART();
             JRip cls = new JRip();
+            cls.setSeed(2);
 
             cls.buildClassifier(train);
 
@@ -241,31 +307,18 @@ public class Main {
             evl.evaluateModel(cls,test);
             //System.out.println(evl.toSummaryString());
             System.out.println(cls);
+            System.out.println(className);
 
 
             Rules rules = new Rules(cls);
 
-            Rules rules2 = new Rules(cls);
-            rules2.refineRules(train.numInstances(),0.8,0.1);
 
-            Rules rules3 = new Rules(cls);
-            rules3.generateUserReadableRules(getColNameToNgram());
-
-            Rules rules4 = new Rules(cls);
-            //0.8 0.1
-            rules4.refineRules(train.numInstances(),0.8,0.1);
-            rules4.generateUserReadableRules(getColNameToNgram());
-
-            System.out.println(className);
 
             Formulaes ff = new Formulaes(rules);
             System.out.println(ff.getAccuracy(test));
-            ff.refine(train.numInstances(),0.8,0.1);
-            System.out.println(ff.getAccuracy(test));
-
-            ff = new Formulaes(rules3);
             String formulaeUserNonRefined = ff.toString();
             ff.refine(train.numInstances(),0.8,0.1);
+            System.out.println(ff.getAccuracy(test));
             String formulaesUserRefined = ff.toString();
 
 
@@ -285,7 +338,7 @@ public class Main {
 
     }
 
-    public static Map<String,String> getColNameToNgram() throws IOException
+    /*public static Map<String,String> getColNameToNgram() throws IOException
     {
         BufferedReader bf = new BufferedReader(new FileReader("/home/dadawg/PycharmProjects/untitled1/colnametongram.txt"));
         String pyDic = bf.readLine();
@@ -306,7 +359,7 @@ public class Main {
 
         }
         return colnameToNgram;
-    }
+    }*/
 
     public static void prova() throws Exception {
 
@@ -369,6 +422,7 @@ class Proposizione
 
     public Proposizione(String prop)
     {
+
         Pattern operand1Pattern = Pattern.compile("(?<=\\()\\w+");
         Pattern operatorPattern = Pattern.compile("(<=|>=|<|>|=)");
         Pattern operand2Pattern = Pattern.compile("(?<=(<=|>=|<|>|=)\\s)[\\w\\s.+,-/()]+(?=\\))");
@@ -1152,10 +1206,13 @@ class Formulaes
         String output = "";
         for (ConjunctiveFormula f: this.formulaes)
         {
-            output+=f.toString() + "\n";
+            if (f != this.formulaes.get(this.formulaes.size()-1))
+                output+=f.toString() + "\n";
+            else
+                output+=f.toString();
         }
-        //rimuovo \n\n dell'ultima formula
-        return output.substring(0,output.length()-1);
+
+        return output;
     }
 }
 

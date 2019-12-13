@@ -4925,44 +4925,6 @@
 		            				</script>
 
 
-<!--INDICAZIONI DI PREVENZIONE E TERAPIA *******************************************************************************************************************************************************************************
-**********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************7
- *******************************************************************************************************************************************************************************
-**********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- *******************************************************************************************************************************************************************************
-**********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- *******************************************************************************************************************************************************************************
-**********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************-->
-
-
 
 		            				<h4><p style="text-align:center;"><b>INDICAZIONI DI PREVENZIONE E TERAPIA</b></p></h4>
 		            				<!--ORMONALI-->
@@ -5026,12 +4988,7 @@
 
 
 									<br/>
-									<span id = "1"> Suggerimento: </span> <b> <span id = "terapie_ormonali" >  </span> </b> 
-
-									<div id="a" class="popup"  onclick="myFunction()"> <u>  <font color="blue">?</font> </u>
-									<span class="popuptext" id="terapie_ormonali_popup">Popup text...</span>
-									</div>
-
+							
 									<div class="row">
 										<div class="col-sm-3">
 				          					<div class="input-group">
@@ -5039,7 +4996,11 @@
 				              						<input type="checkbox" id="TerapieOrmonali" name="TerapieOrmonali" value="TerapieOrmonali" <?php if($terapie_ormonali_check == 1) echo "checked='checked'"   ?>/>
 				            					</span>
 				            					<input type="text" class="form-control" value="Terapie ormonali" readonly>
+
 				          					</div><!--/input-group-->
+											  <!--primo bottone-->
+											  <input class="btn btn-primary" id = "ter_orm_sugg_button" type="button" value = "Suggerisci" name="SubmitButton" onclick = 'myFunction(this.id)'/>
+
 				        				</div><!--/col-sm-3-->
 
 				        				<div class="col-sm-3">
@@ -5220,12 +5181,7 @@
 									?>
 
 									<!--TERAPIE OSTEOPROTETTIVE-->
-									<span id = "2"> Suggerimento: </span> <b>  <span id = "terapie_osteo_s" >  </span></b> 
-
-									<div id="b" class="popup"  onclick="myFunction2()"> <u>  <font color="blue">?</font> </u>
-									<span class="popuptext" id="terapie_osteo_popup">Popup text...</span>
-									</div>
-
+									
 
 									<div class="row">
 										<div class="col-sm-3">
@@ -5234,7 +5190,10 @@
 				              						<input type="checkbox" id="TerapieOsteoprotettive" name="TerapieOsteoprotettive" value="TerapieOsteoprotettive" <?php if($terapie_osteoprotettive_check == 1) echo "checked='checked'"  ?>/>
 				            					</span>
 				            					<input type="text" class="form-control" value="Terapie osteoprotettive" readonly>
+
 				          					</div><!--/input-group-->
+											  <input class="btn btn-primary" id = "ter_osteo_sugg_button" type="button" value = "Suggerisci" name="SubmitButton" onclick = 'myFunction(this.id)'/>
+
 				          				</div>
 				          				<div class="col-sm-3">	
 				          					<div class="input-group">
@@ -5415,6 +5374,7 @@
 				            					</span>
 				            					<input type="text" class="form-control" value="Vitamina D Terapia" readonly>
 				          					</div><!--/input-group-->
+										  <input class="btn btn-primary" id = "vit_d_ter_sugg_button" type="button" value = "Suggerisci" name="SubmitButton" onclick = 'myFunction(this.id)'/>
 				        				</div>
 
 				        				<div class="col-sm-3">
@@ -5447,16 +5407,17 @@
 				          					<input type="button" value="cancella" id="cancella_vitamina_d_terapia" onclick="remove7();">
 
 				        				</div>
-
 				        				<div class="col-sm-6">
 				        					<?php $i = 0; ?>
 			        						<select style="height:100px;width:500px;" size="5" class="text_area_vitamina_d_terapia" name="text_area_vitamina_d_terapia" id="text_area_vitamina_d_terapia"><?php  while($pezzi_vitamina_d_terapia[$i] != null){ if($pezzi_vitamina_d_terapia[$i] != 'NULL') echo "<option> $pezzi_vitamina_d_terapia[$i] </option>"; $i=$i+1;} ?></select>
 			        						<textarea style="visibility:hidden;" name="valori_vitamina_d_terapia" id="valori_vitamina_d_terapia"><?php $j = 0; while($pezzi_vitamina_d_terapia[$j] != null){ echo $pezzi_vitamina_d_terapia[$j]."\n"; $j=$j+1; } ?></textarea>
 				        					
 				        				</div>
+										
+
 									</div><!--/row-->
 									<br/>
-
+															
 			        				
 			        				<script>
 			        					//JAVASCRIPT PER INSERIRE DINAMICAMENTE LE OPTION NELLA SELECT DI TIPI TERAPIE, 
@@ -5592,6 +5553,7 @@
 				            					</span>
 				            					<input type="text" class="form-control" value="Vitamina D Supplementazione" readonly>
 				          					</div><!--/input-group-->
+											<input class="btn btn-primary" id = "vit_d_supp_sugg_button" type="button" value = "Suggerisci" name="SubmitButton" onclick = 'myFunction(this.id)'/>
 										</div>
 
 										<div class="col-sm-3">
@@ -5778,6 +5740,7 @@
 				            					</span>
 				            					<input type="text" class="form-control" value="Calcio supplementazione" readonly>
 				          					</div><!--/input-group-->
+											 <input class="btn btn-primary" id = "calcio_supp_sugg_button" type="button" value = "Suggerisci" name="SubmitButton" onclick = 'myFunction(this.id)'/>
 										</div>
 
 										<div class="col-sm-3">
@@ -8695,7 +8658,15 @@
       	});
   	</script>
 
-<script type="text/javascript">
+									<script type="text/javascript">
+
+									var TERAPIE_ORMONALI_sugg;
+									var TERAPIE_OSTEOPROTETTIVE_sugg;
+									var VITAMINA_D_TERAPIA_sugg;
+									var VITAMINA_D_SUPPLEMENTAZIONE_sugg;
+									var CALCIO_SUPPLEMENTAZIONE_sugg;
+									var suggestions = {};
+
                                     function stickyheaddsadaer(pk,data_scan)
                                     {   
 
@@ -8723,96 +8694,136 @@
 										xmlhttp.onreadystatechange = function() {
 											if (this.readyState == 4 && this.status == 200)
 											{
-												//document.getElementById("txtHint").innerHTML = this.responseText;
-												var splitted = this.responseText.split("\n\n\n");
-												console.log(this.responseText);
+												//TODO: sistemare Spiegazione non disponibile
 												
+												//console.log( this.responseText )
+
+												var response = this.responseText;
+
+												response = response.replace(/\n/g, '<br>');
+												//console.log( response )
 												
-												var TERAPIE_ORMONALI_CHECKBOX_prediction = splitted[0];
+												var splitted = response.split("<br><br><br>");
+												
+
+												/////////////////////////////////////TERAPIE_ORMONALI//////////////////////////////////////////////////
+
+												/*var TERAPIE_ORMONALI_CHECKBOX_prediction = splitted[0];
 												var TERAPIE_ORMONALI_CHECKBOX_rule = splitted[1];
 												var TERAPIE_ORMONALI_LISTA_prediction = splitted[2];
 												var TERAPIE_ORMONALI_LISTA_rule = splitted[3];
 
-												console.log(TERAPIE_ORMONALI_CHECKBOX_prediction);
+												//console.log(TERAPIE_ORMONALI_CHECKBOX_prediction);
 
-												if(TERAPIE_ORMONALI_CHECKBOX_prediction.localeCompare("None")==0)
+												if(TERAPIE_ORMONALI_CHECKBOX_prediction.localeCompare("idk")==0)
 												{
-													document.getElementById("terapie_ormonali").innerHTML = "non disponibile";
+													TERAPIE_ORMONALI_sugg = "Suggerimento non disponibile";
 												}
 												else if(TERAPIE_ORMONALI_CHECKBOX_prediction.localeCompare("0")==0)
-												{
-													document.getElementById("terapie_ormonali").innerHTML = "no terapia ormonale";
+												{	
+													TERAPIE_ORMONALI_sugg = "Non si consiglia la terapia ormonale perchè:<br>"+TERAPIE_ORMONALI_CHECKBOX_rule;
 												}
-												else if(TERAPIE_ORMONALI_CHECKBOX_prediction.localeCompare("1")==0)
+												else if(TERAPIE_ORMONALI_CHECKBOX_prediction.localeCompare("1") == 0)
 												{
-													if(TERAPIE_ORMONALI_LISTA_prediction.localeCompare("None")==0)
-														document.getElementById("terapie_ormonali").innerHTML = "si terapia ormonale";
+													if(TERAPIE_ORMONALI_LISTA_prediction.localeCompare("idk") == 0)
+													{	
+														TERAPIE_ORMONALI_sugg = "Si suggerisce la terapia ormonale perchè:<br>"+TERAPIE_ORMONALI_CHECKBOX_rule;
+													}
 													else
-														document.getElementById("terapie_ormonali").innerHTML = "terapia ormonale di tipo "+TERAPIE_ORMONALI_LISTA_prediction;
-												}
+													{	
+														TERAPIE_ORMONALI_sugg = "Si suggerisce la terapia ormonale perchè:<br>"+TERAPIE_ORMONALI_CHECKBOX_rule +"<br><br>di tipo: "
+														+TERAPIE_ORMONALI_LISTA_prediction+" perchè:<br>"+TERAPIE_ORMONALI_LISTA_rule;
+													}
+												}*/
 												
-												var popup = document.getElementById("terapie_ormonali_popup");
-												popup.innerHTML=TERAPIE_ORMONALI_CHECKBOX_rule;
+
+												for(var i=0; i<5; i++)
+												{
+													if(splitted[0+4*i].localeCompare("idk")==0)
+													{
+														suggestions[i] = "Suggerimento non disponibile";
+													}
+													else if(splitted[0+4*i].localeCompare("0")==0)
+													{	
+														suggestions[i] = "Non si consiglia la terapia perchè:<br>"+splitted[1+4*i];
+													}
+													else if(splitted[0+4*i].localeCompare("1") == 0)
+													{
+														if(splitted[2+4*i].localeCompare("idk") == 0)
+														{	
+															suggestions[i] = "Si suggerisce la terapia perchè:<br>"+splitted[1+4*i];
+														}
+														else
+														{	
+															suggestions[i] = "Si suggerisce la terapia perchè:<br>"+splitted[1+4*i] +"<br><br>di tipo: "
+															+splitted[2+4*i]+" perchè:<br>"+splitted[3+4*i];
+														}
+													}
+												}
+												////////////////////////////////////////////TERAPIE_OSTEOPROTETTIVE//////////////////////////////////////////////////
+
+												
 												
 
-
-												////////////////////////////////////////////////////////////////////////////////////////
-
-												var TERAPIE_OSTEOPROTETTIVE_CHECKBOX_prediction = splitted[4];
-												var TERAPIE_OSTEOPROTETTIVE_CHECKBOX_rule = splitted[5];
-												var TERAPIE_OSTEOPROTETTIVE_LISTA_prediction = splitted[6];
-												var TERAPIE_OSTEOPROTETTIVE_LISTA_rule = splitted[7];
-
-												if(TERAPIE_OSTEOPROTETTIVE_CHECKBOX_prediction.localeCompare("None")==0)
-												{
-													document.getElementById("terapie_osteo_s").innerHTML = "non disponibile";
-												}
-												else if(TERAPIE_OSTEOPROTETTIVE_CHECKBOX_prediction.localeCompare("0")==0)
-												{
-													document.getElementById("terapie_osteo_s").innerHTML = "no terapia osteoprotettiva";
-												}
-												else if(TERAPIE_OSTEOPROTETTIVE_CHECKBOX_prediction.localeCompare("1")==0)
-												{
-													if(TERAPIE_OSTEOPROTETTIVE_LISTA_prediction.localeCompare("None")==0)
-														document.getElementById("terapie_osteo_s").innerHTML = "si terapia osteoprotettiva";
-													else
-														document.getElementById("terapie_osteo_s").innerHTML = "terapia osteoprotettiva di tipo "+TERAPIE_OSTEOPROTETTIVE_LISTA_prediction;
-												}
-
-												var popup = document.getElementById("terapie_osteo_popup");
-												popup.innerHTML=TERAPIE_OSTEOPROTETTIVE_CHECKBOX_rule;
-											
-												//document.querySelector('.popup').style.visibility = 'visible';
-												document.getElementById("a").style.visibility = "visible";
-												document.getElementById("b").style.visibility = "visible";
-												document.getElementById("1").style.visibility = "visible";
-												document.getElementById("2").style.visibility = "visible";
-
-
+												
 
 											}
 										};
-									
-
 
 										xmlhttp.send("pk="+pk+"&datascan="+data_scan);
                                     }
 
-									function myFunction() {
-									var popup = document.getElementById("terapie_ormonali_popup");
-									popup.classList.toggle("show");
+									function myFunction(sugg_button_id) 
+									{
+										console.log(sugg_button_id);
+										var mapForm = document.createElement("form");
+										mapForm.target = "Map";
+										mapForm.method = "POST"; 
+										mapForm.action = "show_suggestion.php";
+
+										var mapInput = document.createElement("input");
+										mapInput.type = "text";
+										mapInput.name = "sugg";
+										mapInput.hidden = "true";
+//											  <input class="btn btn-primary" id = "ter_orm_sugg_button" type="button" value = "Suggerisci" name="SubmitButton" onclick = 'myFunction(this.id)'/>
+
+										if(sugg_button_id.localeCompare("ter_orm_sugg_button")==0)
+											mapInput.value = suggestions[0];
+										else if(sugg_button_id.localeCompare("ter_osteo_sugg_button")==0)
+											mapInput.value = suggestions[1];
+										else if(sugg_button_id.localeCompare("vit_d_ter_sugg_button")==0)
+											mapInput.value = suggestions[2];
+										else if(sugg_button_id.localeCompare("vit_d_supp_sugg_button")==0)
+											mapInput.value = suggestions[3];
+										else if(sugg_button_id.localeCompare("calcio_supp_sugg_button")==0)
+											mapInput.value = suggestions[4];
+							
+
+
+
+										mapForm.appendChild(mapInput);
+
+										document.body.appendChild(mapForm);
+
+										map = window.open("", "Map", "status=0,title=0,height=300,width=500,scrollbars=1");
+
+										if (map) {
+										mapForm.submit();
+										} else {
+										alert('You must allow popups for this map to work.');
+										}
+
+
+
 									}
-									function myFunction2() {
-									var popup = document.getElementById("terapie_osteo_popup");
-									popup.classList.toggle("show");
+									function myFunction2()
+									{
+									
 									}
 
 									window.onload = function() {
 										stickyheaddsadaer(<?php echo $args; ?>);
-										document.getElementById("a").style.visibility = "hidden";
-										document.getElementById("b").style.visibility = "hidden";
-										document.getElementById("1").style.visibility = "hidden";
-										document.getElementById("2").style.visibility = "hidden";
+										
 
 
 									};
@@ -8820,5 +8831,7 @@
 
 
                                     </script>
+
+									<!-- xxx -->
 
 </html>

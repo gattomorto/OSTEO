@@ -9,9 +9,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sqlalchemy import create_engine
 from sqlalchemy import text
 import json
-from lib import preprocess, Regole
+from lib import preprocess, Regole, Formulaes
 
 #sys.stderr = open("log.txt", "a")
+
+# todo quella libreria che ho aggiunto...
 
 # todo controlla che tutti i regex che abbiano anche '_' e dove serve áéíóúàèìòùàèìòù
 # todo sost. vitamina con vit
@@ -63,17 +65,22 @@ def singola_istanza():
     for class_name in class_names:
         t = text("SELECT * FROM regole WHERE terapia = '{}'".format(class_name))
         result = db_connection.execute(t).fetchone()
-        reg = result['user_readable_not_ref']
-        rules = Regole(reg)
+        #reg = result['refined']
+        reg = result['not_refined']
+        formulaes = Formulaes(reg)
 
-        predicted, rule_predicted, _ = rules.predict(preprocessato)
+        true_formula = formulaes.predict(preprocessato)
 
-        if rule_predicted is not None:
-            rule_predicted = rule_predicted.get_medic_readable_version(preprocessato, None)
+        predicted = 'idk'
+        formula_predicted = 'idk'
+
+        if true_formula is not None:
+            predicted = true_formula.prediction
+            formula_predicted = true_formula.get_user_readable_version(preprocessato)
 
         print(predicted)
         print('\n')
-        print(rule_predicted)
+        print(formula_predicted)
         print('\n')
 
     exit(5)
