@@ -1,10 +1,4 @@
-
-
-
 <!DOCTYPE html>
-
-
-
 <?php
 	define('PATH_REPORT_A', './report/tipoA/');
 	define('PATH_REPORT_D', './report/tipoD/');
@@ -120,67 +114,8 @@
 				background-color: #8cacbb;
 				margin: 0.5em 0 1em 0;
 			}
-
-			/********************************************************************************** */
-
-			/* Popup container */
-			.popup {
-			position: relative;
-			display: inline-block;
-			cursor: pointer;
-			/*visibility: hidden;*/
-			}
-
-			/* The actual popup (appears on top) */
-			.popup .popuptext {
-			visibility: hidden;
-			width: 450px;
-			/*height: 100px;*/
-			background-color: #555;
-			color: #fff;
-			text-align: center;
-			border-radius: 6px;
-			padding: 8px 0;
-			position: absolute;
-			z-index: 1000; /*prima 1 */
-			bottom: 125%;
-			left: 50%;
-			margin-left: -80px;
-			}
-
-			/* Popup arrow */
-			.popup .popuptext::after {
-			
-			}
-
-			/* Toggle this class when clicking on the popup container (hide and show the popup) */
-			.popup .show {
-			visibility: visible;
-			-webkit-animation: fadeIn 0.1s;
-			animation: fadeIn 0.1s
-			}
-
-			/* Add animation (fade in the popup) */
-			@-webkit-keyframes fadeIn {
-			from {opacity: 0;}
-			to {opacity: 1;}
-			}
-
-			@keyframes fadeIn {
-			from {opacity: 0;}
-			to {opacity:1 ;}
-			} 
-
-			
 	  	</style>
   	</head>
-
-
-	
-
-
-
-
 
   	<body>
     	<a href="index.php">
@@ -195,7 +130,7 @@
 
 
 				$args = '"'.$pk.'","'.$datascan_mysql.'"';
-				echo $args;
+				//echo $args;
 				
 
 
@@ -580,10 +515,6 @@
 	              					</script>
 	              		<?php  	}  ?>
 
-	              		
-
-
-
 
 	              		<!-- SE IL PERCORSO AL PDF ESISTE ALLORA INIZIALIZZO GLI STATI -->
 	              		<?php   if($pathReportA != null){      ?>
@@ -637,10 +568,6 @@
               							});
 	              					</script>
 	              		<?php	}  ?>
-
-
-
-	              		
 
 	              		
 	              		<!-- PARTE RELATIVA AL BOTTONE B -->
@@ -864,42 +791,6 @@
     			</div>
     			
 
-<!-- *******************************************************************************************************************************************************************************
-**********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************7
- *******************************************************************************************************************************************************************************
-**********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- *******************************************************************************************************************************************************************************
-**********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- *******************************************************************************************************************************************************************************
-**********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************-->
 
     			<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
     			<!-- DA QUA PARTE LA PARTE RELATIVA ALL'ANAMNESI. -->
@@ -1064,7 +955,7 @@
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 			            						<span class="input-group-addon">
-				              						<input type="radio" id="radio_maschio" onclick="stickyheaddsadaer()" name="Sesso" value="Maschio" <?php echo $maschioChecked; ?> >
+				              						<input type="radio" id="radio_maschio" onclick="save_and_update()" name="Sesso" value="Maschio" <?php echo $maschioChecked; ?> >
 				            					</span>
 				            					<input type="text" class="form-control" value="Maschio" readonly>
 				          					</div><!-- /input-group -->
@@ -1073,7 +964,7 @@
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="radio" id="radio_femmina" onclick="stickyheaddsadaer()" name="Sesso" value="Femmina" <?php echo $femminaChecked; ?>>
+				              						<input type="radio" id="radio_femmina" onclick="save_and_update()" name="Sesso" value="Femmina" <?php echo $femminaChecked; ?>>
 				            					</span>
 				            					<input type="text" class="form-control" value="Femmina" readonly>
 				          					</div><!-- /input-group -->
@@ -1193,7 +1084,7 @@
 
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input type="radio" id="radio_premenopausa"  onclick="stickyheaddsadaer()" name="Statomenopausale" value="Premenopausa" <?php echo $premenopausaChecked; ?>/>
+			                						<input type="radio" id="radio_premenopausa"  onclick="save_and_update()" name="Statomenopausale" value="Premenopausa" <?php echo $premenopausaChecked; ?>/>
 			              						</span>
 			              						<!--<span value="Premenopausa" class="input-group-addon" id="sizing-addon2">Premenopausa</span>-->
 			              						<input type="text" class="form-control" value="Premenopausa" class="input-group-addon" readonly>
@@ -1210,7 +1101,7 @@
 
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input type="radio" id="radio_perimenopausa"  onclick="stickyheaddsadaer()"  name="Statomenopausale" value="Perimenopausa" <?php echo $perimenopausaChecked; ?>/>
+			                						<input type="radio" id="radio_perimenopausa"  onclick="save_and_update()"  name="Statomenopausale" value="Perimenopausa" <?php echo $perimenopausaChecked; ?>/>
 			                					</span>
 			              						<!--<span value="Perimenopausa" style="height:53px;" class="form-control" readonly>Perimenopausa</span>-->
 				              					<input type="text" class="form-control" value="Perimenopausa" readonly>
@@ -1222,7 +1113,7 @@
 
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input type="radio" id="radio_post_spontanea"  onclick="stickyheaddsadaer()" name="Statomenopausale" value="Postmenopausa spontanea" <?php echo $postmenopausaSpontaneaChecked; ?>/>
+			                						<input type="radio" id="radio_post_spontanea"  onclick="save_and_update()" name="Statomenopausale" value="Postmenopausa spontanea" <?php echo $postmenopausaSpontaneaChecked; ?>/>
 			                					</span>
 			              						<!--<span value="Postmenopausa spontanea">Postmenopausa spontanea</span>-->
 				              					<input type="text" class="form-control" value="Postmenopausa spontanea" readonly>
@@ -1239,7 +1130,7 @@
 				          					
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input  type="radio" id ="radio_indotta"  onclick="stickyheaddsadaer()" name="Statomenopausale" value="Indotta" <?php echo $indottaChecked; ?>/>
+			                						<input  type="radio" id ="radio_indotta"  onclick="save_and_update()" name="Statomenopausale" value="Indotta" <?php echo $indottaChecked; ?>/>
 			                					</span>
 			              						<!--<span style="height:53px;" class="form-control" value="Indotta(farmaci-radioterapia)" readonly>Indotta(farmaci-radioterapia)</span>-->
 				              					<input type="text" class="form-control" value="Indotta (farmaci-radioterapia)" readonly>
@@ -1254,7 +1145,7 @@
 				            				
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input type="radio" id ="radio_ister_ann_bil"  onclick="stickyheaddsadaer()" name="Statomenopausale" value="Ister-ann bil" <?php echo $isterannBilChecked; ?>/>
+			                						<input type="radio" id ="radio_ister_ann_bil"  onclick="save_and_update()" name="Statomenopausale" value="Ister-ann bil" <?php echo $isterannBilChecked; ?>/>
 			                					</span>
 				              					<!--<span value="Ister-ann bill" style="height:53px;" class="form-control" readonly>Ister-ann bil</span>-->
 				              					<input type="text" class="form-control"value="Ister-ann bil" readonly>
@@ -1268,7 +1159,7 @@
 				          					
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input type="radio" id = "radio_ister_ann_mono"  onclick="stickyheaddsadaer()" name="Statomenopausale" value="Ister-ann mono" <?php echo $isterannMonoChecked; ?>/>
+			                						<input type="radio" id = "radio_ister_ann_mono"  onclick="save_and_update()" name="Statomenopausale" value="Ister-ann mono" <?php echo $isterannMonoChecked; ?>/>
 			                					</span>
 			              						<!--<span value="Ister-ann mono">Ister-ann mono</span>-->
 				              					<input type="text" class="form-control" value="Ister-ann mono" readonly>
@@ -1280,7 +1171,7 @@
 				   
 				            				<div class="input-group">
 				              					<span class="input-group-addon">
-			                						<input type="radio" id="radio_solo_isterectomia" onclick="stickyheaddsadaer()" name="Statomenopausale" value="Solo isterectomia" <?php echo $soloIsterectomiaChecked; ?>/>
+			                						<input type="radio" id="radio_solo_isterectomia" onclick="save_and_update()" name="Statomenopausale" value="Solo isterectomia" <?php echo $soloIsterectomiaChecked; ?>/>
 			                					</span>
 				              					<!--<span value="Solo isterectomia">Solo isterectomia</span>-->
 				              					<input type="text" class="form-control" value="Solo isterectomia" readonly>
@@ -1307,7 +1198,7 @@
 				        							Anno U.M.
 				        						</span>
 				        						
-				        						<input type="text"  class="form-control" name="ultima_mestruazione" id="UltimaMestruazione"  onchange="stickyheaddsadaer()" value="<?php if($um != null) echo $um; ?>" placeholder="Anno">
+				        						<input type="text"  class="form-control" name="ultima_mestruazione" id="UltimaMestruazione"  value="<?php if($um != null) echo $um; ?>" placeholder="Anno">
 				        						
 				        					</div>
 				        				</div>
@@ -1345,17 +1236,17 @@
 				            					
 				            					<span class="input-group-addon">
 					          						Mai
-					          						<input type="radio" id="stato_mai" onclick="stickyheaddsadaer()" name="stato_terapia" value="Mai" <?php echo $statoMaiChecked; ?>/>
+					          						<input type="radio" id="stato_mai" onclick="save_and_update()" name="stato_terapia" value="Mai" <?php echo $statoMaiChecked; ?>/>
 
 					          					</span>
 				            					<span class="input-group-addon" style="text-align:left;">
 				            						In atto
-				            						<input type="radio" id="stato_inatto" onclick="stickyheaddsadaer()" name="stato_terapia" value="In atto" <?php echo $statoInAttoChecked; ?>/>
+				            						<input type="radio" id="stato_inatto" onclick="save_and_update()" name="stato_terapia" value="In atto" <?php echo $statoInAttoChecked; ?>/>
 				      							</span>
 
 				      							<span class="input-group-addon" style="text-align:left;">
 				            						Sospesa
-				            						<input type="radio" id="stato_sospesa" onclick="stickyheaddsadaer()" name="stato_terapia" value="Sospesa" <?php echo $statoSospesaChecked; ?>/>
+				            						<input type="radio" id="stato_sospesa" onclick="save_and_update()" name="stato_terapia" value="Sospesa" <?php echo $statoSospesaChecked; ?>/>
 				          						</span>
 
 				          						<span class="input-group-addon">
@@ -1541,7 +1432,7 @@
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="Ormonale" name="Ormonale" onchange="stickyheaddsadaer()" value="true" <?php echo $ormonaleChecked; ?> disabled> <!--deve partire da disabled-->
+				              						<input type="checkbox" id="Ormonale" name="Ormonale" onchange="save_and_update()" value="true" <?php echo $ormonaleChecked; ?> disabled> <!--deve partire da disabled-->
 				            					</span>
 				            					<!--<input type="text" class="form-control" value="Orm.sost. / C.O." readonly>-->
 				            					<span class="form-control"  readonly>Orm.sost. / C.O.</span>
@@ -1585,7 +1476,7 @@
 				        				<div class="col-sm-7">
 				        					<!--<div><textarea class="text_area_orm_sost" name="text_area_orm_sost" id="text_area_orm_sost"></textarea></div>-->
 				        					<?php $i = 0; ?>
-				        					<select style="height:100px;width:500px" size="5" class="text_area_orm_sost" name="text_area_orm_sost" id="text_area_orm_sost" onchange="stickyheaddsadaer()" >
+				        					<select style="height:100px;width:500px" size="5" class="text_area_orm_sost" name="text_area_orm_sost" id="text_area_orm_sost" onchange="save_and_update()" >
 				        						<?php  
 				        						while ($pezzi_ormonale[$i] != null){ if($pezzi_ormonale[$i] != 'NULL')  echo "<option> $pezzi_ormonale[$i] </option>"; $i = $i + 1;} 
 				        						?>
@@ -1627,7 +1518,7 @@
 												x.add(option);
 											}
 											//quando schiaccia aggiungi() su Orm.sost. / C.O.
-											stickyheaddsadaer();
+											save_and_update();
 											
 										});
 
@@ -1651,7 +1542,7 @@
       												$('#Cancella').prop('disabled',true);
     											}
   											}
-											stickyheaddsadaer();
+											save_and_update();
 
 										});
 
@@ -1691,7 +1582,7 @@
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">                                                           <!--solo query-->
-				              						<input type="checkbox" id="Osteoprotettiva" name="Osteoprotettiva" onchange="stickyheaddsadaer()" value="true" <?php if( $osteoprotettiva == 1) echo "checked='checked'"; ?> disabled> <!--deve partire da disabled-->
+				              						<input type="checkbox" id="Osteoprotettiva" name="Osteoprotettiva" onchange="save_and_update()" value="true" <?php if( $osteoprotettiva == 1) echo "checked='checked'"; ?> disabled> <!--deve partire da disabled-->
 				            					</span>
 				            					<!--<input type="text" class="form-control" value="Orm.sost. / C.O." readonly>-->
 				            					<span class="form-control"  readonly>Osteoprotettiva specifica</span>
@@ -1782,7 +1673,7 @@
 													
 												}
 
-												stickyheaddsadaer();
+												save_and_update();
 												
 											});
 				        					/*
@@ -1829,7 +1720,7 @@
 	    											}
 	  											}
 
-												  stickyheaddsadaer();
+												  save_and_update();
 											});
 
 
@@ -1874,7 +1765,7 @@
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="VitaminaD" name="VitaminaD" value="true" onchange="stickyheaddsadaer()" <?php echo $vitamina_dChecked; ?> disabled> <!--deve partire da disabled-->
+				              						<input type="checkbox" id="VitaminaD" name="VitaminaD" value="true" onchange="save_and_update()" <?php echo $vitamina_dChecked; ?> disabled> <!--deve partire da disabled-->
 				            					</span>
 				            					<!--<input type="text" class="form-control" value="Orm.sost. / C.O." readonly>-->
 				            					<span class="form-control"  readonly>Vitamina D supplementazione</span>
@@ -1972,7 +1863,7 @@
 												x.add(option);
 											}
 
-											stickyheaddsadaer();
+											save_and_update();
 											
 										}
 
@@ -1996,7 +1887,7 @@
     											}
   											}
 
-											  stickyheaddsadaer();
+											  save_and_update();
 										}
 
 			        				</script>
@@ -2030,11 +1921,11 @@
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="AltroTerapie" onchange="stickyheaddsadaer()" name="TerapieProtettive" value="true" <?php if( $altro_terapie == 1) echo "checked='checked'"; ?> disabled>
+				              						<input type="checkbox" id="AltroTerapie" onchange="save_and_update()" name="TerapieProtettive" value="true" <?php if( $altro_terapie == 1) echo "checked='checked'"; ?> disabled>
 				            					</span>
 				            					<span class="input-group-addon" value="Altro">Altro</span>
 				            					<!--<input type="text" class="form-control" value="Altro" readonly>-->
-				            					<input class="form-control" type="text" placeholder="Altro" id="ValueAltroTerapie" onchange="stickyheaddsadaer()" name="ValueAltroTerapie" value="<?php if($value_altro_terapia != 'NULL') echo $value_altro_terapia;?>" disabled>
+				            					<input class="form-control" type="text" placeholder="Altro" id="ValueAltroTerapie" onchange="save_and_update()" name="ValueAltroTerapie" value="<?php if($value_altro_terapia != 'NULL') echo $value_altro_terapia;?>" disabled>
 				          					</div><!--/input-group-->
 
 				        				</div><!--/col-sm-4-->
@@ -2045,7 +1936,7 @@
 				        				<div class="col-sm-5">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="ComplianceAllaTerapia" name="ComplianceAllaTerapia" onchange="stickyheaddsadaer()" <?php if($compliance_alla_terapia == 1) echo "checked='checked'"; ?> disabled>
+				              						<input type="checkbox" id="ComplianceAllaTerapia" name="ComplianceAllaTerapia" onchange="save_and_update()" <?php if($compliance_alla_terapia == 1) echo "checked='checked'"; ?> disabled>
 				            					</span>
 				            					<input type="text" class="form-control" value="Compliance alla terapia >= 75%" readonly>
 				            					
@@ -2095,7 +1986,7 @@
 				            					<span class="input-group-addon">
 				              						<b>Peso(Kg)</b>
 				            					</span>
-				            					<input type="text" class="form-control" id="Peso" onchange = "stickyheaddsadaer()" name="Peso" value="<?php echo $peso;?>">
+				            					<input type="text" class="form-control" id="Peso" name="Peso" value="<?php echo $peso;?>">
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-3-->
 
@@ -2104,7 +1995,7 @@
 				            					<span class="input-group-addon">
 				              						<b>Altezza(cm)</b>
 				            					</span>
-				            					<input type="text" class="form-control" id="Altezza" onchange = "stickyheaddsadaer()" name="Altezza" value="<?php echo $altezza;?>">
+				            					<input type="text" class="form-control" id="Altezza"  name="Altezza" value="<?php echo $altezza;?>">
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-3-->
 
@@ -2128,7 +2019,7 @@
 				        				<div class="col-sm-1">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="FratturaFragilitaVertebrosa" name="FratturaFragilitaVertebrosa" onchange="stickyheaddsadaer()" <?php if($frattura_fragilità_vertebrosa == 1) echo "checked='checked'"  ?>/>
+				              						<input type="checkbox" id="FratturaFragilitaVertebrosa" name="FratturaFragilitaVertebrosa" onchange="save_and_update()" <?php if($frattura_fragilità_vertebrosa == 1) echo "checked='checked'"  ?>/>
 				            					</span>
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-2-->
@@ -2142,11 +2033,11 @@
 				        							<b>Vertebre</b>
 				          							<span class="input-group-addon">
 				            							1
-				            							<input type="radio" id="FratturaVertebreUna" name="FratturaVertebre" value="1" onchange="stickyheaddsadaer()" <?php if(strcmp($vertebre, "1")==0) echo "checked='checked'";  ?> disabled>
+				            							<input type="radio" id="FratturaVertebreUna" name="FratturaVertebre" value="1" onchange="save_and_update()" <?php if(strcmp($vertebre, "1")==0) echo "checked='checked'";  ?> disabled>
 				          							</span>
 				          							<span class="input-group-addon">
 				            							più di 1
-				           	 							<input type="radio" id="FratturaVertebrePiuDiUna" name="FratturaVertebre" value="piu di 1" onchange="stickyheaddsadaer()" <?php if(strcmp($vertebre, "piu di 1")==0) echo "checked='checked'";  ?> disabled>
+				           	 							<input type="radio" id="FratturaVertebrePiuDiUna" name="FratturaVertebre" value="piu di 1" onchange="save_and_update()" <?php if(strcmp($vertebre, "piu di 1")==0) echo "checked='checked'";  ?> disabled>
 				          							</span>
 				          						</span>
 
@@ -2154,11 +2045,11 @@
 			        								<b>Femore</b>
 			          								<span class="input-group-addon">
 			            								1
-			            								<input type="radio" id="FratturaFemoreUna" name="FratturaFemore" onchange="stickyheaddsadaer()" value="1" disabled <?php if(strcmp($femore, "1")==0) echo "checked='checked'";  ?> disabled>
+			            								<input type="radio" id="FratturaFemoreUna" name="FratturaFemore" onchange="save_and_update()" value="1" disabled <?php if(strcmp($femore, "1")==0) echo "checked='checked'";  ?> disabled>
 			          								</span>
 			          								<span class="input-group-addon">
 			            								più di 1
-			           	 								<input type="radio" id="FratturaFemorePiuDiUna" name="FratturaFemore" value="piu di 1" onchange="stickyheaddsadaer()" <?php if(strcmp($femore, "piu di 1")==0) echo "checked='checked'";  ?> disabled>
+			           	 								<input type="radio" id="FratturaFemorePiuDiUna" name="FratturaFemore" value="piu di 1" onchange="save_and_update()" <?php if(strcmp($femore, "piu di 1")==0) echo "checked='checked'";  ?> disabled>
 	          										</span>
 			          							</span>
 				          						
@@ -2199,7 +2090,7 @@
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
 
-				            						<input type="checkbox" id="PregresseFratture1" name="PregresseFratture1" onchange="stickyheaddsadaer()" <?php if($fratture_siti_diversi == 1) echo "checked='checked'" ?>/>
+				            						<input type="checkbox" id="PregresseFratture1" name="PregresseFratture1" onchange="save_and_update()" <?php if($fratture_siti_diversi == 1) echo "checked='checked'" ?>/>
 				            					</span>
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-2-->
@@ -2240,7 +2131,7 @@
 				        				<div class="col-sm-1">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="FamiliaritaperFrattura" name="FamiliaritaperFrattura" onchange="stickyheaddsadaer()"  <?php if($familiarita_per_frattura == 1) echo "checked='checked'" ?>/>
+				              						<input type="checkbox" id="FamiliaritaperFrattura" name="FamiliaritaperFrattura" onchange="save_and_update()"  <?php if($familiarita_per_frattura == 1) echo "checked='checked'" ?>/>
 
 				            					</span>
 				         	 				</div><!-- /input-group -->
@@ -2264,7 +2155,7 @@
 				        				<div class="col-sm-1">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="Abusofumo1" name="Abusofumo1" onchange="stickyheaddsadaer()" <?php if($abuso_fumo == 1) echo "checked='checked'" ?>/>
+				              						<input type="checkbox" id="Abusofumo1" name="Abusofumo1" onchange="save_and_update()" <?php if($abuso_fumo == 1) echo "checked='checked'" ?>/>
 				            					</span>
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-2-->
@@ -2277,11 +2168,11 @@
 
 				            					<span class="input-group-addon" style="text-align:left;">
 				            						<= 10 sigarette/dì
-				            						<input type="radio" name="Abusofumo" id="menodi10" value="<= 10 sigarette/di" onchange="stickyheaddsadaer()" <?php if(strcmp($quantita_sigarette, "<= 10 sigarette/di") == 0) echo "checked='checked'" ?> disabled>
+				            						<input type="radio" name="Abusofumo" id="menodi10" value="<= 10 sigarette/di" onchange="save_and_update()" <?php if(strcmp($quantita_sigarette, "<= 10 sigarette/di") == 0) echo "checked='checked'" ?> disabled>
 				          						</span>
 				          						<span class="input-group-addon" style="text-align:left;">
 				            						> 10 sigarette/dì
-				            						<input type="radio" name="Abusofumo" id="piudi10" value="> 10 sigarette/di" onchange="stickyheaddsadaer()" <?php if(strcmp($quantita_sigarette, "> 10 sigarette/di")==0) echo "checked='checked'" ?> disabled>
+				            						<input type="radio" name="Abusofumo" id="piudi10" value="> 10 sigarette/di" onchange="save_and_update()" <?php if(strcmp($quantita_sigarette, "> 10 sigarette/di")==0) echo "checked='checked'" ?> disabled>
 				          						</span>  
 				          					</div><!--/input-group-->
 				        				</div><!--/col-sm-7-->
@@ -2311,7 +2202,7 @@
 				        				<div class="col-sm-1">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="Usocortisone1" name="Usocortisone1"  onchange="stickyheaddsadaer()" <?php if($cortisone == 1) echo "checked='checked'" ?>/>
+				              						<input type="checkbox" id="Usocortisone1" name="Usocortisone1"  onchange="save_and_update()" <?php if($cortisone == 1) echo "checked='checked'" ?>/>
 				            					</span>
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-2-->
@@ -2323,12 +2214,12 @@
 
 				            					<span class="input-group-addon" style="text-align:left;">
 				            						> 2,5 mg e < 5 mg
-				            						<input type="radio" id="tradueecinque" name="Usocortisone" value="> 2.5 mg e < 5 mg"  onchange="stickyheaddsadaer()" <?php if(strcmp($uso_cortisone, "> 2.5 mg e < 5 mg")==0) echo "checked='checked'"  ?> disabled/>
+				            						<input type="radio" id="tradueecinque" name="Usocortisone" value="> 2.5 mg e < 5 mg"  onchange="save_and_update()" <?php if(strcmp($uso_cortisone, "> 2.5 mg e < 5 mg")==0) echo "checked='checked'"  ?> disabled/>
 				          						</span>
 				          
 				          						<span class="input-group-addon" style="text-align:left;">
 				            						>= 5 mg (Prednisone)
-				            						<input type="radio" id="piudicinque" name="Usocortisone" value=">= 5 mg (Prednisone)"  onchange="stickyheaddsadaer()" <?php if(strcmp($uso_cortisone, ">= 5 mg (Prednisone)")==0) echo "checked='checked'"  ?> disabled/>
+				            						<input type="radio" id="piudicinque" name="Usocortisone" value=">= 5 mg (Prednisone)"  onchange="save_and_update()" <?php if(strcmp($uso_cortisone, ">= 5 mg (Prednisone)")==0) echo "checked='checked'"  ?> disabled/>
 				          						</span>
 				          					</div><!--/input-group-->
 				        				</div><!--/col-sm-7-->
@@ -2358,7 +2249,7 @@
 				        				<div class="col-sm-1">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="MalattieAttuali" onchange="stickyheaddsadaer()"  name="Malattieattuali" <?php if($malattie_attuali == 1) echo "checked='checked'" ?> />
+				              						<input type="checkbox" id="MalattieAttuali" onchange="save_and_update()"  name="Malattieattuali" <?php if($malattie_attuali == 1) echo "checked='checked'" ?> />
 				            					</span>
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-2-->
@@ -2370,27 +2261,27 @@
 
 				            					<span class="input-group-addon" style="text-align:left;">
 				            						artrite reumatoide
-				            						<input type="checkbox" id="artritereumatoide" onchange="stickyheaddsadaer()" name="Artrite" <?php if($artrite == 1) echo "checked='checked'" ?> disabled>
+				            						<input type="checkbox" id="artritereumatoide" onchange="save_and_update()" name="Artrite" <?php if($artrite == 1) echo "checked='checked'" ?> disabled>
 				      							</span>
 
 				      							<span class="input-group-addon" style="text-align:left;">
 				            						artrite psoriasica
-				            						<input type="checkbox" id="artritepsoriasica" onchange="stickyheaddsadaer()" name="Psoriasi"  <?php if($psoriasi == 1) echo "checked='checked'" ?>   disabled>
+				            						<input type="checkbox" id="artritepsoriasica" onchange="save_and_update()" name="Psoriasi"  <?php if($psoriasi == 1) echo "checked='checked'" ?>   disabled>
 				          						</span>
 				          
 					          					<span class="input-group-addon" style="text-align:left;">
 					            					lupus
-					            					<input type="checkbox" id="lupus" name="Lupus" onchange="stickyheaddsadaer()"  <?php if($lupus == 1) echo "checked='checked'" ?> disabled>
+					            					<input type="checkbox" id="lupus" name="Lupus" onchange="save_and_update()"  <?php if($lupus == 1) echo "checked='checked'" ?> disabled>
 					          					</span>
 					          
 					          					<span class="input-group-addon" style="text-align:left;">
 					            					sclerodermia
-					            					<input type="checkbox" id="sclerodermia" name="Sclerodermia" onchange="stickyheaddsadaer()"  <?php if($sclerodermia == 1) echo "checked='checked'" ?> disabled>
+					            					<input type="checkbox" id="sclerodermia" name="Sclerodermia" onchange="save_and_update()"  <?php if($sclerodermia == 1) echo "checked='checked'" ?> disabled>
 					          					</span>
 
 					          					<span class="input-group-addon" style="text-align:left;">
 					            					altre connettiviti
-					            					<input type="checkbox" id="altreconnettiviti" name="AltreConnettiviti"  onchange="stickyheaddsadaer()" <?php if($altre_connettiviti == 1) echo "checked='checked'" ?> disabled>
+					            					<input type="checkbox" id="altreconnettiviti" name="AltreConnettiviti"  onchange="save_and_update()" <?php if($altre_connettiviti == 1) echo "checked='checked'" ?> disabled>
 					          					</span>
 
 				          					</div><!--/input-group-->
@@ -2433,7 +2324,7 @@
 				        				<div class="col-sm-1">
 				          					<div class="input-group">
 				            					<span class="input-group-addon">
-				              						<input type="checkbox" id="Osteoporosisecondaria" onchange="stickyheaddsadaer()" name="Osteoporosisecondaria" <?php if($cause_secondarie == 1) echo "checked='checked'" ?>/>
+				              						<input type="checkbox" id="Osteoporosisecondaria" onchange="save_and_update()" name="Osteoporosisecondaria" <?php if($cause_secondarie == 1) echo "checked='checked'" ?>/>
 				            					</span>
 				          					</div><!-- /input-group -->
 				        				</div><!--/col-sm-2-->
@@ -2512,7 +2403,7 @@
 												
 											}
 
-											stickyheaddsadaer();
+											save_and_update();
 											
 										}
 
@@ -2538,7 +2429,7 @@
 												}
 											}
 
-											stickyheaddsadaer();
+											save_and_update();
 										}
 			        				</script>
 				      				
@@ -2602,7 +2493,7 @@
 		    									<div class="input-group">		
 					      							<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="PatologieUterine" onchange="stickyheaddsadaer()" name="PatologieUterine" <?php if($patologie_uterine == 1) echo "checked='checked'"  ?>/>
+					            						<input type="checkbox" id="PatologieUterine" onchange="save_and_update()" name="PatologieUterine" <?php if($patologie_uterine == 1) echo "checked='checked'"  ?>/>
 					            					</span>
 					            					<span class="input-group-addon" style="text-align:left;background:#eee">
 					            						<div>Patologie uterine</div>
@@ -2610,7 +2501,7 @@
 					            				
 					            				
 					            				
-					            					<input type="text"  class="form-control" id="diagnosi1" onchange="stickyheaddsadaer()" name="diagnosi1" placeholder="Diagnosi" value="<?php if($diagnosi_patologie_uterine != 'NULL') echo $diagnosi_patologie_uterine; ?>" disabled>
+					            					<input type="text"  class="form-control" id="diagnosi1" onchange="save_and_update()" name="diagnosi1" placeholder="Diagnosi" value="<?php if($diagnosi_patologie_uterine != 'NULL') echo $diagnosi_patologie_uterine; ?>" disabled>
 
 					          					</div>
 					          				</div>
@@ -2639,7 +2530,7 @@
 		    									<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="Neoplasia" onchange="stickyheaddsadaer()" name="Neoplasia" value="Neoplasia Magligna mammaria" <?php if($neoplasia == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Neoplasia" onchange="save_and_update()" name="Neoplasia" value="Neoplasia Magligna mammaria" <?php if($neoplasia == 1) echo "checked='checked'" ?>/>
 					            						
 					            					</span>
 					            					<span class="input-group-addon" style="width:100%;text-align:left">
@@ -2654,7 +2545,7 @@
 					            					</span>
 
 					            					<span class="input-group-addon" style="text-align:left">	
-					            						<input type="text" id="terapia_neoplasia" onchange="stickyheaddsadaer()"  name="terapia_neoplasia" placeholder="Terapia" value="<?php if($terapia_neoplasia != 'NULL') echo $terapia_neoplasia; ?>" disabled>
+					            						<input type="text" id="terapia_neoplasia" onchange="save_and_update()"  name="terapia_neoplasia" placeholder="Terapia" value="<?php if($terapia_neoplasia != 'NULL') echo $terapia_neoplasia; ?>" disabled>
 					            					</span>
 					            				
 					            					
@@ -2690,7 +2581,7 @@
 										        <div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="SintomiVasomotori"  onchange="stickyheaddsadaer()" name="SintomiVasomotori" <?php if($sintomi_vasomotori == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="SintomiVasomotori"  onchange="save_and_update()" name="SintomiVasomotori" <?php if($sintomi_vasomotori == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" class="form-control" value="Sintomi vasomotori presenti" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Sintomi vasomotori presenti</span>
@@ -2706,7 +2597,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="SintomiDistrofici" onchange="stickyheaddsadaer()" name="SintomiDistrofici" <?php if($sintomi_distrofici == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="SintomiDistrofici" onchange="save_and_update()" name="SintomiDistrofici" <?php if($sintomi_distrofici == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Sintomi distrofici" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Sintomi distrofici</span> 
@@ -2726,10 +2617,10 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="Dislipidemia" onchange="stickyheaddsadaer()" name="Dislipidemia" <?php if($dislipidemia == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Dislipidemia" onchange="save_and_update()" name="Dislipidemia" <?php if($dislipidemia == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<span class="input-group-addon" style="text-align:left">Dislipidemia</span>
-					            					<input type="text"  class="form-control" id="dislipidemia_terapia" onchange="stickyheaddsadaer()" name="dislipidemia_terapia" placeholder="Terapia" value="<?php if($dislipidemia_terapia != 'NULL') echo $dislipidemia_terapia ?>"> 
+					            					<input type="text"  class="form-control" id="dislipidemia_terapia" onchange="save_and_update()" name="dislipidemia_terapia" placeholder="Terapia" value="<?php if($dislipidemia_terapia != 'NULL') echo $dislipidemia_terapia ?>"> 
 					            					
 					          					</div>
 					          				</div>
@@ -2778,7 +2669,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="Ipertensione" onchange="stickyheaddsadaer()" name="Ipertensione" <?php if($ipertensione == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Ipertensione" onchange="save_and_update()" name="Ipertensione" <?php if($ipertensione == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Ipertensione in terapia" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Ipertensione in terapia</span>
@@ -2795,7 +2686,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="RischioTev" onchange="stickyheaddsadaer()" name="RischioTev" <?php if($rischio_tev == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="RischioTev" onchange="save_and_update()" name="RischioTev" <?php if($rischio_tev == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Rischio TEV" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Rischio TEV</span> 
@@ -2812,7 +2703,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="PatologiaCardiaca" onchange="stickyheaddsadaer()" name="PatologiaCardiaca" <?php if($patologia_cardiaca == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="PatologiaCardiaca" onchange="save_and_update()" name="PatologiaCardiaca" <?php if($patologia_cardiaca == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Patologia cardiaca (infarto,coronaropatia)" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Patologia cardiaca (infarto,coronaropatia)</span>
@@ -2830,7 +2721,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="PatologiaVascolare" onchange="stickyheaddsadaer()" name="PatologiaVascolare" <?php if($patologia_vascolare == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="PatologiaVascolare" onchange="save_and_update()" name="PatologiaVascolare" <?php if($patologia_vascolare == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Patologia vascolare cerebrale (ictus,TIA,altro)" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Patologia vascolare cerebrale (ictus,TIA,altro)</span>
@@ -2847,7 +2738,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="InsufficienzaRenale" onchange="stickyheaddsadaer()" name="InsufficienzaRenale" <?php if($insufficienza_renale == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="InsufficienzaRenale" onchange="save_and_update()" name="InsufficienzaRenale" <?php if($insufficienza_renale == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Insufficienza renale" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Insufficienza renale</span>
@@ -2864,7 +2755,7 @@
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="PatologiaRespiratoria" onchange="stickyheaddsadaer()" name="PatologiaRespiratoria" <?php if($patologia_respiratoria == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="PatologiaRespiratoria" onchange="save_and_update()" name="PatologiaRespiratoria" <?php if($patologia_respiratoria == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" value="Patologia respiratoria (asma,B.P.C.O.)" class="form-control" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Patologia respiratoria (asma,B.P.C.O.)</span>
@@ -2885,7 +2776,7 @@
 					      						<div class="input-group">
 					      							<span class="input-group-addon">
 					            						
-					            						<input type="checkbox" id="PatologiaDelCavoOrale" onchange="stickyheaddsadaer()" name="PatologiaDelCavoOrale" <?php if($patologia_del_cavo_orale == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="PatologiaDelCavoOrale" onchange="save_and_update()" name="PatologiaDelCavoOrale" <?php if($patologia_del_cavo_orale == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<span class="input-group-addon" style="text-align:left">Patologia del cavo orale</span>
 					            						<!--Patologia del cavo orale-->
@@ -2922,7 +2813,7 @@
 		        								<div class="input-group">
 					      							<span class="input-group-addon">
 					            					
-					            						<input type="checkbox" id="PatologiaEpatica" onchange="stickyheaddsadaer()" name="PatologiaEpatica" <?php if($patologia_epatica == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="PatologiaEpatica" onchange="save_and_update()" name="PatologiaEpatica" <?php if($patologia_epatica == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" class="form-control" style="width:29em;" value="Grave patologia epatica (epatite acuta/cronica,cirrosi)" readonly>-->
 					            					<span class="form-control" style="width:100%" readonly>Grave patologia epatica (epatite acuta/cronica,cirrosi)</span>
@@ -2941,7 +2832,7 @@
 				          					<div style="width:100%">
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
-					            						<input type="checkbox" id="PatologiaEsofagea" onchange="stickyheaddsadaer()" name="PatologiaEsofagea" <?php if($patologia_esofagea == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="PatologiaEsofagea" onchange="save_and_update()" name="PatologiaEsofagea" <?php if($patologia_esofagea == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" class="form-control" style="width:70%;" value="Patologia esofagea (esofagite,diverticoli,reflusso g.e. , ernia iatale)" readonly>-->
 					            					<span class="form-control" style="width:100%" readonly>Patologia esofagea (esofagite,diverticoli,reflusso g.e., ernia iatale)</span>
@@ -2957,7 +2848,7 @@
 				          					<div style="width:100%">
 										        <div class="input-group">
 					          						<span class="input-group-addon">
-					            						<input type="checkbox" id="Gastroduodenite" onchange="stickyheaddsadaer()" name="Gastroduodenite" <?php if($gastro_duodenite == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Gastroduodenite" onchange="save_and_update()" name="Gastroduodenite" <?php if($gastro_duodenite == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" class="form-control" value="Gastro-duodenite, ulcera g.d." readonly>-->
 					          						<span class="form-control" style="width:100%" readonly>Gastro-duodenite, ulcera g.d.</span>
@@ -2971,7 +2862,7 @@
 				          					<div style="width:100%">
 										        <div class="input-group">
 					          						<span class="input-group-addon">
-					            						<input type="checkbox" id="Gastroresezione" onchange="stickyheaddsadaer()" name="Gastroresezione" <?php if($gastro_resezione == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Gastroresezione" onchange="save_and_update()" name="Gastroresezione" <?php if($gastro_resezione == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" class="form-control" value="Gastro-resezione" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Gastro-resezione</span>
@@ -2986,7 +2877,7 @@
 				          					<div style="width:100%">
 										        <div class="input-group">
 					          						<span class="input-group-addon">
-					            						<input type="checkbox" id="Resezioneintestinale" onchange="stickyheaddsadaer()" name="Resezioneintestinale" <?php if($resezione_intestinale == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Resezioneintestinale" onchange="save_and_update()" name="Resezioneintestinale" <?php if($resezione_intestinale == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" class="form-control" value="Resezione intestinale" readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">Resezione intestinale</span>
@@ -3000,7 +2891,7 @@
 				          					<div style="width:100%">
 										        <div class="input-group">
 					          						<span class="input-group-addon">
-					            						<input type="checkbox" id="mici" onchange="stickyheaddsadaer()" name="mici" <?php if($mici == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="mici" onchange="save_and_update()" name="mici" <?php if($mici == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<!--<input type="text" style="width:29em;" class="form-control" value="M.I.C.I." readonly>-->
 					            					<span class="form-control" style="text-align:left;background:#eee">M.I.C.I.</span>
@@ -3020,10 +2911,10 @@
 				          					<div style="width:100%">
 					          					<div class="input-group">
 					          						<span class="input-group-addon">
-					          							<input type="checkbox" id="Ipovitaminosi" onchange="stickyheaddsadaer()" name="Ipovitaminosi" <?php if($ipovitaminosi == 1) echo "checked='checked'" ?>/>
+					          							<input type="checkbox" id="Ipovitaminosi" onchange="save_and_update()" name="Ipovitaminosi" <?php if($ipovitaminosi == 1) echo "checked='checked'" ?>/>
 					          						</span>
 					          						<span class="input-group-addon">25 OH Vitamina D ng/ml</span>
-					          						<input type="text" class="form-control"  name="valore_ipovitaminosi" onchange="stickyheaddsadaer()" id="valore_ipovitaminosi" class="form-control" placeholder="ng/ml" value="<?php if($valore_ipovitaminosi != 'NULL') echo $valore_ipovitaminosi  ?>" disabled>
+					          						<input type="text" class="form-control"  name="valore_ipovitaminosi" onchange="save_and_update()" id="valore_ipovitaminosi" class="form-control" placeholder="ng/ml" value="<?php if($valore_ipovitaminosi != 'NULL') echo $valore_ipovitaminosi  ?>" disabled>
 					          					</div>
 					          				</div>
 				          				</div>
@@ -3072,10 +2963,10 @@
 				            				<div style="width:100%">
 				            					<div class="input-group">
 				            						<span class="input-group-addon">
-				            							<input type="checkbox" id="AltroPatologie" onchange="stickyheaddsadaer()" name="AltroPatologie" <?php if($altre_patologie == 1) echo "checked='checked'" ?>/>
+				            							<input type="checkbox" id="AltroPatologie" onchange="save_and_update()" name="AltroPatologie" <?php if($altre_patologie == 1) echo "checked='checked'" ?>/>
 					            					</span>
 					            					<span class="input-group-addon" style="text-align:left;background:#eee">Altro</span>
-					            					<input type="text" class="form-control" id="altro_patologie" onchange="stickyheaddsadaer()" name="altro_patologie" placeholder="Altro" value="<?php if($altre_patologie_testo != 'NULL') echo $altre_patologie_testo ?>" disabled>		
+					            					<input type="text" class="form-control" id="altro_patologie" onchange="save_and_update()" name="altro_patologie" placeholder="Altro" value="<?php if($altre_patologie_testo != 'NULL') echo $altre_patologie_testo ?>" disabled>		
 					          					</div>
 					          				</div>
 				          				</div>
@@ -3105,10 +2996,10 @@
 				          					<div style="width:100%">
 					          					<div class="input-group">
 				            						<span class="input-group-addon">
-				            							<input type="checkbox" id="Allergie" onchange="stickyheaddsadaer()" name="Allergie" <?php if($allergie == 1) echo "checked='checked'" ?>/>
+				            							<input type="checkbox" id="Allergie" onchange="save_and_update()" name="Allergie" <?php if($allergie == 1) echo "checked='checked'" ?>/>
 				            						</span>
 					            					<span class="input-group-addon" style="text-align:left;background:#eee">Allergie</span>
-					            					<input type="text" class="form-control" id="allergie" onchange="stickyheaddsadaer()" name="allergie" placeholder="Allergie" value="<?php if($valori_allergie != 'NULL') echo $valori_allergie ?>" disabled>
+					            					<input type="text" class="form-control" id="allergie" onchange="save_and_update()" name="allergie" placeholder="Allergie" value="<?php if($valori_allergie != 'NULL') echo $valori_allergie ?>" disabled>
 					            				</div>
 					            			</div>
 				            			</div>
@@ -3135,13 +3026,13 @@
 				            				<div style="width:100%">
 					            				<div class="input-group">
 					            					<span class="input-group-addon">
-					            						<input type="checkbox" id="Intolleranza" onchange="stickyheaddsadaer()" name="Intolleranza" <?php if($intolleranza == 1) echo "checked='checked'" ?>/>
+					            						<input type="checkbox" id="Intolleranza" onchange="save_and_update()" name="Intolleranza" <?php if($intolleranza == 1) echo "checked='checked'" ?>/>
 					          						</span>
 					          						<span class="input-group-addon" style="text-align:left;background:#eee">	
 					          							Intolleranza/non accettabilità terapie per osteoporosi
 					          						</span>
 
-					          						<input type="text" class="form-control" id="value_intolleranze" onchange="stickyheaddsadaer()" name="value_intolleranze" placeholder="Intolleranze" value="<?php if($valori_intolleranze != 'NULL') echo $valori_intolleranze ?>">
+					          						<input type="text" class="form-control" id="value_intolleranze" onchange="save_and_update()" name="value_intolleranze" placeholder="Intolleranze" value="<?php if($valori_intolleranze != 'NULL') echo $valori_intolleranze ?>">
 
 					            					<br/>
 					            					
@@ -3591,45 +3482,6 @@
 
 
 
-<!-- CONSULENZA PER OSTEOPOROSI*******************************************************************************************************************************************************************************
-**********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************7
- *******************************************************************************************************************************************************************************
-**********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- *******************************************************************************************************************************************************************************
-**********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- *******************************************************************************************************************************************************************************
-**********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************
- **********************************************************************************************************************************************************-->
-
-
-
           		<?php require './backend_frontend/recupero_diagnosi.php'; ?>
           		<form method="POST" action="./backend_frontend/inserimento_diagnosi.php" id="myForm2"  name="myForm2" visible="true" style="display:none;">
 	          		<div class="row">
@@ -3720,11 +3572,11 @@
 	          							<div class="col-sm-6">
 	          								<div class="input-group">
 	          									<span class="input-group-addon">
-		          									<input type="checkbox"  name="colonna_vertebrale" id="colonna_vertebrale" onchange="stickyheaddsadaer()" <?php if($colonna_vertebrale_check == 1) echo "checked='checked'"; ?>/>
+		          									<input type="checkbox"  name="colonna_vertebrale" id="colonna_vertebrale" onchange="save_and_update()" <?php if($colonna_vertebrale_check == 1) echo "checked='checked'"; ?>/>
 		          								</span>
 	          									<span class="form-control" style="width:50%;background:#eee"><b>Colonna vertebrale&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></span>
 		          								
-		          								<select class="form-control" style="width:50%" id="situazione_colonna" onchange="stickyheaddsadaer()" name = "situazione_colonna" disabled>
+		          								<select class="form-control" style="width:50%" id="situazione_colonna" onchange="save_and_update()" name = "situazione_colonna" disabled>
 		          									<option>Situazione di normalità</option>
 		          									<option>Osteopenia</option>
 		          									<option>Osteoporosi</option>
@@ -3827,10 +3679,10 @@
 	          							<div class="col-sm-6">
 	          								<div class="input-group">
 	          									<span class="input-group-addon">
-		          									<input type="checkbox"  name="collo_femore_sn" id="collo_femore_sn" onchange="stickyheaddsadaer()" <?php if($collo_femore_sn_check == 1) echo "checked='checked'"; ?>/>
+		          									<input type="checkbox"  name="collo_femore_sn" id="collo_femore_sn" onchange="save_and_update()" <?php if($collo_femore_sn_check == 1) echo "checked='checked'"; ?>/>
 		          								</span>
 	          									<span class="form-control" style="width:50%;background:#eee"><b>Collo femore sinistro</b></span>
-		          								<select class="form-control" style="width:50%" id="situazione_femore_sn" onchange="stickyheaddsadaer()"  name = "situazione_femore_sn" disabled>
+		          								<select class="form-control" style="width:50%" id="situazione_femore_sn" onchange="save_and_update()"  name = "situazione_femore_sn" disabled>
 		          									<option>Situazione di normalità</option>
 		          									<option>Osteopenia</option>
 		          									<option>Osteoporosi</option>
@@ -3930,10 +3782,10 @@
 	          								<div style="width:100%">
 		          								<div class="input-group">
 		          									<span class="input-group-addon">
-			          									<input type="checkbox"  name="collo_femore_dx" id="collo_femore_dx" onchange="stickyheaddsadaer()" <?php if($collo_femore_dx_check == 1) echo "checked='checked'"; ?>/>
+			          									<input type="checkbox"  name="collo_femore_dx" id="collo_femore_dx" onchange="save_and_update()" <?php if($collo_femore_dx_check == 1) echo "checked='checked'"; ?>/>
 			          								</span>
 		          									<span class="form-control" style="width:50%;background:#eee"><b>Collo femore destro</b></span>
-			          								<select class="form-control" style="width:50%" id="situazione_femore_dx" onchange="stickyheaddsadaer()" name = "situazione_femore_dx" disabled>
+			          								<select class="form-control" style="width:50%" id="situazione_femore_dx" onchange="save_and_update()" name = "situazione_femore_dx" disabled>
 			          									<option>Situazione di normalità</option>
 			          									<option>Osteopenia</option>
 			          									<option>Osteoporosi</option>
@@ -4024,7 +3876,7 @@
 		          						<div class="col-sm-5">
 		          							<div class="input-group">
 		          								<span class="input-group-addon">
-		          									<input type="checkbox" id="OsteoporosiGrave" onchange="stickyheaddsadaer()" name="OsteoporosiGrave" <?php if($osteoporosi_grave == 1) echo "checked='checked'" ?>/>
+		          									<input type="checkbox" id="OsteoporosiGrave" onchange="save_and_update()" name="OsteoporosiGrave" <?php if($osteoporosi_grave == 1) echo "checked='checked'" ?>/>
 		          								</span>
 		          								<span class="form-control" readonly><b>Osteoporosi grave per pregresse fratture</b></span>
 		          							</div>
@@ -4041,7 +3893,7 @@
 		              						<div style="width:100%">
 		            							<div class="input-group">
 		              								<span class="input-group-addon">
-		                								<input type="checkbox" name="ColonnaVertebraleParzialmenteNonAnalizzabile" id="ColonnaVertebraleParzialmenteNonAnalizzabile"  onchange="stickyheaddsadaer()" <?php if($vertebre_non_analizzate == 1) echo "checked='checked'"; ?>/>
+		                								<input type="checkbox" name="ColonnaVertebraleParzialmenteNonAnalizzabile" id="ColonnaVertebraleParzialmenteNonAnalizzabile"  onchange="save_and_update()" <?php if($vertebre_non_analizzate == 1) echo "checked='checked'"; ?>/>
 		              								</span>
 		              								
 		              								<span class="input-group-addon" style="width:100%;text-align:left">
@@ -4052,20 +3904,20 @@
 
 		            								
 		            								<span class="input-group-addon">
-		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L1" onchange="stickyheaddsadaer()" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L1"  <?php if($vertebre_non_analizzate_L1 == 1) echo "checked='checked'"; ?> disabled>L1
+		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L1" onchange="save_and_update()" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L1"  <?php if($vertebre_non_analizzate_L1 == 1) echo "checked='checked'"; ?> disabled>L1
 		            									
 		            								</span>
 
 		            								<span class="input-group-addon">
-		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L2" onchange="stickyheaddsadaer()" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L2"  <?php if($vertebre_non_analizzate_L2 == 1) echo "checked='checked'"; ?>disabled>L2
+		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L2" onchange="save_and_update()" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L2"  <?php if($vertebre_non_analizzate_L2 == 1) echo "checked='checked'"; ?>disabled>L2
 		            								</span>
 
 		            								<span class="input-group-addon">
-		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L3" onchange="stickyheaddsadaer()" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L3" <?php if($vertebre_non_analizzate_L3 == 1) echo "checked='checked'"; ?> disabled>L3
+		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L3" onchange="save_and_update()" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L3" <?php if($vertebre_non_analizzate_L3 == 1) echo "checked='checked'"; ?> disabled>L3
 		            								</span>
 
 		            								<span class="input-group-addon">
-		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L4" onchange="stickyheaddsadaer()" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L4" <?php if($vertebre_non_analizzate_L4 == 1) echo "checked='checked'"; ?> disabled>L4
+		            									<input type="checkbox" name="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L4" onchange="save_and_update()" id="Colonna_Vertebrale_Parzialmente_NonAnalizzabile_L4" <?php if($vertebre_non_analizzate_L4 == 1) echo "checked='checked'"; ?> disabled>L4
 		            								</span>
 		            							</div><!--/input-group-->
 	            							</div>
@@ -4140,7 +3992,7 @@
 		              						<div style="width:100%">
 			                					<div class="input-group">
 			                  						<span class="input-group-addon">
-			                    						<input type="checkbox"  onchange="stickyheaddsadaer()" id="colonnavertebralenonanalizzabile" name="colonnavertebralenonanalizzabile" <?php if($colonna_non_analizzabile == 1) echo "checked='checked'";   ?>/>
+			                    						<input type="checkbox"  onchange="save_and_update()" id="colonnavertebralenonanalizzabile" name="colonnavertebralenonanalizzabile" <?php if($colonna_non_analizzabile == 1) echo "checked='checked'";   ?>/>
 			                  						</span>
 			                  						<!--<input type="text" class="form-control" value="Colonna vertebrale interamente non analizzabile per deformazioni morfologiche e artefatti" readonly>-->
 			                						<span class="form-control" style="width:100%;background:#eee">
@@ -4159,7 +4011,7 @@
 		            							<div class="input-group">
 
 			                  						<span class="input-group-addon">
-			                    						<input type="checkbox" id="radio_colonna_valori_sup" onchange="stickyheaddsadaer()"  name="colonnavertebraleconvalori"  <?php if($colonna_valori_superiori == 1) echo "checked='checked'" ?>/>
+			                    						<input type="checkbox" id="radio_colonna_valori_sup" onchange="save_and_update()"  name="colonnavertebraleconvalori"  <?php if($colonna_valori_superiori == 1) echo "checked='checked'" ?>/>
 			                  						</span>
 			                  						
 			                  						<span class="form-control" style="width:100%;text-align:left;background:#eee">
@@ -4178,7 +4030,7 @@
 		              						<div style="width:100%">
 			                					<div class="input-group">
 			                  						<span class="input-group-addon">
-			                    						<input type="checkbox" name="femorenonanalizzabile" id="femore_non_analizzabile" onchange="stickyheaddsadaer()" <?php if($femore_non_analizzabile == 1) echo "checked='checked'" ?>/>
+			                    						<input type="checkbox" name="femorenonanalizzabile" id="femore_non_analizzabile" onchange="save_and_update()" <?php if($femore_non_analizzabile == 1) echo "checked='checked'" ?>/>
 			                  						</span>
 
 			                  						<span class="form-control" style="width:100%;text-align:left;background:#eee">
@@ -4309,7 +4161,7 @@
 		              						<div style="width:100%">
 		                					<div class="input-group">
 		                						<span style="align:center" class="input-group-addon">
-			            							<input type="checkbox" id="Frax_applicabile" onchange="stickyheaddsadaer()" name="Frax_applicabile" value="applicabile" <?php if($frax_applicabile == 1) echo "checked='checked'"  ?>/>
+			            							<input type="checkbox" id="Frax_applicabile" onchange="save_and_update()" name="Frax_applicabile" value="applicabile" <?php if($frax_applicabile == 1) echo "checked='checked'"  ?>/>
 			            							Applicabile
 
 			            						</span>
@@ -4329,7 +4181,7 @@
 	                  								
 		              								<span class="input-group-addon" id="sizing-addon2">Fratture maggiori&nbsp;&nbsp;</span>
 		              									<span class="input-group-addon"><input type="checkbox" id="percentuale_frax" name="percentuale_frax" <?php if($frax_percentuale == 1) echo "checked='checked'" ?>/>&nbsp;&nbsp;&nbsp;< 0.1%</span>
-		              									<input type="text" style="text-align:right;width:70px"  class="frax form-control" id = "frax" onchange="stickyheaddsadaer()" name="frax_fratture_maggiori_intero" value="<?php if($frax_fratture_maggiori_intero != 'NULL') echo $frax_fratture_maggiori_intero ?>">
+		              									<input type="text" style="text-align:right;width:70px"  class="frax form-control" id = "frax" onchange="save_and_update()" name="frax_fratture_maggiori_intero" value="<?php if($frax_fratture_maggiori_intero != 'NULL') echo $frax_fratture_maggiori_intero ?>">
 		              									<!--
 		              									<input type="text" style="width:30px;font-size:20px" value="." class="form-control" readonly>
 		              									<input type="text" style="width:50px" class="frax form-control" id = "frax"  name="frax_fratture_maggiori_decimale" value="<?php if($frax_fratture_maggiori_decimale != 'NULL') echo $frax_fratture_maggiori_decimale ?>">
@@ -4350,7 +4202,7 @@
 	              								<span class="input-group-addon" id="sizing-addon2">Collo femore&nbsp;&nbsp;</span>
 	              								<span class="input-group-addon"><input type="checkbox" id="percentuale_collo_femore" name="percentuale_collo_femore" <?php if($frax_collo_femore_percentuale == 1) echo "checked='checked'" ?>/>&nbsp;&nbsp;&nbsp;< 0.1%</span>
 	              								
-	              									<input type="text" style="text-align:right;width:70px"  class="frax_collo_femore form-control" id = "frax_collo_femore" onchange="stickyheaddsadaer()" name="collo_femore_intero" value="<?php if($frax_collo_femore_intero != 'NULL') echo $frax_collo_femore_intero ?>">
+	              									<input type="text" style="text-align:right;width:70px"  class="frax_collo_femore form-control" id = "frax_collo_femore" onchange="save_and_update()" name="collo_femore_intero" value="<?php if($frax_collo_femore_intero != 'NULL') echo $frax_collo_femore_intero ?>">
 	              									<!--
 	              									<input type="text" style="width:30px;font-size:20px" value="." class="form-control" readonly>
 	              									<input type="text" style="width:50px" class="frax_collo_femore form-control" id = "frax_collo_femore"  name="collo_femore_decimale" value="<?php if($frax_collo_femore_decimale != 'NULL') echo $frax_collo_femore_decimale ?>">
@@ -4627,7 +4479,7 @@
 		              						<div style="width:100%">
 		                					<div class="input-group">
 		                						<span style="align:center" class="input-group-addon">
-			            							<input type="checkbox" id="tbs_colonna_applicabile" onchange="stickyheaddsadaer()" name="tbs_colonna_applicabile" value="applicabile" <?php if($tbs_colonna_applicabile == 1) echo "checked='checked'"  ?>/>
+			            							<input type="checkbox" id="tbs_colonna_applicabile" onchange="save_and_update()" name="tbs_colonna_applicabile" value="applicabile" <?php if($tbs_colonna_applicabile == 1) echo "checked='checked'"  ?>/>
 			            							Applicabile
 
 			            						</span>
@@ -4646,7 +4498,7 @@
 	                  								<!--NON SO COSA SCRIVERCI QUINDI LO COMMENTO NEL CASO DOVRO' SCRIVERE QUALCOSA-->
 		              								<!--<span class="input-group-addon" id="sizing-addon2">Fratture maggiori&nbsp;&nbsp;</span>-->
 	              									<span class="input-group-addon"><input type="checkbox" id="percentuale_tbs_colonna" name="percentuale_tbs_colonna" <?php if($percentuale_tbs_colonna == 1) echo "checked='checked'" ?>/>&nbsp;&nbsp;&nbsp;< 0.1%</span>
-	              									<input type="text" style="text-align:right;width:70px"  class="tbs_colonna_valore form-control" onchange="stickyheaddsadaer()" id = "tbs_colonna_valore"  name="tbs_colonna_valore" value="<?php if($tbs_colonna_valore != 'NULL') echo $tbs_colonna_valore ?>">
+	              									<input type="text" style="text-align:right;width:70px"  class="tbs_colonna_valore form-control" onchange="save_and_update()" id = "tbs_colonna_valore"  name="tbs_colonna_valore" value="<?php if($tbs_colonna_valore != 'NULL') echo $tbs_colonna_valore ?>">
 		              									
 
 		              							</div>
@@ -4766,7 +4618,7 @@
 		              						<div style="width:100%">
 		                					<div class="input-group">
 		                						<span style="align:center" class="input-group-addon">
-			            							<input type="checkbox" id="defra_applicabile" onchange="stickyheaddsadaer()" name="defra_applicabile" value="defra_applicabile" <?php if($defra_applicabile == 1) echo "checked='checked'" ?>/>
+			            							<input type="checkbox" id="defra_applicabile" onchange="save_and_update()" name="defra_applicabile" value="defra_applicabile" <?php if($defra_applicabile == 1) echo "checked='checked'" ?>/>
 			            							Applicabile
 
 			            						</span>
@@ -4787,7 +4639,7 @@
 		              						<div class="input-group">
 		              							<span class="input-group-addon"><input type="checkbox" id="percentuale_defra_01" class="percentuale_defra" name="defra_percentuale_01" <?php if($defra_percentuale_01 == 1) echo "checked='checked'" ?> disabled/>&nbsp;&nbsp;< 0.1%</span>
 	                  							<span class="input-group-addon"><input type="checkbox" id="percentuale_defra_50" class="percentuale_defra" name="defra_percentuale_50" <?php if($defra_percentuale_50 == 1) echo "checked='checked'" ?> disabled/>&nbsp;&nbsp;> 50%</span>
-              									<input type="text" style="text-align:right;width:70px"  class="defra form-control" id = "defra_intero" onchange="stickyheaddsadaer()"  name="defra_intero" value="<?php if($defra_intero != 'NULL') echo $defra_intero ?>">
+              									<input type="text" style="text-align:right;width:70px"  class="defra form-control" id = "defra_intero" onchange="save_and_update()"  name="defra_intero" value="<?php if($defra_intero != 'NULL') echo $defra_intero ?>">
               									<!--
               									<input type="text" style="width:30px;font-size:20px" value="." class="form-control" readonly>
               									<input type="text" style="width:50px" class="defra form-control" id = "defra_decimale"  name="defra_decimale" value="<?php if($defra_decimale != 'NULL') echo $defra_decimale ?>">
@@ -4873,7 +4725,7 @@
 			            						$('#defra_decimale').prop('disabled',false);
 			            						
 			            					}
-											stickyheaddsadaer();
+											save_and_update();
 			            				});
 
 			            				$('#percentuale_defra_50').bind('click',function(){	
@@ -4889,7 +4741,7 @@
 			            						$('#defra_decimale').prop('disabled',false);
 			            						
 			            					}
-											stickyheaddsadaer();
+											save_and_update();
 			            				});
 
 			            				
@@ -4948,7 +4800,7 @@
 
 									<form>
 									<!--
-									<input class="btn btn-primary" type="button" value = "Suggerisci" name="SubmitButton" onclick = 'stickyheaddsadaer(<?php echo $args; ?>)'/>
+									<input class="btn btn-primary" type="button" value = "Suggerisci" name="SubmitButton" onclick = 'generate_suggestions(<?php echo $args; ?>)'/>
 									<br/>
 									<br/>-->
 
@@ -5941,10 +5793,10 @@
 			          						<div style="width:95rem">
 				          						<div class="input-group">
 				          							<span class="input-group-addon">
-			            								<input type="checkbox" id="Altro" onchange="stickyheaddsadaer()" name="Altro" <?php if($altro_check == 1) echo "checked='checked'" ?>/>
+			            								<input type="checkbox" id="Altro" onchange="save_and_update()" name="Altro" <?php if($altro_check == 1) echo "checked='checked'" ?>/>
 				            						</span>
 				            						<span class="input-group-addon">Altro</span>
-				            						<input type="text" class="form-control" id="value_altro" onchange="stickyheaddsadaer()" name="value_altro" placeholder="Altro" value="<?php if($altro != 'NULL') echo $altro ?>" disabled>
+				            						<input type="text" class="form-control" id="value_altro" onchange="save_and_update()" name="value_altro" placeholder="Altro" value="<?php if($altro != 'NULL') echo $altro ?>" disabled>
 				            						
 				            					</div>
 				            				</div>
@@ -5958,7 +5810,7 @@
 			        						<div style="width:95rem">
 				        						<div class="input-group">
 			                  						<span class="input-group-addon">
-			                    						<input type="checkbox" id="norme_prevenzione" onchange="stickyheaddsadaer()" name="norme_prevenzione" <?php if($norme_prevenzione == 1) echo "checked='checked'" ?>/>
+			                    						<input type="checkbox" id="norme_prevenzione" onchange="save_and_update()" name="norme_prevenzione" <?php if($norme_prevenzione == 1) echo "checked='checked'" ?>/>
 			                  						</span>
 			                  						<!--<input type="text" class="form-control" value="Norme comportamentali" readonly>-->
 			                  						<input type="text" class="form-control" value="Norme di prevenzione"  readonly>
@@ -5974,7 +5826,7 @@
 			        						<div style="width:95rem">
 				        						<div class="input-group">
 			                  						<span class="input-group-addon">
-			                    						<input type="checkbox" id="norme_comportamentali" onchange="stickyheaddsadaer()" name="norme_comportamentali" <?php if($norme_comportamentali == 1) echo "checked='checked'"; ?>/>
+			                    						<input type="checkbox" id="norme_comportamentali" onchange="save_and_update()" name="norme_comportamentali" <?php if($norme_comportamentali == 1) echo "checked='checked'"; ?>/>
 			                  						</span>
 			                  						<!--<input type="text" class="form-control" value="Norme comportamentali" readonly>-->
 			                  						<span class="form-control" readonly>Norme comportamentali</span>
@@ -5988,7 +5840,7 @@
 		                					<div style="width:95rem">
 			                					<div class="input-group">
 			                  						<span class="input-group-addon">
-			                    						<input type="checkbox" id="attivita_fisica" onchange="stickyheaddsadaer()" name="attivita_fisica" <?php if($attivita_fisica == 1) echo "checked='checked'" ?>/>
+			                    						<input type="checkbox" id="attivita_fisica" onchange="save_and_update()" name="attivita_fisica" <?php if($attivita_fisica == 1) echo "checked='checked'" ?>/>
 			                  						</span>
 			                  						<!--<input type="text" class="form-control" value="Norme comportamentali" readonly>-->
 			                  						<span class="form-control" readonly>Attività fisica</span>
@@ -6002,10 +5854,10 @@
 		                					<div style="width:95rem">
 		                					<div class="input-group">
 			            						<span class="input-group-addon">
-			            							<input type="checkbox" id="sospensione_terapia" onchange="stickyheaddsadaer()" name="sospensione_terapia" <?php if($sospensione_terapia_check == 1) echo "checked='checked'"  ?>/>
+			            							<input type="checkbox" id="sospensione_terapia" onchange="save_and_update()" name="sospensione_terapia" <?php if($sospensione_terapia_check == 1) echo "checked='checked'"  ?>/>
 			            						</span>
 				            					<span class="input-group-addon">Sospensione temporanea della terapia in corso con</span>
-				            					<input type="text" class="form-control" id="Farmaco" onchange="stickyheaddsadaer()" name="Farmaco" placeholder="Farmaco" value="<?php if($sospensione_terapia_farmaco != 'NULL') echo $sospensione_terapia_farmaco  ?>"  disabled>
+				            					<input type="text" class="form-control" id="Farmaco" onchange="save_and_update()" name="Farmaco" placeholder="Farmaco" value="<?php if($sospensione_terapia_farmaco != 'NULL') echo $sospensione_terapia_farmaco  ?>"  disabled>
 				            					<span class="input-group-addon">per</span>
 				            					<input type="text" class="form-control" id="Mesi" name="Mesi" placeholder="Mesi" value="<?php if($sospensione_terapia_mesi != 'NULL') echo $sospensione_terapia_mesi  ?>" disabled>
 				            				</div>
@@ -8178,6 +8030,7 @@
 				    var bmi = calbmi(peso, altezza);
 
 				    $('#BMI').val(bmi);
+					save_and_update();
 
 				});
 
@@ -8302,8 +8155,8 @@
 			    
 			    var diff = Number(um - anno); //mi calcolo la differenza tra l anno di ultima mestruazione e l'anno di nascita
 			    
-			    
 			    $("#etamenopausa").val(diff);
+				save_and_update();
 
 			});
 
@@ -8658,180 +8511,138 @@
       	});
   	</script>
 
-									<script type="text/javascript">
+	<script type="text/javascript">
 
-									var TERAPIE_ORMONALI_sugg;
-									var TERAPIE_OSTEOPROTETTIVE_sugg;
-									var VITAMINA_D_TERAPIA_sugg;
-									var VITAMINA_D_SUPPLEMENTAZIONE_sugg;
-									var CALCIO_SUPPLEMENTAZIONE_sugg;
-									var suggestions = {};
+	var suggestions = {"ter_orm_sugg_button":"","ter_osteo_sugg_button":"","vit_d_ter_sugg_button":"","vit_d_supp_sugg_button":"","calcio_supp_sugg_button":""};
+	function save_and_update()
+	{   
+		save_state();
+		update_sugg();
+	}
 
-                                    function stickyheaddsadaer(pk,data_scan)
-                                    {   
+	function update_sugg()
+	{
+		for (var key in suggestions)
+		{
+			document.getElementById(key).disabled = true;
+			document.getElementById(key).title = "Suggerimento non disponibile";
+		}
+		
+		var xmlhttp = new XMLHttpRequest();
+		xmlhttp.open("POST", "gethint.php", true);
+		xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 
-										//qui salvo anamnesi
-										var xmlhttp = new XMLHttpRequest();
-										var datastring = $("#myForm").serialize();
-										//console.log(datastring);
-										xmlhttp.open("POST", "backend_frontend/filenon2.php", true);
-										xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-										xmlhttp.send(datastring);
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200)
+			{
+				var response = this.responseText;
 
-										//salvo diagnosi
-										var xmlhttp = new XMLHttpRequest();
-										var datastring = $("#myForm2").serialize();
-										//console.log(datastring);
-										xmlhttp.open("POST", "backend_frontend/filenon.php", true);
-										xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-										xmlhttp.send(datastring);
+				response = response.replace(/\n/g, '<br>');
+				//console.log( response )
+				
+				var splitted = response.split("<br><br><br>");
 
+				var i=0;
+				var suggestion_for_button_i;
+				for(var key in suggestions)
+				{
+					if(splitted[0+4*i].localeCompare("idk")==0)
+					{
+						suggestion_for_button_i = "idk";
+					}
+					else if(splitted[0+4*i].localeCompare("0")==0)
+					{	
+						suggestion_for_button_i = "<b>Non si consiglia la terapia</b><br>"+splitted[1+4*i];
+					}
+					else if(splitted[0+4*i].localeCompare("1") == 0)
+					{
+						suggestion_for_button_i = "<b>Si suggerisce la terapia</b><br>"+splitted[1+4*i];
+						if(splitted[2+4*i].localeCompare("idk") != 0)
+						{	
+							suggestion_for_button_i+="<br><br>di tipo <b>"+splitted[2+4*i]+"</b><br>"+splitted[3+4*i];
+						}
+					}
+					i++;
 
-										var xmlhttp = new XMLHttpRequest();
-										xmlhttp.open("POST", "gethint.php", true);
-										xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+					suggestions[key] = suggestion_for_button_i;
+					if (suggestion_for_button_i.localeCompare("idk")!=0)
+					{
+						document.getElementById(key).disabled = false;
+						document.getElementById(key).title="";
 
-										xmlhttp.onreadystatechange = function() {
-											if (this.readyState == 4 && this.status == 200)
-											{
-												//TODO: sistemare Spiegazione non disponibile
-												
-												//console.log( this.responseText )
+					}
+				}
+			}
+		};
+		
+		var pk = '<?php echo $pk; ?>';
+		var data_scan = '<?php echo $datascan_mysql; ?>';
 
-												var response = this.responseText;
+		//console.log(pk);
+		//console.log(data_scan);
 
-												response = response.replace(/\n/g, '<br>');
-												//console.log( response )
-												
-												var splitted = response.split("<br><br><br>");
-												
+		xmlhttp.send("pk="+pk+"&datascan="+data_scan);
+	}
 
-												/////////////////////////////////////TERAPIE_ORMONALI//////////////////////////////////////////////////
+	function save_state()
+	{
+		//qui salvo anamnesi
+		var xmlhttp = new XMLHttpRequest();
+		var datastring = $("#myForm").serialize();
+		//console.log(datastring);
+		xmlhttp.open("POST", "backend_frontend/salva_anamnesi.php", true);
+		xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		xmlhttp.send(datastring);
 
-												/*var TERAPIE_ORMONALI_CHECKBOX_prediction = splitted[0];
-												var TERAPIE_ORMONALI_CHECKBOX_rule = splitted[1];
-												var TERAPIE_ORMONALI_LISTA_prediction = splitted[2];
-												var TERAPIE_ORMONALI_LISTA_rule = splitted[3];
+		//salvo diagnosi
+		var xmlhttp = new XMLHttpRequest();
+		var datastring = $("#myForm2").serialize();
+		//console.log(datastring);
+		xmlhttp.open("POST", "backend_frontend/salva_diagnosi.php", true);
+		xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		xmlhttp.send(datastring);
+	}
 
-												//console.log(TERAPIE_ORMONALI_CHECKBOX_prediction);
+	function myFunction(sugg_button_id) 
+	{
+		var mapForm = document.createElement("form");
+		mapForm.target = "Map";
+		mapForm.method = "POST"; 
+		mapForm.action = "show_suggestion.php";
 
-												if(TERAPIE_ORMONALI_CHECKBOX_prediction.localeCompare("idk")==0)
-												{
-													TERAPIE_ORMONALI_sugg = "Suggerimento non disponibile";
-												}
-												else if(TERAPIE_ORMONALI_CHECKBOX_prediction.localeCompare("0")==0)
-												{	
-													TERAPIE_ORMONALI_sugg = "Non si consiglia la terapia ormonale perchè:<br>"+TERAPIE_ORMONALI_CHECKBOX_rule;
-												}
-												else if(TERAPIE_ORMONALI_CHECKBOX_prediction.localeCompare("1") == 0)
-												{
-													if(TERAPIE_ORMONALI_LISTA_prediction.localeCompare("idk") == 0)
-													{	
-														TERAPIE_ORMONALI_sugg = "Si suggerisce la terapia ormonale perchè:<br>"+TERAPIE_ORMONALI_CHECKBOX_rule;
-													}
-													else
-													{	
-														TERAPIE_ORMONALI_sugg = "Si suggerisce la terapia ormonale perchè:<br>"+TERAPIE_ORMONALI_CHECKBOX_rule +"<br><br>di tipo: "
-														+TERAPIE_ORMONALI_LISTA_prediction+" perchè:<br>"+TERAPIE_ORMONALI_LISTA_rule;
-													}
-												}*/
-												
+		var mapInput = document.createElement("input");
+		mapInput.type = "text";
+		mapInput.name = "sugg";
+		mapInput.hidden = "true";
 
-												for(var i=0; i<5; i++)
-												{
-													if(splitted[0+4*i].localeCompare("idk")==0)
-													{
-														suggestions[i] = "Suggerimento non disponibile";
-													}
-													else if(splitted[0+4*i].localeCompare("0")==0)
-													{	
-														suggestions[i] = "Non si consiglia la terapia perchè:<br>"+splitted[1+4*i];
-													}
-													else if(splitted[0+4*i].localeCompare("1") == 0)
-													{
-														if(splitted[2+4*i].localeCompare("idk") == 0)
-														{	
-															suggestions[i] = "Si suggerisce la terapia perchè:<br>"+splitted[1+4*i];
-														}
-														else
-														{	
-															suggestions[i] = "Si suggerisce la terapia perchè:<br>"+splitted[1+4*i] +"<br><br>di tipo: "
-															+splitted[2+4*i]+" perchè:<br>"+splitted[3+4*i];
-														}
-													}
-												}
-												////////////////////////////////////////////TERAPIE_OSTEOPROTETTIVE//////////////////////////////////////////////////
+		mapInput.value = suggestions[sugg_button_id];
 
-												
-												
+		mapForm.appendChild(mapInput);
 
-												
+		document.body.appendChild(mapForm);
 
-											}
-										};
+		map = window.open("", "Map", "status=0,title=0,height=300,width=900,scrollbars=1");
 
-										xmlhttp.send("pk="+pk+"&datascan="+data_scan);
-                                    }
-
-									function myFunction(sugg_button_id) 
-									{
-										console.log(sugg_button_id);
-										var mapForm = document.createElement("form");
-										mapForm.target = "Map";
-										mapForm.method = "POST"; 
-										mapForm.action = "show_suggestion.php";
-
-										var mapInput = document.createElement("input");
-										mapInput.type = "text";
-										mapInput.name = "sugg";
-										mapInput.hidden = "true";
-//											  <input class="btn btn-primary" id = "ter_orm_sugg_button" type="button" value = "Suggerisci" name="SubmitButton" onclick = 'myFunction(this.id)'/>
-
-										if(sugg_button_id.localeCompare("ter_orm_sugg_button")==0)
-											mapInput.value = suggestions[0];
-										else if(sugg_button_id.localeCompare("ter_osteo_sugg_button")==0)
-											mapInput.value = suggestions[1];
-										else if(sugg_button_id.localeCompare("vit_d_ter_sugg_button")==0)
-											mapInput.value = suggestions[2];
-										else if(sugg_button_id.localeCompare("vit_d_supp_sugg_button")==0)
-											mapInput.value = suggestions[3];
-										else if(sugg_button_id.localeCompare("calcio_supp_sugg_button")==0)
-											mapInput.value = suggestions[4];
-							
+		if (map) {
+		mapForm.submit();
+		} else {
+		alert('You must allow popups for this map to work.');
+		}
 
 
 
-										mapForm.appendChild(mapInput);
+	}
 
-										document.body.appendChild(mapForm);
+	window.onload = function()
+	{
+		update_sugg();
 
-										map = window.open("", "Map", "status=0,title=0,height=300,width=500,scrollbars=1");
-
-										if (map) {
-										mapForm.submit();
-										} else {
-										alert('You must allow popups for this map to work.');
-										}
+	};
 
 
 
-									}
-									function myFunction2()
-									{
-									
-									}
+	</script>
 
-									window.onload = function() {
-										stickyheaddsadaer(<?php echo $args; ?>);
-										
-
-
-									};
-
-
-
-                                    </script>
-
-									<!-- xxx -->
+	<!-- xxx -->
 
 </html>

@@ -2,12 +2,11 @@ import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine
 from sqlalchemy import text
-from lib import preprocess, Formulaes, df_column_uniquify
+from lib import preprocess, Formulae, df_column_uniquify, password, user, db_name, class_columns
 import copy
-import json
 
 def risorgi_test(test_di_java):
-    db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
+    db_connection_str = 'mysql+pymysql://{}:{}@localhost/{}'.format(user,password,db_name)
     db_connection = create_engine(db_connection_str)
     tabella_completa = pd.read_sql(
         'select * from Anamnesi inner join Diagnosi on Anamnesi.PATIENT_KEY = Diagnosi.PATIENT_KEY and Anamnesi.SCAN_DATE = Diagnosi.SCAN_DATE inner join PATIENT on Anamnesi.PATIENT_KEY = PATIENT.PATIENT_KEY inner join Spine on Anamnesi.PATIENT_KEY = Spine.PATIENT_KEY and Anamnesi.SCAN_DATE = Spine.SCAN_DATE inner join ScanAnalysis on Anamnesi.PATIENT_KEY = ScanAnalysis.PATIENT_KEY and Anamnesi.SCAN_DATE = ScanAnalysis.SCAN_DATE'
@@ -21,7 +20,7 @@ def risorgi_test(test_di_java):
 
     instances_ok = []
     for index_test in range(0, test_di_java.shape[0]):
-        # qui ce scritto PRIMARY_KEY
+        # qui ce scritto "PRIMARY_KEY"
         pk = list(test_di_java)[0]
         pk_test = test_di_java.loc[index_test, pk]
 
@@ -45,52 +44,36 @@ def risorgi_test(test_di_java):
     output = pd.DataFrame(instances_ok)
 
     output.reset_index(drop=True, inplace=True)
-    print("test_da_java: {}, risorto: {}".format(test_di_java.shape[0],output.shape[0]))
+    print("num instances in test_test: {}, number of instances revived: {}".format(test_di_java.shape[0],output.shape[0]))
     return output
 
 def leggo_regole_dal_db_e_verifico_accuracy():
-    class_names = [
-        'TERAPIE_ORMONALI_CHECKBOX',#[0]
-        #'TERAPIE_ORMONALI_LISTA',#[1]
-        #'TERAPIE_OSTEOPROTETTIVE_CHECKBOX',#[2]
-        #'TERAPIE_OSTEOPROTETTIVE_LISTA',#[3]
-        #'VITAMINA_D_TERAPIA_CHECKBOX',#[4]
-        #'VITAMINA_D_TERAPIA_LISTA',#[5]
-        #'VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX',#[6]
-        #'VITAMINA_D_SUPPLEMENTAZIONE_LISTA',#[7]
-        # 'CALCIO_SUPPLEMENTAZIONE_CHECKBOX',#[8]
-        'CALCIO_SUPPLEMENTAZIONE_LISTA'] #[9]
 
-    #class_names = [class_names[0]]
-
-
-    for class_name in class_names:
-        db_connection_str = 'mysql+pymysql://utente_web:CMOREL96T45@localhost/CMO2'
+    for class_name in class_columns:
+        db_connection_str = 'mysql+pymysql://{}:{}@localhost/{}'.format(user, password, db_name)
         db_connection = create_engine(db_connection_str)
 
-        t = text("SELECT * FROM regole where terapia = '{}'".format(class_name))
+        t = text("SELECT * FROM regole_test where terapia = '{}'".format(class_name))
         result = db_connection.execute(t).fetchone()
         reg_user_read_not_ref = result['not_refined']
         reg_user_read_ref = result['refined']
 
-        formulaes_not_refined = Formulaes(reg_user_read_not_ref)
-        formulaes_refined = Formulaes(reg_user_read_ref)
+        formulaes_not_refined = Formulae(reg_user_read_not_ref)
+        formulaes_refined = Formulae(reg_user_read_ref)
 
 
         # ATTENZIONE: this is not a random testset, it's a stratified one, bases on a particular class
         # it is produced by java, so first run java
-        #todo capire perchè qui mi da errore se cella contiene testo con virgola
-        # e perchè nel preprocessamento no... forse pechè npn cerecano virgole
         test = pd.read_csv('/home/dadawg/PycharmProjects/untitled1/{}_perpython.csv'.format(class_name), quotechar="'")
 
         risorto = risorgi_test(test)
 
         print(class_name)
-        #print(accuracy_rules4(risorto, test[class_name], formulaes_not_refined))
-        print(accuracy_rules4(risorto, test[class_name], formulaes_refined))
+        print(accuracy_rules(risorto, test[class_name], formulaes_not_refined))
+        print(accuracy_rules(risorto, test[class_name], formulaes_refined))
         print('\n')
 
-def accuracy_rules4(test_x, test_y, formulaes):
+def accuracy_rules(test_x, test_y, formulaes):
     #test_x.reset_index(drop=True, inplace=True)
 
     does_know = 0
@@ -101,31 +84,22 @@ def accuracy_rules4(test_x, test_y, formulaes):
     for row_index in range(0, num_instances):
         formulaes_copy = copy.deepcopy(formulaes)
 
-        if row_index == 172:
-            c = -0
-
         instance_x = test_x.iloc[row_index, :].copy()
         true_Y = test_y.values[row_index]
-        preprocessed_instance_x = preprocess(instance_x.to_frame().transpose(), is_single_instance=True)
-
-        true_formula = formulaes_copy.predict(preprocessed_instance_x)
-
-        print(true_formula)
-        if true_formula is not None:
-            print(true_formula.get_user_readable_version(preprocessed_instance_x))
-        else:
-            print('idk')
-
-        print()
-
-        #print(golden_rule.get_medic_readable_version(preprocessed_instance_x,stemmed_to_original))
-
-        #print('{}: {}'.format(row_index,predicted_y))
+        preprocessed_instance_x = preprocess(instance_x.to_frame().transpose())
+        y = preprocessed_instance_x.T.squeeze()
+        true_formula = formulaes_copy.predict(y)
 
         if true_formula is None:
             doesnt_know += 1
+            #print('{}: {}'.format(row_index,'null'))
+
         else:
             predicted_y = true_formula.prediction
+            #print(true_formula.get_user_readable_version(preprocessed_instance_x))
+            #print()
+            #print('{}: {}'.format(row_index,predicted_y))
+
             does_know += 1
             if str(predicted_y) == str(true_Y):
                 predicted_right += 1

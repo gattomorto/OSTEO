@@ -21,26 +21,20 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.sql.*;
-//todo le regole non devono avere apostrofi perchè non piace a mysql
 public class Main {
     //todo: capire cosa succede se refine rules produce no regole
     //attenzione se i tuoi valori differiscono dal classificatore, è perchè il classificatore si comporta diversamnte qnd vede null
     public static void main(String[] args) throws Exception
     {
-        //Rules rs = new Rules(null);
-        //Formulaes f = new Formulaes(rs);
-        vecchiomain();
-        // prova();
+        //PrintStream out = new PrintStream(new FileOutputStream("log.txt"));
+        //System.setErr(out);
+        go();
+        //Test.test_go();
     }
 
-
-    static private void vecchiomain() throws Exception
+    static private void go() throws Exception
     {
-        //System.out.println(args[0]);
-
         String[] classNames = {
-
-                "CALCIO_SUPPLEMENTAZIONE_LISTA",
                 "TERAPIE_ORMONALI_CHECKBOX",
                 "TERAPIE_ORMONALI_LISTA",
                 "TERAPIE_OSTEOPROTETTIVE_CHECKBOX",
@@ -49,12 +43,9 @@ public class Main {
                 "VITAMINA_D_TERAPIA_LISTA",
                 "VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX",
                 "VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
-               "CALCIO_SUPPLEMENTAZIONE_CHECKBOX",
-                //"CALCIO_SUPPLEMENTAZIONE_LISTA"
+                "CALCIO_SUPPLEMENTAZIONE_CHECKBOX",
+                "CALCIO_SUPPLEMENTAZIONE_LISTA"
         };
-        //String className = classNames[9];
-        //classNames = new String[]{classNames[0]};
-
 
         String[] tmp = {
                 "TERAPIA_OSTEOPROTETTIVA_ORMONALE",
@@ -181,7 +172,6 @@ public class Main {
                 "CAUSE_OSTEOPOROSI_SECONDARIA_5",
                 "CAUSE_OSTEOPOROSI_SECONDARIA_6",
                 "CAUSE_OSTEOPOROSI_SECONDARIA_7"
-
         };
 
         List<String> nomiColDaTrasInNominal = new ArrayList<String>();
@@ -193,21 +183,16 @@ public class Main {
 
         for (String className: classNames)
         {
-            Instances dati =  loader.getDataSet();
+            Instances dati = loader.getDataSet();
             nomiColDaTrasInNominal.add(className);
-
 
             int[] indiciColDaTrasInNominal= new int[nomiColDaTrasInNominal.size()];
             int i=0;
             for (String colName: nomiColDaTrasInNominal)
             {
-                //System.out.println(colName);
-                //System.out.println(data.attribute(colName));
                 indiciColDaTrasInNominal[i]=dati.attribute(colName).index();
                 i++;
             }
-
-
             Filter filter;
             filter = new NumericToNominal();
             ((NumericToNominal)filter).setAttributeIndicesArray(indiciColDaTrasInNominal);
@@ -237,172 +222,31 @@ public class Main {
 
             dati.removeIf(Instance::classIsMissing);
 
-
-            //This is because sometimes the training set is so small that an entire column has missing values, SITUAZIONE_FEMORE_DX,
-            //for example.
-            //If this happens, weka assigns string type to that column. The proplem is that JRip or PART can't operate with
-            //string type attributes.
-            //Therefore we use this filter to remove such type columns.
-            //What happens if we have string attributes which don't have all missing values? Doesn't the filter remove those
-            //as well?
-            //We do not have string attributes, so no problem
-            filter = new RemoveType();
-            filter.setOptions(new String[]{"-T","string"});
+            filter = new Remove();
+            ((Remove)filter).setAttributeIndicesArray(new int[] {dati.attribute("PATIENT_KEY").index(),dati.attribute("SCAN_DATE").index()});
             filter.setInputFormat(dati);
             dati = Filter.useFilter(dati,filter);
 
-            // train test sets generation
-            filter = new StratifiedRemoveFolds();
-            filter.setOptions(new String[]{"-S", "0", "-N", "4", "-F", "1"});
-            filter.setInputFormat(dati);
-            Instances test =  Filter.useFilter(dati, filter);
-
-            filter.setOptions(new String[]{"-S", "0", "-V", "-N", "4", "-F", "1"});
-            filter.setInputFormat(dati);
-            Instances train = Filter.useFilter(dati, filter);
-
-
-            //test set per python, percè vogliamo verificare che il classificatore fittizio fatto solo di regole s python
-            //si comporta come uelllo vero
-            Saver saver = new CSVSaver();
-            saver.setInstances(test);
-            saver.setFile(new File(String.format("/home/dadawg/PycharmProjects/untitled1/%s_perpython.csv",className)));
-            saver.writeBatch();
-
-
-            //questa parte è per la storia che devo recuperare le colonne con il testo su python sul test set
-            //lo faccio usando pk.. allora salvo il test set e poi la rimuovo subito
-            filter = new Remove();
-            ((Remove)filter).setAttributeIndicesArray(new int[] {dati.attribute("SCAN_DATE").index()});
-            filter.setInputFormat(train);
-            train = Filter.useFilter(train,filter);
-            filter.setInputFormat(test);
-            test = Filter.useFilter(test,filter);
-
-            filter = new Remove();
-            ((Remove)filter).setAttributeIndicesArray(new int[] {dati.attribute("PATIENT_KEY").index()});
-            filter.setInputFormat(train);
-            train = Filter.useFilter(train,filter);
-            filter.setInputFormat(test);
-            test = Filter.useFilter(test,filter);
-
-
-            //this is not very useful, unless you want to see what weka GUI says
-            saver = new ArffSaver();
-            saver.setInstances(test);
-            saver.setFile(new File(String.format("Tests/%s_test.arff",className)));
-            saver.writeBatch();
-            saver = new ArffSaver();
-            saver.setInstances(train);
-            saver.setFile(new File(String.format("Tests/%s_train.arff",className)));
-            saver.writeBatch();
-
-            //PART cls = new PART();
             JRip cls = new JRip();
-            cls.setSeed(2);
+            cls.setOptimizations(20);
+            cls.buildClassifier(dati);
 
-            cls.buildClassifier(train);
-
-            Evaluation evl = new Evaluation(train);
-            evl.evaluateModel(cls,test);
-            //System.out.println(evl.toSummaryString());
-            System.out.println(cls);
-            System.out.println(className);
-
-
-            Rules rules = new Rules(cls);
-
-
-
-            Formulaes ff = new Formulaes(rules);
-            System.out.println(ff.getAccuracy(test));
-            String formulaeUserNonRefined = ff.toString();
-            ff.refine(train.numInstances(),0.8,0.1);
-            System.out.println(ff.getAccuracy(test));
-            String formulaesUserRefined = ff.toString();
-
-
-
-            System.out.println();
-
-
-            String qry = String.format("replace into regole values('%s','%s','%s')",className,formulaeUserNonRefined,formulaesUserRefined);
-            Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO2","utente_web","CMOREL96T45");
-            Statement myStmt = myConn.createStatement();
-            // todo attenzione se devi modificare questa, assicurati di cancellare la tabella dal terminale
-            myStmt.executeUpdate( "create table if not exists regole (terapia VARCHAR(256) PRIMARY KEY, not_refined TEXT, refined TEXT)");
-
-            myStmt.executeUpdate(qry);
-
-        }
-
-    }
-
-    /*public static Map<String,String> getColNameToNgram() throws IOException
-    {
-        BufferedReader bf = new BufferedReader(new FileReader("/home/dadawg/PycharmProjects/untitled1/colnametongram.txt"));
-        String pyDic = bf.readLine();
-        String[] keyVals = pyDic.split(",");
-        //System.out.println(keyVals);
-        Map<String,String> colnameToNgram = new HashMap<>();
-        Pattern keyValueRegex = Pattern.compile("(?<=')[a-zA-Z0-9\\s_áéíóúàèìòùàèìòù]+(?=')");
-        Matcher matcher;
-        for (String keyVal : keyVals)
-        {
-            matcher = keyValueRegex.matcher(keyVal);
-            matcher.find();
-            String key = matcher.group();
-            matcher.find();
-            String value = matcher.group();
-            //System.out.println(key+": "+value);
-            colnameToNgram.put(key,value);
-
-        }
-        return colnameToNgram;
-    }*/
-
-    public static void prova() throws Exception {
-
-        List<String> datasets = new LinkedList<>();
-        datasets.add("cpu.arff");
-        datasets.add("colic.arff");
-        datasets.add("credit.arff");
-        datasets.add("derma.arff");
-        datasets.add("ecoli.arff");
-
-        for (String dataset : datasets) {
-
-            ArffLoader loader = new ArffLoader();
-            loader.setFile(new File(String.format("Tests/"+dataset)));
-            Instances dati = loader.getDataSet();
-            dati.setClassIndex(dati.numAttributes() - 1);
-
-            StratifiedRemoveFolds filter;
-            filter = new StratifiedRemoveFolds();
-            filter.setOptions(new String[]{"-S", "0", "-N", "4", "-F", "1"});
-            filter.setInputFormat(dati);
-            Instances test = Filter.useFilter(dati, filter);
-
-            filter.setOptions(new String[]{"-S", "0", "-V", "-N", "4", "-F", "1"});
-            filter.setInputFormat(dati);
-            Instances train = Filter.useFilter(dati, filter);
-
-
-            JRip cls = new JRip();
-            cls.buildClassifier(train);
-            Evaluation evl = new Evaluation(train);
-            evl.evaluateModel(cls, test);
+            Evaluation evl = new Evaluation(dati);
+            evl.evaluateModel(cls,dati);
             //System.out.println(evl.toSummaryString());
             //System.out.println(cls);
-
+            System.out.println(className);
 
             Rules rules = new Rules(cls);
-            System.out.println(rules.getAccuracy(test));
+            Formulae formulae = new Formulae(rules);
+            formulae.refine(dati.numInstances(),0.0,0.0);
+            String formulae_ = formulae.toString();
 
-            Formulaes ff = new Formulaes(rules);
-            System.out.println(ff.getAccuracy(test));
+            Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO","utente_web","CMOREL96T45");
+            Statement myStmt = myConn.createStatement();
+            myStmt.executeUpdate( "create table if not exists regole (terapia VARCHAR(256) PRIMARY KEY, refined TEXT)");
+            myStmt.executeUpdate(String.format("replace into regole values('%s','%s')",className,formulae_));
 
-            System.out.println();
         }
 
     }
@@ -445,11 +289,6 @@ class Proposizione
     {
         Attribute attOfoperando1 = inst.dataset().attribute(this.operando1);
 
-        // se incontro una regola che non valutare allora dico che è falsa procedo alla successiva
-        // TODO: meglio mettere a null il tipo di ritorno cosi diciamo che non sappiamo perchè ho paura che se sia è
-        //  sia corretto e poi perchè i risualtati sembrano dimostrare che sia meglio
-
-        //System.out.println(this.operando1+" ** "+attOfoperando1);
         if(inst.isMissing(attOfoperando1))
         {
            return false;
@@ -564,11 +403,6 @@ class Proposizione
             case "<=":
                 outputOperator = ">";
                 break;
-            case "contiene le parole":
-                outputOperator = "non contiene le parole";
-                break;
-            case "non contiene le parole":
-                outputOperator = "contiene le parole";
 
         }
         return new Proposizione(outputOperand1,outputOperator,outputOperand2);
@@ -879,111 +713,9 @@ class Rules implements Iterable<Regola>
         return null;
     }
 
-    public List<Regola> extractRulesPART(Classifier cls)
-    {
-        String rulesInStringFormat = cls.toString();
-        rulesInStringFormat=rulesInStringFormat.replaceAll("^PART decision list[\r\n][-]+[\r\n]{2}","");
-        rulesInStringFormat=rulesInStringFormat.replaceAll("[\\r\\n][\\r\\n]Number of Rules\\s+:\\s+[0-9]+$","");
-
-        List<Regola> output = new ArrayList<>();
-
-        String[] stringArray_rules = rulesInStringFormat.split("\n\n");
-        //todo approfindire il regex per gestire tutti i carattreri strani
-        Pattern predictionPattern = Pattern.compile("(?<=:\\s)[\\d\\w.,\\s-+/]+(?=\\s\\()");
-        Pattern mnPattern = Pattern.compile("(?<=\\s)[(].*[)]$");
-        Pattern mnPattern2 = Pattern.compile("(?:\\d+(?:[.]\\d+)?)");
-        Matcher matcher;
-
-        for (String string_rule: stringArray_rules)
-        {
-
-            //se non è l'ultima regola
-            if(string_rule != stringArray_rules[stringArray_rules.length-1]) {
-                Regola r = new Regola();
-
-                String[] stringArray_props = string_rule.split("\n");
-                Pattern colNamePattern = Pattern.compile("^\\w+(?=\\s(=|<|>|<=|>=)\\s)");
-                Pattern operatorPattern = Pattern.compile("(?<=^\\w+\\s)(<=|>=|=|<|>)(?=\\s)");
-                Pattern operand2Pattern = Pattern.compile("((> 2.5 mg e < 5 mg)|(>= 5 mg \\(Prednisone\\))|(<= 10 sigarette/di)|(> 10 sigarette/di))|((?<=(<|<=|>|>=|=)\\s)[\\w\\d\\s.,+-]+((?=\\sAND$)|(?=:)))");
-
-
-                for (String string_prop : stringArray_props) {
-                    matcher = colNamePattern.matcher(string_prop);
-                    matcher.find();
-                    String colName = matcher.group();
-                    matcher = operatorPattern.matcher(string_prop);
-                    matcher.find();
-                    String operator = matcher.group();
-                    matcher = operand2Pattern.matcher(string_prop);
-                    matcher.find();
-                    String operand2 = matcher.group();
-                    Proposizione p = new Proposizione(colName, operator, operand2);
-                    r.addProposision(p);
-
-                    // se è l'ultima proposizione
-                    if (string_prop == stringArray_props[stringArray_props.length - 1]) {
-                        matcher = predictionPattern.matcher(string_prop);
-                        matcher.find();
-                        String prediction = matcher.group();
-
-
-                        matcher = mnPattern.matcher(string_prop);
-                        matcher.find();
-                        String mn = matcher.group();
-
-                        mn = mn.replaceAll("(?<=^\\()(\\d+(?:[.]\\d+)?)(?=\\)$)", "$1/0)");
-
-                        matcher = mnPattern2.matcher(mn);
-                        matcher.find();
-
-                        Float m = Float.parseFloat(matcher.group(0));
-                        matcher.find();
-                        Float n = Float.parseFloat(matcher.group(0));
-
-                        r.setPredizione(prediction);
-                        r.setM(m);
-                        r.setN(n);
-
-                        output.add(r);
-                    }
-                }
-
-            }
-            //se è l'ultima regola
-            else
-            {
-                matcher = predictionPattern.matcher(string_rule);
-                matcher.find();
-                String prediction = matcher.group();
-
-
-                matcher = mnPattern.matcher(string_rule);
-                matcher.find();
-                String mn = matcher.group();
-
-                mn = mn.replaceAll("(?<=^\\()(\\d+(?:[.]\\d+)?)(?=\\)$)", "$1/0)");
-
-                matcher = mnPattern2.matcher(mn);
-                matcher.find();
-
-                Float m = Float.parseFloat(matcher.group(0));
-                matcher.find();
-                Float n = Float.parseFloat(matcher.group(0));
-
-                Regola r = new Regola(prediction,m,n,null);
-                output.add(r);
-            }
-
-        }
-
-
-        return output;
-    }
-
     public List<Regola> extractRulesJRip(Classifier cls) throws IOException {
         List<Regola> rules_list = new ArrayList<>();
         String rules_string = cls.toString();
-        //String rules_string = new String(Files.readAllBytes(Paths.get("r.txt")), StandardCharsets.UTF_8);
         rules_string=rules_string.replaceAll("^JRIP rules:[\\n\\r]=+[\\n\\r]{2}","");
         rules_string=rules_string.replaceAll("[\\n\\r]Number.*$","");
 
@@ -993,7 +725,6 @@ class Rules implements Iterable<Regola>
         {
             rules_list.add(new Regola(rule));
         }
-
 
         return rules_list;
     }
@@ -1037,7 +768,6 @@ class Rules implements Iterable<Regola>
 
 }
 
-//cojunction of clauses
 class ConjunctiveFormula
 {
     private List<Clause> clauses;
@@ -1055,12 +785,14 @@ class ConjunctiveFormula
         clauses = new ArrayList<>();
 
         if(!r.getProposizioni().isEmpty())
-            clauses.add(new ConjunctionClause(r.getProposizioni()));
+            clauses.add(new ConjunctiveClause(r.getProposizioni()));
 
         this.predizione=r.getPredizione();
         this.m=r.getM();
         this.n = r.getN();
     }
+
+
     public void addClause(Clause cl)
     {
         this.clauses.add(cl);
@@ -1100,42 +832,46 @@ class ConjunctiveFormula
         return n;
     }
 }
-//(regole) fatte di formule.. ogni formula è una lista di clausole
-class Formulaes
+
+class Formulae
 {
+    List<ConjunctiveFormula> Formulae;
+
+
     public void refine(int numTrainInstances, double min_f1, double min_f2)
     {
-        List<ConjunctiveFormula> formulaesToBeRemoved = new ArrayList<>();
-        for (ConjunctiveFormula f:this.formulaes)
+        List<ConjunctiveFormula> FormulaeToBeRemoved = new ArrayList<>();
+        for (ConjunctiveFormula f:this.Formulae)
         {
             double f1 = (1-f.getN()/f.getM());
             double f2 = f.getM()/numTrainInstances;
             if(f1 < min_f1 | f2 < min_f2)
-                formulaesToBeRemoved.add(f);
+                FormulaeToBeRemoved.add(f);
         }
 
-        this.removeFormulaes(formulaesToBeRemoved);
+        this.removeFormulae(FormulaeToBeRemoved);
     }
 
-    private void removeFormulaes(List<ConjunctiveFormula> formulaesToRemove)
+    private void removeFormulae(List<ConjunctiveFormula> FormulaeToRemove)
     {
-        for (ConjunctiveFormula f: formulaesToRemove)
-            this.formulaes.remove(f);
+        for (ConjunctiveFormula f: FormulaeToRemove)
+            this.Formulae.remove(f);
     }
 
-    List<ConjunctiveFormula> formulaes;
-    public Formulaes(Rules rules)
+    public Formulae(Rules rules)
     {
-        formulaes= new ArrayList<>();
+        this.Formulae= new ArrayList<>();
 
         for(int i=0; i<rules.size(); i++)
         {
-            formulaes.add(new ConjunctiveFormula(rules.get(i)));
+
+            this.Formulae.add(new ConjunctiveFormula(rules.get(i)));
+
             for (int j=0; j<i; j++)
             {
                 List<Proposizione> propsOfJthRule = rules.get(j).getProposizioni();
-                ConjunctionClause conjC = new ConjunctionClause(propsOfJthRule);
-                DisjunctionClause disjC = conjC.negate();
+                ConjunctiveClause conjC = new ConjunctiveClause(propsOfJthRule);
+                DisjunctiveClause disjC = conjC.negate();
                 this.get(i).addClause(disjC);
             }
         }
@@ -1143,12 +879,12 @@ class Formulaes
 
     public ConjunctiveFormula get(int index)
     {
-        return this.formulaes.get(index);
+        return this.Formulae.get(index);
     }
 
     public String predict(Instance inst)
     {
-        for (ConjunctiveFormula formula: this.formulaes)
+        for (ConjunctiveFormula formula: this.Formulae)
         {
             if(formula.evaluate(inst)==true)
                 return formula.getPrediction();
@@ -1165,22 +901,15 @@ class Formulaes
         Enumeration instances = testset.enumerateInstances();
         while (instances.hasMoreElements())
         {
-            if (i==106)
+            if (i == 316)
             {
-                int x = 9;
+                int x = 5;
             }
             Instance inst = (Instance) instances.nextElement();
-            //System.out.println(inst);
             String predicted_y = this.predict(inst);
 
-            /*Double predictedByCls = cls.classifyInstance(inst);
-            if(Double.parseDouble(predicted_y) != predictedByCls) {
-                int r = 5;
-            }*/
 
-            //System.out.println(predicted_y+" "+predictedByCls);
-
-            //System.out.println(i+": "+predicted_y);
+            //ystem.out.println(String.format("%d: %s",i,predicted_y));
 
 
             String right_y = inst.stringValue(testset.classIndex());
@@ -1194,7 +923,6 @@ class Formulaes
                     predictedRight++;
             }
 
-            //System.out.println(i+": "+predicted_y);
             i++;
         }
 
@@ -1204,9 +932,9 @@ class Formulaes
     public String toString()
     {
         String output = "";
-        for (ConjunctiveFormula f: this.formulaes)
+        for (ConjunctiveFormula f: this.Formulae)
         {
-            if (f != this.formulaes.get(this.formulaes.size()-1))
+            if (f != this.Formulae.get(this.Formulae.size()-1))
                 output+=f.toString() + "\n";
             else
                 output+=f.toString();
@@ -1228,9 +956,9 @@ abstract class Clause
     public String toString() {
         String logicalOperator=null;
 
-        if (this instanceof ConjunctionClause)
+        if (this instanceof ConjunctiveClause)
             logicalOperator = " AND ";
-        else if(this instanceof DisjunctionClause)
+        else if(this instanceof DisjunctiveClause)
             logicalOperator = " OR ";
 
         String output = "(";
@@ -1246,9 +974,9 @@ abstract class Clause
 
 }
 //todo: change to conjunctive
-class ConjunctionClause extends Clause
+class ConjunctiveClause extends Clause
 {
-    public ConjunctionClause(List<Proposizione> propositions)
+    public ConjunctiveClause(List<Proposizione> propositions)
     {
         super(propositions);
     }
@@ -1279,7 +1007,7 @@ class ConjunctionClause extends Clause
         return output;
     }
 
-    public DisjunctionClause negate()
+    public DisjunctiveClause negate()
     {
         List<Proposizione> negatedPropositions= new LinkedList<>();
         for(Proposizione prop: super.propositions)
@@ -1287,12 +1015,12 @@ class ConjunctionClause extends Clause
             negatedPropositions.add(prop.negate());
         }
 
-        return new DisjunctionClause(negatedPropositions);
+        return new DisjunctiveClause(negatedPropositions);
     }
 }
-class DisjunctionClause extends Clause
+class DisjunctiveClause extends Clause
 {
-    public DisjunctionClause(List<Proposizione> propositions) {
+    public DisjunctiveClause(List<Proposizione> propositions) {
         super(propositions);
     }
 
@@ -1305,5 +1033,317 @@ class DisjunctionClause extends Clause
                 return true;
         }
         return false;
+    }
+}
+
+class Test
+{
+    public static void test_go() throws Exception
+    {
+        //System.out.println(args[0]);
+
+        String[] classNames = {
+                //"VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX",
+                "TERAPIE_ORMONALI_CHECKBOX",//0
+                "TERAPIE_ORMONALI_LISTA",//1
+                "TERAPIE_OSTEOPROTETTIVE_CHECKBOX",//2
+                "TERAPIE_OSTEOPROTETTIVE_LISTA",
+                "VITAMINA_D_TERAPIA_CHECKBOX",
+                "VITAMINA_D_TERAPIA_LISTA",
+                "VITAMINA_D_SUPPLEMENTAZIONE_CHECKBOX",
+                "VITAMINA_D_SUPPLEMENTAZIONE_LISTA",
+                "CALCIO_SUPPLEMENTAZIONE_CHECKBOX",
+                "CALCIO_SUPPLEMENTAZIONE_LISTA"
+        };
+        //String className = classNames[9];
+        //classNames = new String[]{classNames[0]};
+
+        String[] tmp = {
+                "TERAPIA_OSTEOPROTETTIVA_ORMONALE",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA",
+                "TERAPIA_ALTRO_CHECKBOX",
+                "TERAPIA_COMPLIANCE",
+                "FRATTURA_SITI_DIVERSI",
+                "FRATTURA_FAMILIARITA",
+                "MALATTIE_ATTUALI_CHECKBOX",
+                "MALATTIE_ATTUALI_ARTRITE_REUM",
+                "MALATTIE_ATTUALI_ARTRITE_PSOR",
+                "MALATTIE_ATTUALI_LUPUS",
+                "MALATTIE_ATTUALI_SCLERODERMIA",
+                "MALATTIE_ATTUALI_ALTRE_CONNETTIVITI",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_CHECKBOX",
+                "PATOLOGIE_UTERINE_CHECKBOX",
+                "NEOPLASIA_CHECKBOX",
+                "SINTOMI_VASOMOTORI",
+                "SINTOMI_DISTROFICI",
+                "DISLIPIDEMIA_CHECKBOX",
+                "IPERTENSIONE",
+                "RISCHIO_TEV",
+                "PATOLOGIA_CARDIACA",
+                "PATOLOGIA_VASCOLARE",
+                "INSUFFICIENZA_RENALE",
+                "PATOLOGIA_RESPIRATORIA",
+                "PATOLOGIA_CAVO_ORALE_CHECKBOX",
+                "PATOLOGIA_EPATICA",
+                "PATOLOGIA_ESOFAGEA",
+                "GASTRO_DUODENITE",
+                "GASTRO_RESEZIONE",
+                "RESEZIONE_INTESTINALE",
+                "MICI",
+                "VITAMINA_D_CHECKBOX",
+                "ALLERGIE_CHECKBOX",
+                "INTOLLERANZE_CHECKBOX",
+                "OSTEOPOROSI_GRAVE",
+                "VERTEBRE_NON_ANALIZZATE_CHECKBOX",
+                "VERTEBRE_NON_ANALIZZATE_L1",
+                "VERTEBRE_NON_ANALIZZATE_L2",
+                "VERTEBRE_NON_ANALIZZATE_L3",
+                "VERTEBRE_NON_ANALIZZATE_L4",
+                "COLONNA_NON_ANALIZZABILE",
+                "COLONNA_VALORI_SUPERIORI",
+                "FEMORE_NON_ANALIZZABILE",
+                "FRAX_APPLICABILE",
+                "TBS_COLONNA_APPLICABILE",
+                "DEFRA_APPLICABILE",
+
+                "TERAPIA_ALTRO_0",
+                "TERAPIA_ALTRO_1",
+                "TERAPIA_ALTRO_2",
+                "TERAPIA_ALTRO_3",
+                "TERAPIA_ALTRO_4",
+                "TERAPIA_ALTRO_5",
+                "TERAPIA_ALTRO_6",
+                "TERAPIA_ALTRO_7",
+                "TERAPIA_ALTRO_8",
+                "TERAPIA_ALTRO_9",
+                "TERAPIA_ALTRO_10",
+                "TERAPIA_ALTRO_11",
+                "TERAPIA_ALTRO_12",
+                "TERAPIA_ALTRO_13",
+                "TERAPIA_ALTRO_14",
+                "TERAPIA_ALTRO_15",
+                "TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA_0",
+                "TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA_1",
+                "TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA_2",
+                "TERAPIA_OSTEOPROTETTIVA_ORMONALE_LISTA_3",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_0",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_1",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_2",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_3",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_4",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_5",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_6",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_7",
+                "TERAPIA_OSTEOPROTETTIVA_SPECIFICA_LISTA_8",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA_0",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA_1",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA_2",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA_3",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA_4",
+                "VITAMINA_D_TERAPIA_OSTEOPROTETTIVA_LISTA_5",
+                "PATOLOGIE_UTERINE_DIAGNOSI_0",
+                "PATOLOGIE_UTERINE_DIAGNOSI_1",
+                "PATOLOGIE_UTERINE_DIAGNOSI_2",
+                "PATOLOGIE_UTERINE_DIAGNOSI_3",
+                "ALTRE_PATOLOGIE_0",
+                "ALTRE_PATOLOGIE_1",
+                "NEOPLASIA_MAMMARIA_TERAPIA_0",
+                "NEOPLASIA_MAMMARIA_TERAPIA_1",
+                "NEOPLASIA_MAMMARIA_TERAPIA_2",
+                "NEOPLASIA_MAMMARIA_TERAPIA_3",
+                "NEOPLASIA_MAMMARIA_TERAPIA_4",
+                "NEOPLASIA_MAMMARIA_TERAPIA_5",
+                "DISLIPIDEMIA_TERAPIA_0",
+                "DISLIPIDEMIA_TERAPIA_1",
+                "DISLIPIDEMIA_TERAPIA_2",
+                "DISLIPIDEMIA_TERAPIA_3",
+                "ALLERGIE_0",
+                "ALLERGIE_1",
+                "ALLERGIE_2",
+                "ALLERGIE_3",
+                "ALLERGIE_4",
+                "ALLERGIE_5",
+                "ALLERGIE_6",
+                "ALLERGIE_7",
+                "ALLERGIE_8",
+                "INTOLLERANZE_0",
+                "INTOLLERANZE_1",
+                "INTOLLERANZE_2",
+                "INTOLLERANZE_3",
+                "INTOLLERANZE_4",
+                "INTOLLERANZE_5",
+                "INTOLLERANZE_6",
+                "INTOLLERANZE_7",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_0",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_1",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_2",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_3",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_4",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_5",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_6",
+                "CAUSE_OSTEOPOROSI_SECONDARIA_7"
+        };
+
+        List<String> nomiColDaTrasInNominal = new ArrayList<String>();
+
+        Collections.addAll(nomiColDaTrasInNominal,tmp);
+
+        CSVLoader loader = new CSVLoader();
+        loader.setFile(new File(String.format("/home/dadawg/PycharmProjects/untitled1/perJAVA.csv")));
+
+        for (String className: classNames)
+        {
+            Instances dati =  loader.getDataSet();
+            nomiColDaTrasInNominal.add(className);
+
+
+            int[] indiciColDaTrasInNominal= new int[nomiColDaTrasInNominal.size()];
+            int i=0;
+            for (String colName: nomiColDaTrasInNominal)
+            {
+                //System.out.println(colName);
+                //System.out.println(data.attribute(colName));
+                indiciColDaTrasInNominal[i]=dati.attribute(colName).index();
+                i++;
+            }
+
+
+            Filter filter;
+            filter = new NumericToNominal();
+            ((NumericToNominal)filter).setAttributeIndicesArray(indiciColDaTrasInNominal);
+            filter.setInputFormat(dati);
+            dati = Filter.useFilter(dati,filter);
+
+            int[] classIndexesToRemove = new int[classNames.length-1];
+            i = 0;
+            // finding out indices of columns to be removed
+            for(String className_: classNames)
+            {
+                if(!className_.equals(className)) {
+                    classIndexesToRemove[i] = dati.attribute(className_).index();
+                    i++;
+                }
+            }
+
+            // the removal itself
+            filter = new Remove();
+            ((Remove)filter).setAttributeIndicesArray(classIndexesToRemove);
+            filter.setInputFormat(dati);
+            dati = Filter.useFilter(dati,filter);
+
+            dati.setClassIndex(dati.numAttributes()-1);
+
+            dati.removeIf(Instance::classIsMissing);
+
+            // train/test sets generation
+            filter = new StratifiedRemoveFolds();
+            filter.setOptions(new String[]{"-S", "0", "-N", "4", "-F", "1"});
+            filter.setInputFormat(dati);
+            Instances test =  Filter.useFilter(dati, filter);
+
+            filter.setOptions(new String[]{"-S", "0", "-V", "-N", "4", "-F", "1"});
+            filter.setInputFormat(dati);
+            Instances train = Filter.useFilter(dati, filter);
+
+
+            Saver saver = new CSVSaver();
+            saver.setInstances(test);
+            saver.setFile(new File(String.format("/home/dadawg/PycharmProjects/untitled1/%s_perpython.csv",className)));
+            saver.writeBatch();
+
+
+            filter = new Remove();
+            ((Remove)filter).setAttributeIndicesArray(new int[] {dati.attribute("SCAN_DATE").index()});
+            filter.setInputFormat(train);
+            train = Filter.useFilter(train,filter);
+            filter.setInputFormat(test);
+            test = Filter.useFilter(test,filter);
+
+            filter = new Remove();
+            ((Remove)filter).setAttributeIndicesArray(new int[] {dati.attribute("PATIENT_KEY").index()});
+            filter.setInputFormat(train);
+            train = Filter.useFilter(train,filter);
+            filter.setInputFormat(test);
+            test = Filter.useFilter(test,filter);
+
+
+            //this is not very useful, unless you want to see what weka GUI says
+            saver = new ArffSaver();
+            saver.setInstances(test);
+            saver.setFile(new File(String.format("Tests/%s_test.arff",className)));
+            saver.writeBatch();
+            saver = new ArffSaver();
+            saver.setInstances(train);
+            saver.setFile(new File(String.format("Tests/%s_train.arff",className)));
+            saver.writeBatch();
+
+            //PART cls = new PART();
+            JRip cls = new JRip();
+
+            cls.buildClassifier(train);
+
+            Evaluation evl = new Evaluation(train);
+            evl.evaluateModel(cls,test);
+            //System.out.println(evl.toSummaryString());
+            //System.out.println(cls);
+            System.out.println(className);
+
+            Rules rules = new Rules(cls);
+
+            Formulae ff = new Formulae(rules);
+            System.out.println(ff.getAccuracy(test));
+            String formulaeUserNonRefined = ff.toString();
+            ff.refine(train.numInstances(),0.8,0.1);
+            System.out.println(ff.getAccuracy(test));
+            String FormulaeUserRefined = ff.toString();
+
+            System.out.println();
+
+            String qry = String.format("replace into regole_test values('%s','%s','%s')",className,formulaeUserNonRefined,FormulaeUserRefined);
+            Connection myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CMO","utente_web","CMOREL96T45");
+            Statement myStmt = myConn.createStatement();
+            // attenzione se devi modificare questa, assicurati di cancellare prima la tabella
+            myStmt.executeUpdate( "create table if not exists regole_test (terapia VARCHAR(256) PRIMARY KEY, not_refined TEXT, refined TEXT)");
+
+            myStmt.executeUpdate(qry);
+
+        }
+
+    }
+
+    public static void test_Formulae() throws Exception {
+
+        List<String> datasets = new LinkedList<>();
+        datasets.add("cpu.arff");
+        datasets.add("colic.arff");
+        datasets.add("credit.arff");
+        datasets.add("derma.arff");
+        datasets.add("ecoli.arff");
+
+        for (String dataset : datasets) {
+
+            ArffLoader loader = new ArffLoader();
+            loader.setFile(new File(String.format("Tests/"+dataset)));
+            Instances dati = loader.getDataSet();
+            dati.setClassIndex(dati.numAttributes() - 1);
+
+            JRip cls = new JRip();
+            cls.buildClassifier(dati);
+            Evaluation evl = new Evaluation(dati);
+            evl.evaluateModel(cls, dati);
+            //System.out.println(evl.toSummaryString());
+            //System.out.println(cls);
+
+
+            Rules rules = new Rules(cls);
+            System.out.println(rules.getAccuracy(dati));
+
+            Formulae ff = new Formulae(rules);
+            System.out.println(ff.getAccuracy(dati));
+
+            System.out.println();
+        }
+
     }
 }
